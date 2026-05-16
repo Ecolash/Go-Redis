@@ -2,6 +2,7 @@ package handler_test
 
 import (
 	"testing"
+	"time"
 
 	"github.com/codecrafters-io/redis-starter-go/internal/handler"
 	"github.com/codecrafters-io/redis-starter-go/internal/store"
@@ -58,5 +59,40 @@ func TestHandleGetReturnsNullBulkStringForMissingKey(t *testing.T) {
 	h := newHandler()
 	if got := h.Handle([]byte("*2\r\n$3\r\nGET\r\n$6\r\nnobody\r\n")); got != "$-1\r\n" {
 		t.Errorf("expected $-1\\r\\n, got %q", got)
+	}
+}
+
+func TestHandleSetWithPXReturnsOK(t *testing.T) {
+	h := newHandler()
+	// SET foo bar PX 100
+	got := h.Handle([]byte("*5\r\n$3\r\nSET\r\n$3\r\nfoo\r\n$3\r\nbar\r\n$2\r\nPX\r\n$3\r\n100\r\n"))
+	if got != "+OK\r\n" {
+		t.Errorf("expected +OK\\r\\n, got %q", got)
+	}
+}
+
+func TestHandleGetReturnsValueBeforePXExpiry(t *testing.T) {
+	h := newHandler()
+	h.Handle([]byte("*5\r\n$3\r\nSET\r\n$3\r\nfoo\r\n$3\r\nbar\r\n$2\r\nPX\r\n$3\r\n200\r\n"))
+	if got := h.Handle([]byte("*2\r\n$3\r\nGET\r\n$3\r\nfoo\r\n")); got != "$3\r\nbar\r\n" {
+		t.Errorf("expected $3\\r\\nbar\\r\\n before expiry, got %q", got)
+	}
+}
+
+func TestHandleGetReturnsNullAfterPXExpiry(t *testing.T) {
+	h := newHandler()
+	h.Handle([]byte("*5\r\n$3\r\nSET\r\n$3\r\nfoo\r\n$3\r\nbar\r\n$2\r\nPX\r\n$2\r\n20\r\n"))
+	time.Sleep(30 * time.Millisecond)
+	if got := h.Handle([]byte("*2\r\n$3\r\nGET\r\n$3\r\nfoo\r\n")); got != "$-1\r\n" {
+		t.Errorf("expected $-1\\r\\n after expiry, got %q", got)
+	}
+}
+
+func TestHandleSetWithEXReturnsOK(t *testing.T) {
+	h := newHandler()
+	// SET foo bar EX 10
+	got := h.Handle([]byte("*5\r\n$3\r\nSET\r\n$3\r\nfoo\r\n$3\r\nbar\r\n$2\r\nEX\r\n$2\r\n10\r\n"))
+	if got != "+OK\r\n" {
+		t.Errorf("expected +OK\\r\\n, got %q", got)
 	}
 }
