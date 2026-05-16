@@ -6,10 +6,12 @@ import (
 	"net"
 
 	"github.com/codecrafters-io/redis-starter-go/internal/handler"
+	"github.com/codecrafters-io/redis-starter-go/internal/store"
 )
 
 type Server struct {
 	listener net.Listener
+	handler  *handler.Handler
 }
 
 func New(addr string) (*Server, error) {
@@ -17,7 +19,11 @@ func New(addr string) (*Server, error) {
 	if err != nil {
 		return nil, err
 	}
-	return &Server{listener: l}, nil
+	s := store.New()
+	return &Server{
+		listener: l,
+		handler:  handler.New(s),
+	}, nil
 }
 
 func (s *Server) Addr() string {
@@ -49,7 +55,7 @@ func (s *Server) handleConn(conn net.Conn) {
 			}
 			return
 		}
-		response := handler.Handle(buf[:n])
+		response := s.handler.Handle(buf[:n])
 		if _, err := conn.Write([]byte(response)); err != nil {
 			log.Printf("write error: %v", err)
 			return
