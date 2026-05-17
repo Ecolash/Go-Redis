@@ -209,6 +209,116 @@ func TestLLen(t *testing.T) {
 	}	
 }
 
+func TestLPop(t *testing.T) {
+	tests := []struct {
+		name     string
+		setup    []string
+		wantVal  string
+		wantOK   bool
+		wantList []string
+	}{
+		{
+			name:   "missing key returns not ok",
+			wantOK: false,
+		},
+		{
+			name:     "removes and returns first element",
+			setup:    []string{"a", "b", "c"},
+			wantVal:  "a",
+			wantOK:   true,
+			wantList: []string{"b", "c"},
+		},
+		{
+			name:     "single element list becomes empty",
+			setup:    []string{"only"},
+			wantVal:  "only",
+			wantOK:   true,
+			wantList: []string{},
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			s := store.New()
+			if tt.setup != nil {
+				s.RPush("mylist", tt.setup...)
+			}
+			val, ok := s.LPop("mylist")
+			if ok != tt.wantOK {
+				t.Fatalf("ok = %v, want %v", ok, tt.wantOK)
+			}
+			if ok && val != tt.wantVal {
+				t.Errorf("val = %q, want %q", val, tt.wantVal)
+			}
+			if tt.wantList != nil {
+				got, _ := s.LRange("mylist", 0, -1)
+				if len(got) != len(tt.wantList) {
+					t.Fatalf("list len = %d, want %d; got %v", len(got), len(tt.wantList), got)
+				}
+				for i, v := range tt.wantList {
+					if got[i] != v {
+						t.Errorf("index %d: got %q, want %q", i, got[i], v)
+					}
+				}
+			}
+		})
+	}
+}
+
+func TestRPop(t *testing.T) {
+	tests := []struct {
+		name     string
+		setup    []string
+		wantVal  string
+		wantOK   bool
+		wantList []string
+	}{
+		{
+			name:   "missing key returns not ok",
+			wantOK: false,
+		},
+		{
+			name:     "removes and returns last element",
+			setup:    []string{"a", "b", "c"},
+			wantVal:  "c",
+			wantOK:   true,
+			wantList: []string{"a", "b"},
+		},
+		{
+			name:     "single element list becomes empty",
+			setup:    []string{"only"},
+			wantVal:  "only",
+			wantOK:   true,
+			wantList: []string{},
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			s := store.New()
+			if tt.setup != nil {
+				s.RPush("mylist", tt.setup...)
+			}
+			val, ok := s.RPop("mylist")
+			if ok != tt.wantOK {
+				t.Fatalf("ok = %v, want %v", ok, tt.wantOK)
+			}
+			if ok && val != tt.wantVal {
+				t.Errorf("val = %q, want %q", val, tt.wantVal)
+			}
+			if tt.wantList != nil {
+				got, _ := s.LRange("mylist", 0, -1)
+				if len(got) != len(tt.wantList) {
+					t.Fatalf("list len = %d, want %d; got %v", len(got), len(tt.wantList), got)
+				}
+				for i, v := range tt.wantList {
+					if got[i] != v {
+						t.Errorf("index %d: got %q, want %q", i, got[i], v)
+					}
+				}
+			}
+		})
+	}
+}
+
 func TestLRange(t *testing.T) {
 	tests := []struct {
 		name   string

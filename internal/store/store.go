@@ -80,6 +80,33 @@ func (s *Store) LPush(key string, vals ...string) int {
 	return len(e.listVal)
 }
 
+func (s *Store) LPop(key string) (string, bool) {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	e, ok := s.data[key]
+	if !ok || e.kind != kindList || len(e.listVal) == 0 {
+		return "", false
+	}
+	val := e.listVal[0]
+	e.listVal = e.listVal[1:]
+	s.data[key] = e
+	return val, true
+}
+
+func (s *Store) RPop(key string) (string, bool) {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	e, ok := s.data[key]
+	if !ok || e.kind != kindList || len(e.listVal) == 0 {
+		return "", false
+	}
+	n := len(e.listVal)
+	val := e.listVal[n-1]
+	e.listVal = e.listVal[:n-1]
+	s.data[key] = e
+	return val, true
+}
+
 func (s *Store) LLen(key string) int {
 	s.mu.RLock()
 	defer s.mu.RUnlock()
