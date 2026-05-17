@@ -107,6 +107,43 @@ func (s *Store) RPop(key string) (string, bool) {
 	return val, true
 }
 
+func (s *Store) LPopCount(key string, count int) ([]string, bool) {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	e, ok := s.data[key]
+	if !ok || e.kind != kindList {
+		return nil, false
+	}
+	if count > len(e.listVal) {
+		count = len(e.listVal)
+	}
+	vals := make([]string, count)
+	copy(vals, e.listVal[:count])
+	e.listVal = e.listVal[count:]
+	s.data[key] = e
+	return vals, true
+}
+
+func (s *Store) RPopCount(key string, count int) ([]string, bool) {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	e, ok := s.data[key]
+	if !ok || e.kind != kindList {
+		return nil, false
+	}
+	n := len(e.listVal)
+	if count > n {
+		count = n
+	}
+	vals := make([]string, count)
+	for i := range count {
+		vals[i] = e.listVal[n-1-i]
+	}
+	e.listVal = e.listVal[:n-count]
+	s.data[key] = e
+	return vals, true
+}
+
 func (s *Store) LLen(key string) int {
 	s.mu.RLock()
 	defer s.mu.RUnlock()

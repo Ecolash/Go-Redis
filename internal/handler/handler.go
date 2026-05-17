@@ -15,6 +15,7 @@ const (
 	errWrongArgs = "-ERR wrong number of arguments\r\n"
 	okResponse   = "+OK\r\n"
 	nullBulk     = "$-1\r\n"
+	nullArray    = "*-1\r\n"
 )
 
 type commandFunc func(parts []string) string
@@ -88,22 +89,44 @@ func (h *Handler) handleLPop(parts []string) string {
 	if len(parts) < 2 {
 		return errWrongArgs
 	}
-	val, ok := h.store.LPop(parts[1])
-	if !ok {
-		return nullBulk
+	if len(parts) == 2 {
+		val, ok := h.store.LPop(parts[1])
+		if !ok {
+			return nullBulk
+		}
+		return resp.BulkString(val)
 	}
-	return resp.BulkString(val)
+	count, err := strconv.Atoi(parts[2])
+	if err != nil || count < 0 {
+		return errWrongArgs
+	}
+	vals, ok := h.store.LPopCount(parts[1], count)
+	if !ok {
+		return nullArray
+	}
+	return resp.Array(vals)
 }
 
 func (h *Handler) handleRPop(parts []string) string {
 	if len(parts) < 2 {
 		return errWrongArgs
 	}
-	val, ok := h.store.RPop(parts[1])
-	if !ok {
-		return nullBulk
+	if len(parts) == 2 {
+		val, ok := h.store.RPop(parts[1])
+		if !ok {
+			return nullBulk
+		}
+		return resp.BulkString(val)
 	}
-	return resp.BulkString(val)
+	count, err := strconv.Atoi(parts[2])
+	if err != nil || count < 0 {
+		return errWrongArgs
+	}
+	vals, ok := h.store.RPopCount(parts[1], count)
+	if !ok {
+		return nullArray
+	}
+	return resp.Array(vals)
 }
 
 func (h *Handler) handleLLen(parts []string) string {

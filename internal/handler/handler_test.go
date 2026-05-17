@@ -241,6 +241,78 @@ func TestHandleRPop(t *testing.T) {
 	}
 }
 
+func TestHandleLPopWithCount(t *testing.T) {
+	tests := []struct {
+		name  string
+		setup []string
+		input string
+		want  string
+	}{
+		{
+			name:  "missing key returns null array",
+			input: "*3\r\n$4\r\nLPOP\r\n$6\r\nnobody\r\n$1\r\n2\r\n",
+			want:  "*-1\r\n",
+		},
+		{
+			name:  "pops count elements from front",
+			setup: []string{"*5\r\n$5\r\nRPUSH\r\n$6\r\nmylist\r\n$1\r\na\r\n$1\r\nb\r\n$1\r\nc\r\n"},
+			input: "*3\r\n$4\r\nLPOP\r\n$6\r\nmylist\r\n$1\r\n2\r\n",
+			want:  "*2\r\n$1\r\na\r\n$1\r\nb\r\n",
+		},
+		{
+			name:  "count exceeds length returns all elements",
+			setup: []string{"*4\r\n$5\r\nRPUSH\r\n$6\r\nmylist\r\n$1\r\na\r\n$1\r\nb\r\n"},
+			input: "*3\r\n$4\r\nLPOP\r\n$6\r\nmylist\r\n$1\r\n9\r\n",
+			want:  "*2\r\n$1\r\na\r\n$1\r\nb\r\n",
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			h := newHandler()
+			runCommands(h, tt.setup)
+			if got := h.Handle([]byte(tt.input)); got != tt.want {
+				t.Errorf("got %q, want %q", got, tt.want)
+			}
+		})
+	}
+}
+
+func TestHandleRPopWithCount(t *testing.T) {
+	tests := []struct {
+		name  string
+		setup []string
+		input string
+		want  string
+	}{
+		{
+			name:  "missing key returns null array",
+			input: "*3\r\n$4\r\nRPOP\r\n$6\r\nnobody\r\n$1\r\n2\r\n",
+			want:  "*-1\r\n",
+		},
+		{
+			name:  "pops count elements from back",
+			setup: []string{"*5\r\n$5\r\nRPUSH\r\n$6\r\nmylist\r\n$1\r\na\r\n$1\r\nb\r\n$1\r\nc\r\n"},
+			input: "*3\r\n$4\r\nRPOP\r\n$6\r\nmylist\r\n$1\r\n2\r\n",
+			want:  "*2\r\n$1\r\nc\r\n$1\r\nb\r\n",
+		},
+		{
+			name:  "count exceeds length returns all elements",
+			setup: []string{"*4\r\n$5\r\nRPUSH\r\n$6\r\nmylist\r\n$1\r\na\r\n$1\r\nb\r\n"},
+			input: "*3\r\n$4\r\nRPOP\r\n$6\r\nmylist\r\n$1\r\n9\r\n",
+			want:  "*2\r\n$1\r\nb\r\n$1\r\na\r\n",
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			h := newHandler()
+			runCommands(h, tt.setup)
+			if got := h.Handle([]byte(tt.input)); got != tt.want {
+				t.Errorf("got %q, want %q", got, tt.want)
+			}
+		})
+	}
+}
+
 func TestHandleLLen(t *testing.T) {
 	tests := []struct {
 		name  string

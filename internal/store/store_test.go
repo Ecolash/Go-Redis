@@ -319,6 +319,150 @@ func TestRPop(t *testing.T) {
 	}
 }
 
+func TestLPopCount(t *testing.T) {
+	tests := []struct {
+		name     string
+		setup    []string
+		count    int
+		wantVals []string
+		wantOK   bool
+		wantList []string
+	}{
+		{
+			name:   "missing key returns not ok",
+			count:  2,
+			wantOK: false,
+		},
+		{
+			name:     "pops requested count from front",
+			setup:    []string{"a", "b", "c", "d"},
+			count:    2,
+			wantVals: []string{"a", "b"},
+			wantOK:   true,
+			wantList: []string{"c", "d"},
+		},
+		{
+			name:     "count exceeds length returns all elements",
+			setup:    []string{"a", "b"},
+			count:    10,
+			wantVals: []string{"a", "b"},
+			wantOK:   true,
+			wantList: []string{},
+		},
+		{
+			name:     "count zero returns empty slice",
+			setup:    []string{"a", "b"},
+			count:    0,
+			wantVals: []string{},
+			wantOK:   true,
+			wantList: []string{"a", "b"},
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			s := store.New()
+			if tt.setup != nil {
+				s.RPush("mylist", tt.setup...)
+			}
+			vals, ok := s.LPopCount("mylist", tt.count)
+			if ok != tt.wantOK {
+				t.Fatalf("ok = %v, want %v", ok, tt.wantOK)
+			}
+			if ok {
+				if len(vals) != len(tt.wantVals) {
+					t.Fatalf("vals len = %d, want %d; got %v", len(vals), len(tt.wantVals), vals)
+				}
+				for i, v := range tt.wantVals {
+					if vals[i] != v {
+						t.Errorf("index %d: got %q, want %q", i, vals[i], v)
+					}
+				}
+				got, _ := s.LRange("mylist", 0, -1)
+				if len(got) != len(tt.wantList) {
+					t.Fatalf("remaining list len = %d, want %d; got %v", len(got), len(tt.wantList), got)
+				}
+				for i, v := range tt.wantList {
+					if got[i] != v {
+						t.Errorf("remaining[%d]: got %q, want %q", i, got[i], v)
+					}
+				}
+			}
+		})
+	}
+}
+
+func TestRPopCount(t *testing.T) {
+	tests := []struct {
+		name     string
+		setup    []string
+		count    int
+		wantVals []string
+		wantOK   bool
+		wantList []string
+	}{
+		{
+			name:   "missing key returns not ok",
+			count:  2,
+			wantOK: false,
+		},
+		{
+			name:     "pops requested count from back",
+			setup:    []string{"a", "b", "c", "d"},
+			count:    2,
+			wantVals: []string{"d", "c"},
+			wantOK:   true,
+			wantList: []string{"a", "b"},
+		},
+		{
+			name:     "count exceeds length returns all elements",
+			setup:    []string{"a", "b"},
+			count:    10,
+			wantVals: []string{"b", "a"},
+			wantOK:   true,
+			wantList: []string{},
+		},
+		{
+			name:     "count zero returns empty slice",
+			setup:    []string{"a", "b"},
+			count:    0,
+			wantVals: []string{},
+			wantOK:   true,
+			wantList: []string{"a", "b"},
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			s := store.New()
+			if tt.setup != nil {
+				s.RPush("mylist", tt.setup...)
+			}
+			vals, ok := s.RPopCount("mylist", tt.count)
+			if ok != tt.wantOK {
+				t.Fatalf("ok = %v, want %v", ok, tt.wantOK)
+			}
+			if ok {
+				if len(vals) != len(tt.wantVals) {
+					t.Fatalf("vals len = %d, want %d; got %v", len(vals), len(tt.wantVals), vals)
+				}
+				for i, v := range tt.wantVals {
+					if vals[i] != v {
+						t.Errorf("index %d: got %q, want %q", i, vals[i], v)
+					}
+				}
+				got, _ := s.LRange("mylist", 0, -1)
+				if len(got) != len(tt.wantList) {
+					t.Fatalf("remaining list len = %d, want %d; got %v", len(got), len(tt.wantList), got)
+				}
+				for i, v := range tt.wantList {
+					if got[i] != v {
+						t.Errorf("remaining[%d]: got %q, want %q", i, got[i], v)
+					}
+				}
+			}
+		})
+	}
+}
+
 func TestLRange(t *testing.T) {
 	tests := []struct {
 		name   string
