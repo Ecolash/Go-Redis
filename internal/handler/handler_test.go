@@ -96,3 +96,21 @@ func TestHandleSetWithEXReturnsOK(t *testing.T) {
 		t.Errorf("expected +OK\\r\\n, got %q", got)
 	}
 }
+
+func TestHandleRPushCreatesListAndReturnsCount(t *testing.T) {
+	h := newHandler()
+	// RPUSH mylist foo
+	got := h.Handle([]byte("*3\r\n$5\r\nRPUSH\r\n$6\r\nmylist\r\n$3\r\nfoo\r\n"))
+	if got != ":1\r\n" {
+		t.Errorf("expected :1\\r\\n, got %q", got)
+	}
+}
+
+func TestHandleRPushAppendsAndReturnsUpdatedCount(t *testing.T) {
+	h := newHandler()
+	h.Handle([]byte("*3\r\n$5\r\nRPUSH\r\n$6\r\nmylist\r\n$3\r\nfoo\r\n"))
+	got := h.Handle([]byte("*3\r\n$5\r\nRPUSH\r\n$6\r\nmylist\r\n$3\r\nbar\r\n"))
+	if got != ":2\r\n" {
+		t.Errorf("expected :2\\r\\n, got %q", got)
+	}
+}

@@ -27,10 +27,11 @@ type Handler struct {
 func New(s *store.Store) *Handler {
 	h := &Handler{store: s}
 	h.commands = map[command.Command]commandFunc{
-		command.PING: h.handlePing,
-		command.ECHO: h.handleEcho,
-		command.SET:  h.handleSet,
-		command.GET:  h.handleGet,
+		command.PING:  h.handlePing,
+		command.ECHO:  h.handleEcho,
+		command.SET:   h.handleSet,
+		command.GET:   h.handleGet,
+		command.RPUSH: h.handleRPush,
 	}
 	return h
 }
@@ -76,6 +77,14 @@ func (h *Handler) handleGet(parts []string) string {
 		return nullBulk
 	}
 	return resp.BulkString(val)
+}
+
+func (h *Handler) handleRPush(parts []string) string {
+	if len(parts) < 3 {
+		return errWrongArgs
+	}
+	n := h.store.RPush(parts[1], parts[2:]...)
+	return resp.Integer(n)
 }
 
 // parseTTL extracts the TTL duration from optional SET arguments (PX <ms> or EX <s>).
