@@ -7,8 +7,10 @@ const (
 	ECHO  Command = "ECHO"
 	SET   Command = "SET"
 	GET   Command = "GET"
-	LPUSH Command = "LPUSH"
-	RPUSH Command = "RPUSH"
+
+	// LIST Commands
+	LPUSH  Command = "LPUSH"
+	RPUSH  Command = "RPUSH"
 	LPOP   Command = "LPOP"
 	RPOP   Command = "RPOP"
 	LLEN   Command = "LLEN"
