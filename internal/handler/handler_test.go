@@ -114,3 +114,25 @@ func TestHandleRPushAppendsAndReturnsUpdatedCount(t *testing.T) {
 		t.Errorf("expected :2\\r\\n, got %q", got)
 	}
 }
+
+func TestHandleLRangeReturnsElementsInRange(t *testing.T) {
+	h := newHandler()
+	h.Handle([]byte("*3\r\n$5\r\nRPUSH\r\n$6\r\nmylist\r\n$1\r\na\r\n"))
+	h.Handle([]byte("*3\r\n$5\r\nRPUSH\r\n$6\r\nmylist\r\n$1\r\nb\r\n"))
+	h.Handle([]byte("*3\r\n$5\r\nRPUSH\r\n$6\r\nmylist\r\n$1\r\nc\r\n"))
+	got := h.Handle([]byte("*4\r\n$6\r\nLRANGE\r\n$6\r\nmylist\r\n$1\r\n0\r\n$1\r\n1\r\n"))
+	if got != "*2\r\n$1\r\na\r\n$1\r\nb\r\n" {
+		t.Errorf("expected *2\\r\\n$1\\r\\na\\r\\n$1\\r\\nb\\r\\n, got %q", got)
+	}
+}
+
+func TestHandleLRangeWithNegativeIndices(t *testing.T) {
+	h := newHandler()
+	h.Handle([]byte("*3\r\n$5\r\nRPUSH\r\n$6\r\nmylist\r\n$1\r\na\r\n"))
+	h.Handle([]byte("*3\r\n$5\r\nRPUSH\r\n$6\r\nmylist\r\n$1\r\nb\r\n"))
+	h.Handle([]byte("*3\r\n$5\r\nRPUSH\r\n$6\r\nmylist\r\n$1\r\nc\r\n"))
+	got := h.Handle([]byte("*4\r\n$6\r\nLRANGE\r\n$6\r\nmylist\r\n$2\r\n-2\r\n$2\r\n-1\r\n"))
+	if got != "*2\r\n$1\r\nb\r\n$1\r\nc\r\n" {
+		t.Errorf("expected *2\\r\\n$1\\r\\nb\\r\\n$1\\r\\nc\\r\\n, got %q", got)
+	}
+}

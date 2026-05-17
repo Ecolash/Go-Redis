@@ -32,6 +32,7 @@ func New(s *store.Store) *Handler {
 		command.SET:   h.handleSet,
 		command.GET:   h.handleGet,
 		command.RPUSH: h.handleRPush,
+		command.LRANGE: h.handleLRange,
 	}
 	return h
 }
@@ -85,6 +86,22 @@ func (h *Handler) handleRPush(parts []string) string {
 	}
 	n := h.store.RPush(parts[1], parts[2:]...)
 	return resp.Integer(n)
+}
+
+func (h *Handler) handleLRange(parts []string) string {
+	if len(parts) < 4 {
+		return errWrongArgs
+	}
+	start, err1 := strconv.Atoi(parts[2])
+	stop, err2 := strconv.Atoi(parts[3])
+	if err1 != nil || err2 != nil {
+		return errWrongArgs
+	}
+	vals, ok := h.store.LRange(parts[1], start, stop)
+	if !ok {
+		return nullBulk
+	}
+	return resp.Array(vals)
 }
 
 // parseTTL extracts the TTL duration from optional SET arguments (PX <ms> or EX <s>).

@@ -8,4 +8,5 @@ const (
 	SET   Command = "SET"
 	GET   Command = "GET"
 	RPUSH Command = "RPUSH"
+	LRANGE Command = "LRANGE"
 )
