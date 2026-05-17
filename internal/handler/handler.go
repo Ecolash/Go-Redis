@@ -97,10 +97,7 @@ func (h *Handler) handleLRange(parts []string) string {
 	if err1 != nil || err2 != nil {
 		return errWrongArgs
 	}
-	vals, ok := h.store.LRange(parts[1], start, stop)
-	if !ok {
-		return nullBulk
-	}
+	vals, _ := h.store.LRange(parts[1], start, stop)
 	return resp.Array(vals)
 }
 

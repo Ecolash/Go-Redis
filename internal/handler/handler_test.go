@@ -136,3 +136,11 @@ func TestHandleLRangeWithNegativeIndices(t *testing.T) {
 		t.Errorf("expected *2\\r\\n$1\\r\\nb\\r\\n$1\\r\\nc\\r\\n, got %q", got)
 	}
 }
+
+func TestHandleLRangeWithMissingKeyReturnsEmptyArray(t *testing.T) {
+	h := newHandler()
+	got := h.Handle([]byte("*4\r\n$6\r\nLRANGE\r\n$6\r\nunknown\r\n$1\r\n0\r\n$1\r\n-1\r\n"))
+	if got != "*0\r\n" {
+		t.Errorf("expected *0\\r\\n for missing key, got %q", got)
+	}
+}
