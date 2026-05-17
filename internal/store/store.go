@@ -65,3 +65,32 @@ func (s *Store) RPush(key string, vals ...string) int {
 	s.data[key] = e
 	return len(e.listVal)
 }
+
+func (s *Store) LRange(key string, start, stop int) ([]string, bool) {
+	s.mu.RLock()
+	defer s.mu.RUnlock()
+	e, ok := s.data[key]
+	if !ok || e.kind != kindList {
+		return nil, false
+	}
+	if !e.expiresAt.IsZero() && time.Now().After(e.expiresAt) {
+		return nil, false
+	}
+	n := len(e.listVal)
+	if start < 0 {
+		start = n + start
+	}
+	if stop < 0 {
+		stop = n + stop
+	}
+	if start < 0 {
+		start = 0
+	}
+	if stop >= n {
+		stop = n - 1
+	}
+	if start > stop {
+		return []string{}, true
+	}
+	return e.listVal[start : stop+1], true
+}

@@ -87,3 +87,60 @@ func TestRPushWithMultipleValuesReturnsTotal(t *testing.T) {
 		t.Errorf("expected 3, got %d", n)
 	}
 }
+
+func TestLRangeReturnsElementsInRange(t *testing.T) {
+	s := store.New()
+	s.RPush("mylist", "a", "b", "c", "d", "e")
+	vals, ok := s.LRange("mylist", 1, 3)
+	if !ok {
+		t.Fatal("expected list to exist")
+	}
+	expected := []string{"b", "c", "d"}
+	for i, v := range expected {
+		if vals[i] != v {
+			t.Errorf("expected %q at index %d, got %q", v, i, vals[i])
+		}
+	}
+}
+
+func TestLRangeWithNegativeIndices(t *testing.T) {
+	s := store.New()
+	s.RPush("mylist", "a", "b", "c", "d", "e")
+	vals, ok := s.LRange("mylist", -3, -1)
+	if !ok {
+		t.Fatal("expected list to exist")
+	}
+	expected := []string{"c", "d", "e"}
+	for i, v := range expected {
+		if vals[i] != v {
+			t.Errorf("expected %q at index %d, got %q", v, i, vals[i])
+		}
+	}
+}
+
+func TestLRangeWithOutOfBoundsIndices(t *testing.T) {
+	s := store.New()
+	s.RPush("mylist", "a", "b", "c")
+	vals, ok := s.LRange("mylist", -10, 10)
+	if !ok {
+		t.Fatal("expected list to exist")
+	}
+	expected := []string{"a", "b", "c"}
+	for i, v := range expected {
+		if vals[i] != v {
+			t.Errorf("expected %q at index %d, got %q", v, i, vals[i])
+		}
+	}
+}
+
+func TestLRangeReturnsEmptyListForStartGreaterThanStop(t *testing.T) {
+	s := store.New()
+	s.RPush("mylist", "a", "b", "c")
+	vals, ok := s.LRange("mylist", 2, 1)
+	if !ok {
+		t.Fatal("expected list to exist")
+	}
+	if len(vals) != 0 {
+		t.Errorf("expected empty list, got %v", vals)
+	}
+}
