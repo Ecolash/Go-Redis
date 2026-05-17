@@ -31,6 +31,7 @@ func New(s *store.Store) *Handler {
 		command.ECHO:  h.handleEcho,
 		command.SET:   h.handleSet,
 		command.GET:   h.handleGet,
+		command.LPUSH: h.handleLPush,
 		command.RPUSH: h.handleRPush,
 		command.LRANGE: h.handleLRange,
 	}
@@ -78,6 +79,14 @@ func (h *Handler) handleGet(parts []string) string {
 		return nullBulk
 	}
 	return resp.BulkString(val)
+}
+
+func (h *Handler) handleLPush(parts []string) string {
+	if len(parts) < 3 {
+		return errWrongArgs
+	}
+	n := h.store.LPush(parts[1], parts[2:]...)
+	return resp.Integer(n)
 }
 
 func (h *Handler) handleRPush(parts []string) string {

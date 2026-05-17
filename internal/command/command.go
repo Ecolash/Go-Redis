@@ -7,6 +7,7 @@ const (
 	ECHO  Command = "ECHO"
 	SET   Command = "SET"
 	GET   Command = "GET"
+	LPUSH Command = "LPUSH"
 	RPUSH Command = "RPUSH"
 	LRANGE Command = "LRANGE"
 )

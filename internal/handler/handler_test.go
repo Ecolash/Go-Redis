@@ -12,70 +12,103 @@ func newHandler() *handler.Handler {
 	return handler.New(store.New())
 }
 
-func TestHandlePingReturnsSimplePong(t *testing.T) {
-	h := newHandler()
-	if got := h.Handle([]byte("*1\r\n$4\r\nPING\r\n")); got != "+PONG\r\n" {
-		t.Errorf("expected +PONG\\r\\n, got %q", got)
+func runCommands(h *handler.Handler, cmds []string) {
+	for _, cmd := range cmds {
+		h.Handle([]byte(cmd))
 	}
 }
 
-func TestHandlePingIsCaseInsensitive(t *testing.T) {
-	h := newHandler()
-	if got := h.Handle([]byte("*1\r\n$4\r\nping\r\n")); got != "+PONG\r\n" {
-		t.Errorf("expected +PONG\\r\\n, got %q", got)
+func TestHandlePing(t *testing.T) {
+	tests := []struct {
+		name  string
+		input string
+		want  string
+	}{
+		{"simple pong", "*1\r\n$4\r\nPING\r\n", "+PONG\r\n"},
+		{"case insensitive", "*1\r\n$4\r\nping\r\n", "+PONG\r\n"},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			h := newHandler()
+			if got := h.Handle([]byte(tt.input)); got != tt.want {
+				t.Errorf("got %q, want %q", got, tt.want)
+			}
+		})
 	}
 }
 
-func TestHandleEchoReturnsBulkStringArgument(t *testing.T) {
-	h := newHandler()
-	if got := h.Handle([]byte("*2\r\n$4\r\nECHO\r\n$3\r\nhey\r\n")); got != "$3\r\nhey\r\n" {
-		t.Errorf("expected $3\\r\\nhey\\r\\n, got %q", got)
+func TestHandleEcho(t *testing.T) {
+	tests := []struct {
+		name  string
+		input string
+		want  string
+	}{
+		{"returns bulk string argument", "*2\r\n$4\r\nECHO\r\n$3\r\nhey\r\n", "$3\r\nhey\r\n"},
+		{"case insensitive", "*2\r\n$4\r\necho\r\n$5\r\nhello\r\n", "$5\r\nhello\r\n"},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			h := newHandler()
+			if got := h.Handle([]byte(tt.input)); got != tt.want {
+				t.Errorf("got %q, want %q", got, tt.want)
+			}
+		})
 	}
 }
 
-func TestHandleEchoIsCaseInsensitive(t *testing.T) {
-	h := newHandler()
-	if got := h.Handle([]byte("*2\r\n$4\r\necho\r\n$5\r\nhello\r\n")); got != "$5\r\nhello\r\n" {
-		t.Errorf("expected $5\\r\\nhello\\r\\n, got %q", got)
+func TestHandleSet(t *testing.T) {
+	tests := []struct {
+		name  string
+		input string
+		want  string
+	}{
+		{"returns OK", "*3\r\n$3\r\nSET\r\n$3\r\nfoo\r\n$3\r\nbar\r\n", "+OK\r\n"},
+		{"with PX returns OK", "*5\r\n$3\r\nSET\r\n$3\r\nfoo\r\n$3\r\nbar\r\n$2\r\nPX\r\n$3\r\n100\r\n", "+OK\r\n"},
+		{"with EX returns OK", "*5\r\n$3\r\nSET\r\n$3\r\nfoo\r\n$3\r\nbar\r\n$2\r\nEX\r\n$2\r\n10\r\n", "+OK\r\n"},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			h := newHandler()
+			if got := h.Handle([]byte(tt.input)); got != tt.want {
+				t.Errorf("got %q, want %q", got, tt.want)
+			}
+		})
 	}
 }
 
-func TestHandleSetReturnsOK(t *testing.T) {
-	h := newHandler()
-	if got := h.Handle([]byte("*3\r\n$3\r\nSET\r\n$3\r\nfoo\r\n$3\r\nbar\r\n")); got != "+OK\r\n" {
-		t.Errorf("expected +OK\\r\\n, got %q", got)
+func TestHandleGet(t *testing.T) {
+	tests := []struct {
+		name  string
+		setup []string
+		input string
+		want  string
+	}{
+		{
+			name:  "returns value after set",
+			setup: []string{"*3\r\n$3\r\nSET\r\n$3\r\nfoo\r\n$3\r\nbar\r\n"},
+			input: "*2\r\n$3\r\nGET\r\n$3\r\nfoo\r\n",
+			want:  "$3\r\nbar\r\n",
+		},
+		{
+			name:  "returns null bulk string for missing key",
+			input: "*2\r\n$3\r\nGET\r\n$6\r\nnobody\r\n",
+			want:  "$-1\r\n",
+		},
+		{
+			name:  "returns value before PX expiry",
+			setup: []string{"*5\r\n$3\r\nSET\r\n$3\r\nfoo\r\n$3\r\nbar\r\n$2\r\nPX\r\n$3\r\n200\r\n"},
+			input: "*2\r\n$3\r\nGET\r\n$3\r\nfoo\r\n",
+			want:  "$3\r\nbar\r\n",
+		},
 	}
-}
-
-func TestHandleGetReturnsValueAfterSet(t *testing.T) {
-	h := newHandler()
-	h.Handle([]byte("*3\r\n$3\r\nSET\r\n$3\r\nfoo\r\n$3\r\nbar\r\n"))
-	if got := h.Handle([]byte("*2\r\n$3\r\nGET\r\n$3\r\nfoo\r\n")); got != "$3\r\nbar\r\n" {
-		t.Errorf("expected $3\\r\\nbar\\r\\n, got %q", got)
-	}
-}
-
-func TestHandleGetReturnsNullBulkStringForMissingKey(t *testing.T) {
-	h := newHandler()
-	if got := h.Handle([]byte("*2\r\n$3\r\nGET\r\n$6\r\nnobody\r\n")); got != "$-1\r\n" {
-		t.Errorf("expected $-1\\r\\n, got %q", got)
-	}
-}
-
-func TestHandleSetWithPXReturnsOK(t *testing.T) {
-	h := newHandler()
-	// SET foo bar PX 100
-	got := h.Handle([]byte("*5\r\n$3\r\nSET\r\n$3\r\nfoo\r\n$3\r\nbar\r\n$2\r\nPX\r\n$3\r\n100\r\n"))
-	if got != "+OK\r\n" {
-		t.Errorf("expected +OK\\r\\n, got %q", got)
-	}
-}
-
-func TestHandleGetReturnsValueBeforePXExpiry(t *testing.T) {
-	h := newHandler()
-	h.Handle([]byte("*5\r\n$3\r\nSET\r\n$3\r\nfoo\r\n$3\r\nbar\r\n$2\r\nPX\r\n$3\r\n200\r\n"))
-	if got := h.Handle([]byte("*2\r\n$3\r\nGET\r\n$3\r\nfoo\r\n")); got != "$3\r\nbar\r\n" {
-		t.Errorf("expected $3\\r\\nbar\\r\\n before expiry, got %q", got)
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			h := newHandler()
+			runCommands(h, tt.setup)
+			if got := h.Handle([]byte(tt.input)); got != tt.want {
+				t.Errorf("got %q, want %q", got, tt.want)
+			}
+		})
 	}
 }
 
@@ -84,63 +117,107 @@ func TestHandleGetReturnsNullAfterPXExpiry(t *testing.T) {
 	h.Handle([]byte("*5\r\n$3\r\nSET\r\n$3\r\nfoo\r\n$3\r\nbar\r\n$2\r\nPX\r\n$2\r\n20\r\n"))
 	time.Sleep(30 * time.Millisecond)
 	if got := h.Handle([]byte("*2\r\n$3\r\nGET\r\n$3\r\nfoo\r\n")); got != "$-1\r\n" {
-		t.Errorf("expected $-1\\r\\n after expiry, got %q", got)
+		t.Errorf("got %q, want $-1\\r\\n", got)
 	}
 }
 
-func TestHandleSetWithEXReturnsOK(t *testing.T) {
-	h := newHandler()
-	// SET foo bar EX 10
-	got := h.Handle([]byte("*5\r\n$3\r\nSET\r\n$3\r\nfoo\r\n$3\r\nbar\r\n$2\r\nEX\r\n$2\r\n10\r\n"))
-	if got != "+OK\r\n" {
-		t.Errorf("expected +OK\\r\\n, got %q", got)
+func TestHandleRPush(t *testing.T) {
+	tests := []struct {
+		name  string
+		setup []string
+		input string
+		want  string
+	}{
+		{
+			name:  "creates list and returns count",
+			input: "*3\r\n$5\r\nRPUSH\r\n$6\r\nmylist\r\n$3\r\nfoo\r\n",
+			want:  ":1\r\n",
+		},
+		{
+			name:  "appends and returns updated count",
+			setup: []string{"*3\r\n$5\r\nRPUSH\r\n$6\r\nmylist\r\n$3\r\nfoo\r\n"},
+			input: "*3\r\n$5\r\nRPUSH\r\n$6\r\nmylist\r\n$3\r\nbar\r\n",
+			want:  ":2\r\n",
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			h := newHandler()
+			runCommands(h, tt.setup)
+			if got := h.Handle([]byte(tt.input)); got != tt.want {
+				t.Errorf("got %q, want %q", got, tt.want)
+			}
+		})
 	}
 }
 
-func TestHandleRPushCreatesListAndReturnsCount(t *testing.T) {
-	h := newHandler()
-	// RPUSH mylist foo
-	got := h.Handle([]byte("*3\r\n$5\r\nRPUSH\r\n$6\r\nmylist\r\n$3\r\nfoo\r\n"))
-	if got != ":1\r\n" {
-		t.Errorf("expected :1\\r\\n, got %q", got)
+func TestHandleLPush(t *testing.T) {
+	tests := []struct {
+		name  string
+		setup []string
+		input string
+		want  string
+	}{
+		{
+			name:  "creates list and returns count",
+			input: "*3\r\n$5\r\nLPUSH\r\n$6\r\nmylist\r\n$3\r\nfoo\r\n",
+			want:  ":1\r\n",
+		},
+		{
+			name:  "prepends and returns updated count",
+			setup: []string{"*3\r\n$5\r\nLPUSH\r\n$6\r\nmylist\r\n$3\r\nfoo\r\n"},
+			input: "*3\r\n$5\r\nLPUSH\r\n$6\r\nmylist\r\n$3\r\nbar\r\n",
+			want:  ":2\r\n",
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			h := newHandler()
+			runCommands(h, tt.setup)
+			if got := h.Handle([]byte(tt.input)); got != tt.want {
+				t.Errorf("got %q, want %q", got, tt.want)
+			}
+		})
 	}
 }
 
-func TestHandleRPushAppendsAndReturnsUpdatedCount(t *testing.T) {
-	h := newHandler()
-	h.Handle([]byte("*3\r\n$5\r\nRPUSH\r\n$6\r\nmylist\r\n$3\r\nfoo\r\n"))
-	got := h.Handle([]byte("*3\r\n$5\r\nRPUSH\r\n$6\r\nmylist\r\n$3\r\nbar\r\n"))
-	if got != ":2\r\n" {
-		t.Errorf("expected :2\\r\\n, got %q", got)
+func TestHandleLRange(t *testing.T) {
+	rpushABC := []string{
+		"*3\r\n$5\r\nRPUSH\r\n$6\r\nmylist\r\n$1\r\na\r\n",
+		"*3\r\n$5\r\nRPUSH\r\n$6\r\nmylist\r\n$1\r\nb\r\n",
+		"*3\r\n$5\r\nRPUSH\r\n$6\r\nmylist\r\n$1\r\nc\r\n",
 	}
-}
-
-func TestHandleLRangeReturnsElementsInRange(t *testing.T) {
-	h := newHandler()
-	h.Handle([]byte("*3\r\n$5\r\nRPUSH\r\n$6\r\nmylist\r\n$1\r\na\r\n"))
-	h.Handle([]byte("*3\r\n$5\r\nRPUSH\r\n$6\r\nmylist\r\n$1\r\nb\r\n"))
-	h.Handle([]byte("*3\r\n$5\r\nRPUSH\r\n$6\r\nmylist\r\n$1\r\nc\r\n"))
-	got := h.Handle([]byte("*4\r\n$6\r\nLRANGE\r\n$6\r\nmylist\r\n$1\r\n0\r\n$1\r\n1\r\n"))
-	if got != "*2\r\n$1\r\na\r\n$1\r\nb\r\n" {
-		t.Errorf("expected *2\\r\\n$1\\r\\na\\r\\n$1\\r\\nb\\r\\n, got %q", got)
+	tests := []struct {
+		name  string
+		setup []string
+		input string
+		want  string
+	}{
+		{
+			name:  "returns elements in range",
+			setup: rpushABC,
+			input: "*4\r\n$6\r\nLRANGE\r\n$6\r\nmylist\r\n$1\r\n0\r\n$1\r\n1\r\n",
+			want:  "*2\r\n$1\r\na\r\n$1\r\nb\r\n",
+		},
+		{
+			name:  "negative indices",
+			setup: rpushABC,
+			input: "*4\r\n$6\r\nLRANGE\r\n$6\r\nmylist\r\n$2\r\n-2\r\n$2\r\n-1\r\n",
+			want:  "*2\r\n$1\r\nb\r\n$1\r\nc\r\n",
+		},
+		{
+			name:  "missing key returns empty array",
+			input: "*4\r\n$6\r\nLRANGE\r\n$6\r\nunknown\r\n$1\r\n0\r\n$1\r\n-1\r\n",
+			want:  "*0\r\n",
+		},
 	}
-}
-
-func TestHandleLRangeWithNegativeIndices(t *testing.T) {
-	h := newHandler()
-	h.Handle([]byte("*3\r\n$5\r\nRPUSH\r\n$6\r\nmylist\r\n$1\r\na\r\n"))
-	h.Handle([]byte("*3\r\n$5\r\nRPUSH\r\n$6\r\nmylist\r\n$1\r\nb\r\n"))
-	h.Handle([]byte("*3\r\n$5\r\nRPUSH\r\n$6\r\nmylist\r\n$1\r\nc\r\n"))
-	got := h.Handle([]byte("*4\r\n$6\r\nLRANGE\r\n$6\r\nmylist\r\n$2\r\n-2\r\n$2\r\n-1\r\n"))
-	if got != "*2\r\n$1\r\nb\r\n$1\r\nc\r\n" {
-		t.Errorf("expected *2\\r\\n$1\\r\\nb\\r\\n$1\\r\\nc\\r\\n, got %q", got)
-	}
-}
-
-func TestHandleLRangeWithMissingKeyReturnsEmptyArray(t *testing.T) {
-	h := newHandler()
-	got := h.Handle([]byte("*4\r\n$6\r\nLRANGE\r\n$6\r\nunknown\r\n$1\r\n0\r\n$1\r\n-1\r\n"))
-	if got != "*0\r\n" {
-		t.Errorf("expected *0\\r\\n for missing key, got %q", got)
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			h := newHandler()
+			runCommands(h, tt.setup)
+			if got := h.Handle([]byte(tt.input)); got != tt.want {
+				t.Errorf("got %q, want %q", got, tt.want)
+			}
+		})
 	}
 }
