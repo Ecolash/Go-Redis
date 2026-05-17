@@ -62,3 +62,28 @@ func TestGetReturnsMissingAfterTTLExpires(t *testing.T) {
 		t.Error("expected key to be expired and missing")
 	}
 }
+
+func TestRPushCreatesListAndReturnsOne(t *testing.T) {
+	s := store.New()
+	n := s.RPush("mylist", "foo")
+	if n != 1 {
+		t.Errorf("expected 1, got %d", n)
+	}
+}
+
+func TestRPushAppendsToExistingListAndReturnsCount(t *testing.T) {
+	s := store.New()
+	s.RPush("mylist", "foo")
+	n := s.RPush("mylist", "bar")
+	if n != 2 {
+		t.Errorf("expected 2, got %d", n)
+	}
+}
+
+func TestRPushWithMultipleValuesReturnsTotal(t *testing.T) {
+	s := store.New()
+	n := s.RPush("mylist", "a", "b", "c")
+	if n != 3 {
+		t.Errorf("expected 3, got %d", n)
+	}
+}
