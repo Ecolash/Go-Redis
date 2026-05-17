@@ -52,8 +52,6 @@ func (s *Store) Get(key string) (string, bool) {
 	return e.strVal, true
 }
 
-// RPush appends vals to the list at key, creating it if it doesn't exist.
-// Returns the number of elements in the list after appending.
 func (s *Store) RPush(key string, vals ...string) int {
 	s.mu.Lock()
 	defer s.mu.Unlock()
@@ -62,6 +60,22 @@ func (s *Store) RPush(key string, vals ...string) int {
 		e = entry{kind: kindList}
 	}
 	e.listVal = append(e.listVal, vals...)
+	s.data[key] = e
+	return len(e.listVal)
+}
+
+func (s *Store) LPush(key string, vals ...string) int {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	e := s.data[key]
+	if e.kind != kindList {
+		e = entry{kind: kindList}
+	}
+	prepend := make([]string, len(vals))
+	for i, v := range vals {
+		prepend[len(vals)-1-i] = v
+	}
+	e.listVal = append(prepend, e.listVal...)
 	s.data[key] = e
 	return len(e.listVal)
 }
