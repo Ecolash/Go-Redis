@@ -77,8 +77,9 @@ func (s *Store) RPush(key string, vals ...string) int {
 	}
 	e.listVal = append(e.listVal, vals...)
 	s.data[key] = e
+	n := len(e.listVal)
 	s.deliverToWaitersLocked(key)
-	return len(s.data[key].listVal)
+	return n
 }
 
 func (s *Store) LPush(key string, vals ...string) int {
@@ -94,8 +95,9 @@ func (s *Store) LPush(key string, vals ...string) int {
 	}
 	e.listVal = append(prepend, e.listVal...)
 	s.data[key] = e
+	n := len(e.listVal)
 	s.deliverToWaitersLocked(key)
-	return len(s.data[key].listVal)
+	return n
 }
 
 func (s *Store) LPop(key string) (string, bool) {
