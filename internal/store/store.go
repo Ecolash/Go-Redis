@@ -80,6 +80,16 @@ func (s *Store) LPush(key string, vals ...string) int {
 	return len(e.listVal)
 }
 
+func (s *Store) LLen(key string) int {
+	s.mu.RLock()
+	defer s.mu.RUnlock()
+	e, ok := s.data[key]
+	if !ok || e.kind != kindList {
+		return 0
+	}
+	return len(e.listVal)
+}
+
 func (s *Store) LRange(key string, start, stop int) ([]string, bool) {
 	s.mu.RLock()
 	defer s.mu.RUnlock()

@@ -181,6 +181,42 @@ func TestHandleLPush(t *testing.T) {
 	}
 }
 
+func TestHandleLLen(t *testing.T) {
+	tests := []struct {
+		name  string
+		setup []string
+		input string
+		want  string
+	}{
+		{
+			name:  "returns 0 for missing key",
+			input: "*2\r\n$4\r\nLLEN\r\n$6\r\nnobody\r\n",
+			want:  ":0\r\n",
+		},
+		{
+			name:  "returns length after rpush",
+			setup: []string{"*4\r\n$5\r\nRPUSH\r\n$6\r\nmylist\r\n$1\r\na\r\n$1\r\nb\r\n"},
+			input: "*2\r\n$4\r\nLLEN\r\n$6\r\nmylist\r\n",
+			want:  ":2\r\n",
+		},
+		{
+			name:  "returns length after lpush",
+			setup: []string{"*5\r\n$5\r\nLPUSH\r\n$6\r\nmylist\r\n$1\r\na\r\n$1\r\nb\r\n$1\r\nc\r\n"},
+			input: "*2\r\n$4\r\nLLEN\r\n$6\r\nmylist\r\n",
+			want:  ":3\r\n",
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			h := newHandler()
+			runCommands(h, tt.setup)
+			if got := h.Handle([]byte(tt.input)); got != tt.want {
+				t.Errorf("got %q, want %q", got, tt.want)
+			}
+		})
+	}
+}
+
 func TestHandleLRange(t *testing.T) {
 	rpushABC := []string{
 		"*3\r\n$5\r\nRPUSH\r\n$6\r\nmylist\r\n$1\r\na\r\n",

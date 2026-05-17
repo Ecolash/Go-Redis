@@ -9,5 +9,6 @@ const (
 	GET   Command = "GET"
 	LPUSH Command = "LPUSH"
 	RPUSH Command = "RPUSH"
+	LLEN   Command = "LLEN"
 	LRANGE Command = "LRANGE"
 )

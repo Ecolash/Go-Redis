@@ -174,6 +174,41 @@ func TestLPush(t *testing.T) {
 	}
 }
 
+func TestLLen(t *testing.T) {
+	tests := []struct {
+		name   string
+		values []string
+		want   int
+	}{
+		{
+			name:   "missing key returns 0",
+			values: nil,
+			want:   0,
+		},
+		{
+			name:   "empty list returns 0",
+			values: []string{},
+			want:   0,
+		},
+		{
+			name:   "non-empty list returns correct count",
+			values: []string{"a", "b", "c"},
+			want:   3,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			s := store.New()
+			if tt.values != nil {
+				s.RPush("mylist", tt.values...)
+			}
+			if got := s.LLen("mylist"); got != tt.want {
+				t.Errorf("got %d, want %d", got, tt.want)
+			}
+		})
+	}	
+}
+
 func TestLRange(t *testing.T) {
 	tests := []struct {
 		name   string
