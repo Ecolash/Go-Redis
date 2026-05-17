@@ -45,3 +45,8 @@ func ParseArray(data []byte) ([]string, error) {
 func BulkString(s string) string {
 	return fmt.Sprintf("$%d\r\n%s\r\n", len(s), s)
 }
+
+// Integer encodes n as a RESP integer.
+func Integer(n int) string {
+	return fmt.Sprintf(":%d\r\n", n)
+}

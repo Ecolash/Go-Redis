@@ -41,3 +41,15 @@ func TestBulkStringEmpty(t *testing.T) {
 		t.Errorf("expected $0\\r\\n\\r\\n, got %q", got)
 	}
 }
+
+func TestInteger(t *testing.T) {
+	if got := resp.Integer(1); got != ":1\r\n" {
+		t.Errorf("expected :1\\r\\n, got %q", got)
+	}
+}
+
+func TestIntegerZero(t *testing.T) {
+	if got := resp.Integer(0); got != ":0\r\n" {
+		t.Errorf("expected :0\\r\\n, got %q", got)
+	}
+}
