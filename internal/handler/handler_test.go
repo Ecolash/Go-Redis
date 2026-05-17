@@ -241,6 +241,83 @@ func TestHandleRPop(t *testing.T) {
 	}
 }
 
+func TestHandleBLPop(t *testing.T) {
+	t.Run("returns immediately for non-empty list", func(t *testing.T) {
+		h := newHandler()
+		h.Handle([]byte("*3\r\n$5\r\nRPUSH\r\n$6\r\nmylist\r\n$3\r\nfoo\r\n"))
+		got := h.Handle([]byte("*3\r\n$5\r\nBLPOP\r\n$6\r\nmylist\r\n$1\r\n0\r\n"))
+		want := "*2\r\n$6\r\nmylist\r\n$3\r\nfoo\r\n"
+		if got != want {
+			t.Errorf("got %q, want %q", got, want)
+		}
+	})
+
+	t.Run("returns null array on timeout", func(t *testing.T) {
+		h := newHandler()
+		got := h.Handle([]byte("*3\r\n$5\r\nBLPOP\r\n$6\r\nmylist\r\n$3\r\n0.1\r\n"))
+		if got != "*-1\r\n" {
+			t.Errorf("got %q, want *-1\\r\\n", got)
+		}
+	})
+
+	t.Run("unblocks when element is pushed", func(t *testing.T) {
+		h := newHandler()
+		done := make(chan string, 1)
+		go func() {
+			done <- h.Handle([]byte("*3\r\n$5\r\nBLPOP\r\n$6\r\nmylist\r\n$3\r\n0.5\r\n"))
+		}()
+		time.Sleep(20 * time.Millisecond)
+		h.Handle([]byte("*3\r\n$5\r\nRPUSH\r\n$6\r\nmylist\r\n$3\r\nbar\r\n"))
+		select {
+		case got := <-done:
+			want := "*2\r\n$6\r\nmylist\r\n$3\r\nbar\r\n"
+			if got != want {
+				t.Errorf("got %q, want %q", got, want)
+			}
+		case <-time.After(300 * time.Millisecond):
+			t.Fatal("BLPOP did not unblock after RPUSH")
+		}
+	})
+
+	t.Run("multiple clients each receive one element", func(t *testing.T) {
+		h := newHandler()
+		done1 := make(chan string, 1)
+		done2 := make(chan string, 1)
+		go func() { done1 <- h.Handle([]byte("*3\r\n$5\r\nBLPOP\r\n$6\r\nmylist\r\n$3\r\n0.5\r\n")) }()
+		go func() { done2 <- h.Handle([]byte("*3\r\n$5\r\nBLPOP\r\n$6\r\nmylist\r\n$3\r\n0.5\r\n")) }()
+		time.Sleep(20 * time.Millisecond)
+		h.Handle([]byte("*4\r\n$5\r\nRPUSH\r\n$6\r\nmylist\r\n$1\r\na\r\n$1\r\nb\r\n"))
+		timeout := time.After(300 * time.Millisecond)
+		results := make([]string, 0, 2)
+		for range 2 {
+			select {
+			case got := <-done1:
+				results = append(results, got)
+			case got := <-done2:
+				results = append(results, got)
+			case <-timeout:
+				t.Fatalf("timed out after receiving %d/2 results", len(results))
+			}
+		}
+		wantA := "*2\r\n$6\r\nmylist\r\n$1\r\na\r\n"
+		wantB := "*2\r\n$6\r\nmylist\r\n$1\r\nb\r\n"
+		got := map[string]bool{results[0]: true, results[1]: true}
+		if !got[wantA] || !got[wantB] {
+			t.Errorf("expected both %q and %q, got %v", wantA, wantB, results)
+		}
+	})
+
+	t.Run("first key with element wins on immediate pop", func(t *testing.T) {
+		h := newHandler()
+		h.Handle([]byte("*3\r\n$5\r\nRPUSH\r\n$2\r\nk2\r\n$3\r\nval\r\n"))
+		got := h.Handle([]byte("*4\r\n$5\r\nBLPOP\r\n$2\r\nk1\r\n$2\r\nk2\r\n$1\r\n0\r\n"))
+		want := "*2\r\n$2\r\nk2\r\n$3\r\nval\r\n"
+		if got != want {
+			t.Errorf("got %q, want %q", got, want)
+		}
+	})
+}
+
 func TestHandleLPopWithCount(t *testing.T) {
 	tests := []struct {
 		name  string

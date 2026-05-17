@@ -463,6 +463,88 @@ func TestRPopCount(t *testing.T) {
 	}
 }
 
+func TestBLPopWait(t *testing.T) {
+	t.Run("returns immediately when list has elements", func(t *testing.T) {
+		s := store.New()
+		s.RPush("mylist", "a", "b", "c")
+		ch, cancel := s.BLPopWait([]string{"mylist"})
+		defer cancel()
+		select {
+		case got := <-ch:
+			if got.Key != "mylist" || got.Val != "a" {
+				t.Errorf("got {%q %q}, want {mylist a}", got.Key, got.Val)
+			}
+		default:
+			t.Fatal("expected immediate result, channel was empty")
+		}
+	})
+
+	t.Run("blocks until element is pushed", func(t *testing.T) {
+		s := store.New()
+		ch, cancel := s.BLPopWait([]string{"mylist"})
+		defer cancel()
+		go func() {
+			time.Sleep(10 * time.Millisecond)
+			s.RPush("mylist", "hello")
+		}()
+		select {
+		case got := <-ch:
+			if got.Key != "mylist" || got.Val != "hello" {
+				t.Errorf("got {%q %q}, want {mylist hello}", got.Key, got.Val)
+			}
+		case <-time.After(200 * time.Millisecond):
+			t.Fatal("timed out waiting for pushed element")
+		}
+	})
+
+	t.Run("multiple keys returns first key with element", func(t *testing.T) {
+		s := store.New()
+		ch, cancel := s.BLPopWait([]string{"k1", "k2"})
+		defer cancel()
+		go func() {
+			time.Sleep(10 * time.Millisecond)
+			s.RPush("k2", "from-k2")
+		}()
+		select {
+		case got := <-ch:
+			if got.Key != "k2" || got.Val != "from-k2" {
+				t.Errorf("got {%q %q}, want {k2 from-k2}", got.Key, got.Val)
+			}
+		case <-time.After(200 * time.Millisecond):
+			t.Fatal("timed out waiting for pushed element")
+		}
+	})
+
+	t.Run("cancel removes waiter so push does not deliver", func(t *testing.T) {
+		s := store.New()
+		ch, cancel := s.BLPopWait([]string{"mylist"})
+		cancel()
+		s.RPush("mylist", "ignored")
+		select {
+		case got := <-ch:
+			t.Errorf("expected no delivery after cancel, got {%q %q}", got.Key, got.Val)
+		default:
+		}
+	})
+
+	t.Run("multiple clients each receive one element", func(t *testing.T) {
+		s := store.New()
+		ch1, cancel1 := s.BLPopWait([]string{"mylist"})
+		ch2, cancel2 := s.BLPopWait([]string{"mylist"})
+		defer cancel1()
+		defer cancel2()
+		s.RPush("mylist", "first", "second")
+		got1 := <-ch1
+		got2 := <-ch2
+		if got1.Val != "first" {
+			t.Errorf("client1 got %q, want first", got1.Val)
+		}
+		if got2.Val != "second" {
+			t.Errorf("client2 got %q, want second", got2.Val)
+		}
+	})
+}
+
 func TestLRange(t *testing.T) {
 	tests := []struct {
 		name   string

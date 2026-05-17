@@ -19,16 +19,32 @@ type entry struct {
 	expiresAt time.Time // zero means no expiry
 }
 
+// BLPOPResult is the key+value returned by a blocking pop.
+type BLPOPResult struct {
+	Key string
+	Val string
+}
+
+// blpopWaiter tracks a single pending BLPOP across one or more keys.
+type blpopWaiter struct {
+	keys []string
+	ch   chan BLPOPResult // buffered size 1
+}
+
 type Store struct {
-	mu   sync.RWMutex
-	data map[string]entry
+	mu      sync.RWMutex
+	data    map[string]entry
+	wmu     sync.Mutex // always acquired after mu when both are needed
+	waiters map[string][]*blpopWaiter
 }
 
 func New() *Store {
-	return &Store{data: make(map[string]entry)}
+	return &Store{
+		data:    make(map[string]entry),
+		waiters: make(map[string][]*blpopWaiter),
+	}
 }
 
-// Set stores key=value with an optional TTL. ttl=0 means the key never expires.
 func (s *Store) Set(key, value string, ttl time.Duration) {
 	s.mu.Lock()
 	defer s.mu.Unlock()
@@ -61,7 +77,8 @@ func (s *Store) RPush(key string, vals ...string) int {
 	}
 	e.listVal = append(e.listVal, vals...)
 	s.data[key] = e
-	return len(e.listVal)
+	s.deliverToWaitersLocked(key)
+	return len(s.data[key].listVal)
 }
 
 func (s *Store) LPush(key string, vals ...string) int {
@@ -77,7 +94,8 @@ func (s *Store) LPush(key string, vals ...string) int {
 	}
 	e.listVal = append(prepend, e.listVal...)
 	s.data[key] = e
-	return len(e.listVal)
+	s.deliverToWaitersLocked(key)
+	return len(s.data[key].listVal)
 }
 
 func (s *Store) LPop(key string) (string, bool) {
@@ -181,4 +199,83 @@ func (s *Store) LRange(key string, start, stop int) ([]string, bool) {
 		return []string{}, true
 	}
 	return e.listVal[start : stop+1], true
+}
+
+// BLPopWait atomically checks each key in priority order for an available element.
+// If found, the result is pre-loaded into the returned channel (no blocking needed).
+// If not, the caller is registered as a waiter; the channel receives a value when
+// any push delivers an element. The returned cancel must be called on timeout/cleanup.
+func (s *Store) BLPopWait(keys []string) (<-chan BLPOPResult, func()) {
+	w := &blpopWaiter{
+		keys: keys,
+		ch:   make(chan BLPOPResult, 1),
+	}
+
+	s.mu.Lock()
+	// Try immediate pop in key priority order.
+	for _, key := range keys {
+		e, ok := s.data[key]
+		if !ok || e.kind != kindList || len(e.listVal) == 0 {
+			continue
+		}
+		val := e.listVal[0]
+		e.listVal = e.listVal[1:]
+		s.data[key] = e
+		w.ch <- BLPOPResult{Key: key, Val: val}
+		s.mu.Unlock()
+		return w.ch, func() {}
+	}
+
+	// No immediate element — register waiter for all keys.
+	s.wmu.Lock()
+	for _, key := range keys {
+		s.waiters[key] = append(s.waiters[key], w)
+	}
+	s.wmu.Unlock()
+	s.mu.Unlock()
+
+	cancel := func() {
+		s.wmu.Lock()
+		defer s.wmu.Unlock()
+		for _, key := range keys {
+			s.removeWaiter(key, w)
+		}
+	}
+	return w.ch, cancel
+}
+
+// deliverToWaitersLocked pops elements from key and delivers them to registered waiters.
+// Must be called while holding s.mu write lock.
+func (s *Store) deliverToWaitersLocked(key string) {
+	s.wmu.Lock()
+	defer s.wmu.Unlock()
+	for {
+		if len(s.waiters[key]) == 0 {
+			return
+		}
+		e := s.data[key]
+		if len(e.listVal) == 0 {
+			return
+		}
+		waiter := s.waiters[key][0]
+		val := e.listVal[0]
+		e.listVal = e.listVal[1:]
+		s.data[key] = e
+		// Remove waiter from all its registered keys.
+		for _, k := range waiter.keys {
+			s.removeWaiter(k, waiter)
+		}
+		waiter.ch <- BLPOPResult{Key: key, Val: val}
+	}
+}
+
+// removeWaiter removes w from s.waiters[key]. Caller must hold s.wmu.
+func (s *Store) removeWaiter(key string, w *blpopWaiter) {
+	waiters := s.waiters[key]
+	for i, ww := range waiters {
+		if ww == w {
+			s.waiters[key] = append(waiters[:i], waiters[i+1:]...)
+			return
+		}
+	}
 }

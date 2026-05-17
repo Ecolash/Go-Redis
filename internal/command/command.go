@@ -9,6 +9,7 @@ const (
 	GET   Command = "GET"
 
 	// LIST Commands
+	BLPOP  Command = "BLPOP"
 	LPUSH  Command = "LPUSH"
 	RPUSH  Command = "RPUSH"
 	LPOP   Command = "LPOP"

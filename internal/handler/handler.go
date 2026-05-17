@@ -34,6 +34,7 @@ func New(s *store.Store) *Handler {
 		command.GET:   h.handleGet,
 		command.LPOP:  h.handleLPop,
 		command.RPOP:  h.handleRPop,
+		command.BLPOP: h.handleBLPop,
 		command.LLEN:  h.handleLLen,
 		command.LPUSH: h.handleLPush,
 		command.RPUSH: h.handleRPush,
@@ -127,6 +128,36 @@ func (h *Handler) handleRPop(parts []string) string {
 		return nullArray
 	}
 	return resp.Array(vals)
+}
+
+func (h *Handler) handleBLPop(parts []string) string {
+	// parts: [BLPOP, key1, ..., keyN, timeout]
+	if len(parts) < 3 {
+		return errWrongArgs
+	}
+	keys := parts[1 : len(parts)-1]
+	timeoutSecs, err := strconv.ParseFloat(parts[len(parts)-1], 64)
+	if err != nil || timeoutSecs < 0 {
+		return errWrongArgs
+	}
+
+	ch, cancel := h.store.BLPopWait(keys)
+	defer cancel()
+
+	if timeoutSecs == 0 {
+		result := <-ch
+		return resp.Array([]string{result.Key, result.Val})
+	}
+
+	timer := time.NewTimer(time.Duration(float64(time.Second) * timeoutSecs))
+	defer timer.Stop()
+
+	select {
+	case result := <-ch:
+		return resp.Array([]string{result.Key, result.Val})
+	case <-timer.C:
+		return nullArray
+	}
 }
 
 func (h *Handler) handleLLen(parts []string) string {
