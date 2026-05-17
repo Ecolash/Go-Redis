@@ -17,48 +17,65 @@ const (
 	nullBulk     = "$-1\r\n"
 )
 
+type commandFunc func(parts []string) string
+
 type Handler struct {
-	store *store.Store
+	store    *store.Store
+	commands map[command.Command]commandFunc
 }
 
 func New(s *store.Store) *Handler {
-	return &Handler{store: s}
+	h := &Handler{store: s}
+	h.commands = map[command.Command]commandFunc{
+		command.PING: h.handlePing,
+		command.ECHO: h.handleEcho,
+		command.SET:  h.handleSet,
+		command.GET:  h.handleGet,
+	}
+	return h
 }
 
-// Handle parses a RESP-encoded command and returns a RESP-encoded response.
+// Handle parses a RESP-encoded command and dispatches to the appropriate handler.
 func (h *Handler) Handle(data []byte) string {
 	parts, err := resp.ParseArray(data)
 	if err != nil || len(parts) == 0 {
 		return errResponse
 	}
-
-	switch command.Command(strings.ToUpper(parts[0])) {
-	case command.PING:
-		return "+PONG\r\n"
-	case command.ECHO:
-		if len(parts) < 2 {
-			return errWrongArgs
-		}
-		return resp.BulkString(parts[1])
-	case command.SET:
-		if len(parts) < 3 {
-			return errWrongArgs
-		}
-		ttl := parseTTL(parts[3:])
-		h.store.Set(parts[1], parts[2], ttl)
-		return okResponse
-	case command.GET:
-		if len(parts) < 2 {
-			return errWrongArgs
-		}
-		val, ok := h.store.Get(parts[1])
-		if !ok {
-			return nullBulk
-		}
-		return resp.BulkString(val)
-	default:
+	fn, ok := h.commands[command.Command(strings.ToUpper(parts[0]))]
+	if !ok {
 		return errResponse
 	}
+	return fn(parts)
+}
+
+func (h *Handler) handlePing(_ []string) string {
+	return "+PONG\r\n"
+}
+
+func (h *Handler) handleEcho(parts []string) string {
+	if len(parts) < 2 {
+		return errWrongArgs
+	}
+	return resp.BulkString(parts[1])
+}
+
+func (h *Handler) handleSet(parts []string) string {
+	if len(parts) < 3 {
+		return errWrongArgs
+	}
+	h.store.Set(parts[1], parts[2], parseTTL(parts[3:]))
+	return okResponse
+}
+
+func (h *Handler) handleGet(parts []string) string {
+	if len(parts) < 2 {
+		return errWrongArgs
+	}
+	val, ok := h.store.Get(parts[1])
+	if !ok {
+		return nullBulk
+	}
+	return resp.BulkString(val)
 }
 
 // parseTTL extracts the TTL duration from optional SET arguments (PX <ms> or EX <s>).
