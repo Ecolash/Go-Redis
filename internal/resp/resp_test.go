@@ -53,3 +53,19 @@ func TestIntegerZero(t *testing.T) {
 		t.Errorf("expected :0\\r\\n, got %q", got)
 	}
 }
+
+func TestArray(t *testing.T) {
+	got := resp.Array([]string{"foo", "bar"})
+	expected := "*2\r\n$3\r\nfoo\r\n$3\r\nbar\r\n"
+	if got != expected {
+		t.Errorf("expected %q, got %q", expected, got)
+	}
+}
+
+func TestArrayEmpty(t *testing.T) {
+	got := resp.Array([]string{})
+	expected := "*0\r\n"
+	if got != expected {
+		t.Errorf("expected %q, got %q", expected, got)
+	}
+}
