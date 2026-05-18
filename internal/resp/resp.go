@@ -60,3 +60,25 @@ func Array(strs []string) string {
 	}
 	return result
 }
+
+// Entry is a single stream entry for use with StreamEntries.
+type Entry struct {
+	ID     string
+	Fields []string
+}
+
+// StreamEntries encodes a slice of stream entries as a RESP array of arrays.
+// Each entry encodes as *2[id, *N[fields...]].
+func StreamEntries(entries []Entry) string {
+	var sb strings.Builder
+	fmt.Fprintf(&sb, "*%d\r\n", len(entries))
+	for _, e := range entries {
+		sb.WriteString("*2\r\n")
+		sb.WriteString(BulkString(e.ID))
+		fmt.Fprintf(&sb, "*%d\r\n", len(e.Fields))
+		for _, f := range e.Fields {
+			sb.WriteString(BulkString(f))
+		}
+	}
+	return sb.String()
+}

@@ -76,3 +76,50 @@ func TestArrayEmpty(t *testing.T) {
 		t.Errorf("expected %q, got %q", expected, got)
 	}
 }
+
+func TestStreamEntries(t *testing.T) {
+	tests := []struct {
+		name    string
+		entries []resp.Entry
+		want    string
+	}{
+		{
+			name:    "empty slice returns empty outer array",
+			entries: []resp.Entry{},
+			want:    "*0\r\n",
+		},
+		{
+			name: "single entry with two fields",
+			entries: []resp.Entry{
+				{ID: "0-1", Fields: []string{"k", "v"}},
+			},
+			want: "*1\r\n*2\r\n$3\r\n0-1\r\n*2\r\n$1\r\nk\r\n$1\r\nv\r\n",
+		},
+		{
+			name: "two entries matches spec example",
+			entries: []resp.Entry{
+				{ID: "1526985054069-0", Fields: []string{"temperature", "36", "humidity", "95"}},
+				{ID: "1526985054079-0", Fields: []string{"temperature", "37", "humidity", "94"}},
+			},
+			want: "*2\r\n" +
+				"*2\r\n$15\r\n1526985054069-0\r\n" +
+				"*4\r\n$11\r\ntemperature\r\n$2\r\n36\r\n$8\r\nhumidity\r\n$2\r\n95\r\n" +
+				"*2\r\n$15\r\n1526985054079-0\r\n" +
+				"*4\r\n$11\r\ntemperature\r\n$2\r\n37\r\n$8\r\nhumidity\r\n$2\r\n94\r\n",
+		},
+		{
+			name: "entry with no fields encodes empty inner array",
+			entries: []resp.Entry{
+				{ID: "1-0", Fields: []string{}},
+			},
+			want: "*1\r\n*2\r\n$3\r\n1-0\r\n*0\r\n",
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if got := resp.StreamEntries(tt.entries); got != tt.want {
+				t.Errorf("got %q, want %q", got, tt.want)
+			}
+		})
+	}
+}
