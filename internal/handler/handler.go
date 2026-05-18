@@ -92,7 +92,10 @@ func (h *Handler) handleXAdd(parts []string) string {
 	if len(parts) < 5 || (len(parts)-3)%2 != 0 {
 		return errWrongArgs
 	}
-	id := h.store.XAdd(parts[1], parts[2], parts[3:])
+	id, err := h.store.XAdd(parts[1], parts[2], parts[3:])
+	if err != nil {
+		return "-" + err.Error() + "\r\n"
+	}
 	return resp.BulkString(id)
 }
 

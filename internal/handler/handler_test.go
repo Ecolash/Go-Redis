@@ -489,6 +489,23 @@ func TestHandleXAdd(t *testing.T) {
 			input: "*3\r\n$4\r\nXADD\r\n$1\r\ns\r\n$3\r\n0-1\r\n",
 			want:  "-ERR wrong number of arguments\r\n",
 		},
+		{
+			name:  "0-0 ID returns must be greater than 0-0 error",
+			input: "*5\r\n$4\r\nXADD\r\n$1\r\ns\r\n$3\r\n0-0\r\n$1\r\nk\r\n$1\r\nv\r\n",
+			want:  "-ERR The ID specified in XADD must be greater than 0-0\r\n",
+		},
+		{
+			name:  "ID equal to last returns equal or smaller error",
+			setup: []string{"*5\r\n$4\r\nXADD\r\n$1\r\ns\r\n$3\r\n1-1\r\n$1\r\nk\r\n$1\r\nv\r\n"},
+			input: "*5\r\n$4\r\nXADD\r\n$1\r\ns\r\n$3\r\n1-1\r\n$1\r\nk\r\n$1\r\nv\r\n",
+			want:  "-ERR The ID specified in XADD is equal or smaller than the target stream top item\r\n",
+		},
+		{
+			name:  "ms smaller than last returns equal or smaller error",
+			setup: []string{"*5\r\n$4\r\nXADD\r\n$1\r\ns\r\n$3\r\n1-1\r\n$1\r\nk\r\n$1\r\nv\r\n"},
+			input: "*5\r\n$4\r\nXADD\r\n$1\r\ns\r\n$3\r\n0-3\r\n$1\r\nk\r\n$1\r\nv\r\n",
+			want:  "-ERR The ID specified in XADD is equal or smaller than the target stream top item\r\n",
+		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {

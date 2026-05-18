@@ -605,7 +605,10 @@ func TestXAdd(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			s := store.New()
-			got := s.XAdd("mystream", tt.id, tt.fields)
+			got, err := s.XAdd("mystream", tt.id, tt.fields)
+			if err != nil {
+				t.Fatalf("unexpected error: %v", err)
+			}
 			if got != tt.wantID {
 				t.Errorf("got %q, want %q", got, tt.wantID)
 			}
@@ -615,7 +618,9 @@ func TestXAdd(t *testing.T) {
 
 func TestXAddCreatesStreamType(t *testing.T) {
 	s := store.New()
-	s.XAdd("mystream", "0-1", []string{"foo", "bar"})
+	if _, err := s.XAdd("mystream", "0-1", []string{"foo", "bar"}); err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
 	if got := s.Type("mystream"); got != "stream" {
 		t.Errorf("Type = %q, want \"stream\"", got)
 	}
@@ -623,13 +628,97 @@ func TestXAddCreatesStreamType(t *testing.T) {
 
 func TestXAddAppendsMultipleEntries(t *testing.T) {
 	s := store.New()
-	s.XAdd("mystream", "0-1", []string{"foo", "bar"})
-	id := s.XAdd("mystream", "0-2", []string{"baz", "qux"})
+	if _, err := s.XAdd("mystream", "0-1", []string{"foo", "bar"}); err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	id, err := s.XAdd("mystream", "0-2", []string{"baz", "qux"})
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
 	if id != "0-2" {
 		t.Errorf("second XAdd returned %q, want \"0-2\"", id)
 	}
 	if got := s.Type("mystream"); got != "stream" {
 		t.Errorf("Type after second XAdd = %q, want \"stream\"", got)
+	}
+}
+
+func TestXAddIDValidation(t *testing.T) {
+	const errZero = "ERR The ID specified in XADD must be greater than 0-0"
+	const errSmall = "ERR The ID specified in XADD is equal or smaller than the target stream top item"
+
+	tests := []struct {
+		name    string
+		setup   []string // IDs to pre-populate the stream
+		id      string
+		wantErr string // empty means success expected
+	}{
+		{
+			name:    "0-0 on empty stream",
+			id:      "0-0",
+			wantErr: errZero,
+		},
+		{
+			name:    "0-0 on non-empty stream",
+			setup:   []string{"1-1"},
+			id:      "0-0",
+			wantErr: errZero,
+		},
+		{
+			name:    "equal to last ID",
+			setup:   []string{"1-1"},
+			id:      "1-1",
+			wantErr: errSmall,
+		},
+		{
+			name:    "ms less than last ms",
+			setup:   []string{"1-1"},
+			id:      "0-2",
+			wantErr: errSmall,
+		},
+		{
+			name:    "ms equal, seq less than last seq",
+			setup:   []string{"1-5"},
+			id:      "1-4",
+			wantErr: errSmall,
+		},
+		{
+			name:  "0-1 on empty stream is valid",
+			id:    "0-1",
+		},
+		{
+			name:  "ms greater than last ms",
+			setup: []string{"1-1"},
+			id:    "2-0",
+		},
+		{
+			name:  "ms equal, seq greater than last seq",
+			setup: []string{"1-1"},
+			id:    "1-2",
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			s := store.New()
+			for _, sid := range tt.setup {
+				if _, err := s.XAdd("mystream", sid, []string{"k", "v"}); err != nil {
+					t.Fatalf("setup XAdd %q failed: %v", sid, err)
+				}
+			}
+			_, err := s.XAdd("mystream", tt.id, []string{"foo", "bar"})
+			if tt.wantErr == "" {
+				if err != nil {
+					t.Errorf("expected no error, got %v", err)
+				}
+			} else {
+				if err == nil {
+					t.Fatalf("expected error %q, got nil", tt.wantErr)
+				}
+				if err.Error() != tt.wantErr {
+					t.Errorf("error = %q, want %q", err.Error(), tt.wantErr)
+				}
+			}
+		})
 	}
 }
 

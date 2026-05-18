@@ -1,8 +1,16 @@
 package store
 
 import (
+	"errors"
+	"strconv"
+	"strings"
 	"sync"
 	"time"
+)
+
+var (
+	errStreamIDZero  = errors.New("ERR The ID specified in XADD must be greater than 0-0")
+	errStreamIDSmall = errors.New("ERR The ID specified in XADD is equal or smaller than the target stream top item")
 )
 
 type valueKind int
@@ -211,16 +219,48 @@ func (s *Store) LRange(key string, start, stop int) ([]string, bool) {
 	return e.listVal[start : stop+1], true
 }
 
-func (s *Store) XAdd(key, id string, fields []string) string {
+func parseStreamID(id string) (ms, seq int64, err error) {
+	parts := strings.SplitN(id, "-", 2)
+	if len(parts) != 2 {
+		return 0, 0, errors.New("invalid stream ID")
+	}
+	ms, err = strconv.ParseInt(parts[0], 10, 64)
+	if err != nil {
+		return
+	}
+	seq, err = strconv.ParseInt(parts[1], 10, 64)
+	return
+}
+
+func (s *Store) XAdd(key, id string, fields []string) (string, error) {
+	newMs, newSeq, err := parseStreamID(id)
+	if err != nil {
+		return "", err
+	}
+
 	s.mu.Lock()
 	defer s.mu.Unlock()
+
 	e := s.data[key]
 	if e.kind != kindStream {
 		e = entry{kind: kindStream}
 	}
+
+	if newMs == 0 && newSeq == 0 {
+		return "", errStreamIDZero
+	}
+
+	if len(e.streamVal) > 0 {
+		last := e.streamVal[len(e.streamVal)-1]
+		lastMs, lastSeq, _ := parseStreamID(last.ID)
+		if newMs < lastMs || (newMs == lastMs && newSeq <= lastSeq) {
+			return "", errStreamIDSmall
+		}
+	}
+
 	e.streamVal = append(e.streamVal, StreamEntry{ID: id, Fields: fields})
 	s.data[key] = e
-	return id
+	return id, nil
 }
 
 func (s *Store) Type(key string) string {
