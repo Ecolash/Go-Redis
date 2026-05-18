@@ -724,6 +724,64 @@ func TestXAddIDValidation(t *testing.T) {
 	}
 }
 
+func TestXAddPartialAutoID(t *testing.T) {
+	tests := []struct {
+		name    string
+		setup   []string // IDs to pre-populate
+		id      string
+		wantSeq string
+		wantErr bool
+	}{
+		{
+			name:    "ms-* on empty stream gives seq 0",
+			id:      "5-*",
+			wantSeq: "0",
+		},
+		{
+			name:    "ms-* with larger ms gives seq 0",
+			setup:   []string{"3-2"},
+			id:      "5-*",
+			wantSeq: "0",
+		},
+		{
+			name:    "ms-* with equal ms increments seq",
+			setup:   []string{"5-4"},
+			id:      "5-*",
+			wantSeq: "5",
+		},
+		{
+			name:    "ms-* with ms smaller than last returns error",
+			setup:   []string{"5-1"},
+			id:      "3-*",
+			wantErr: true,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			s := store.New()
+			for _, sid := range tt.setup {
+				if _, err := s.XAdd("mystream", sid, []string{"k", "v"}); err != nil {
+					t.Fatalf("setup XAdd %q failed: %v", sid, err)
+				}
+			}
+			id, err := s.XAdd("mystream", tt.id, []string{"foo", "bar"})
+			if tt.wantErr {
+				if err == nil {
+					t.Fatalf("expected error, got id %q", id)
+				}
+				return
+			}
+			if err != nil {
+				t.Fatalf("unexpected error: %v", err)
+			}
+			parts := strings.SplitN(id, "-", 2)
+			if len(parts) != 2 || parts[1] != tt.wantSeq {
+				t.Errorf("got id %q, want seq %q", id, tt.wantSeq)
+			}
+		})
+	}
+}
+
 func TestXAddAutoID(t *testing.T) {
 	s := store.New()
 	before := time.Now().UnixMilli()

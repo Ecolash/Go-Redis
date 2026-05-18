@@ -520,6 +520,42 @@ func TestHandleXAdd(t *testing.T) {
 	}
 }
 
+func TestHandleXAddPartialAutoID(t *testing.T) {
+	tests := []struct {
+		name  string
+		setup []string
+		input string
+		want  string
+	}{
+		{
+			name:  "ms-* on empty stream returns ms-0",
+			input: "*5\r\n$4\r\nXADD\r\n$1\r\ns\r\n$3\r\n5-*\r\n$1\r\nk\r\n$1\r\nv\r\n",
+			want:  "$3\r\n5-0\r\n",
+		},
+		{
+			name:  "ms-* with equal ms increments seq",
+			setup: []string{"*5\r\n$4\r\nXADD\r\n$1\r\ns\r\n$3\r\n5-4\r\n$1\r\nk\r\n$1\r\nv\r\n"},
+			input: "*5\r\n$4\r\nXADD\r\n$1\r\ns\r\n$3\r\n5-*\r\n$1\r\nk\r\n$1\r\nv\r\n",
+			want:  "$3\r\n5-5\r\n",
+		},
+		{
+			name:  "ms-* with smaller ms returns error",
+			setup: []string{"*5\r\n$4\r\nXADD\r\n$1\r\ns\r\n$3\r\n5-1\r\n$1\r\nk\r\n$1\r\nv\r\n"},
+			input: "*5\r\n$4\r\nXADD\r\n$1\r\ns\r\n$3\r\n3-*\r\n$1\r\nk\r\n$1\r\nv\r\n",
+			want:  "-ERR The ID specified in XADD is equal or smaller than the target stream top item\r\n",
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			h := newHandler()
+			runCommands(h, tt.setup)
+			if got := h.Handle([]byte(tt.input)); got != tt.want {
+				t.Errorf("got %q, want %q", got, tt.want)
+			}
+		})
+	}
+}
+
 func TestHandleXAddAutoID(t *testing.T) {
 	h := newHandler()
 	// XADD stream_key * foo bar

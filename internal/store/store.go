@@ -252,6 +252,22 @@ func (s *Store) XAdd(key, id string, fields []string) (string, error) {
 			}
 		}
 		id = fmt.Sprintf("%d-%d", ms, seq)
+	} else if strings.HasSuffix(id, "-*") {
+		newMs, err := strconv.ParseInt(id[:len(id)-2], 10, 64)
+		if err != nil {
+			return "", err
+		}
+		seq := int64(0)
+		if len(e.streamVal) > 0 {
+			lastMs, lastSeq, _ := parseStreamID(e.streamVal[len(e.streamVal)-1].ID)
+			if newMs < lastMs {
+				return "", errStreamIDSmall
+			}
+			if newMs == lastMs {
+				seq = lastSeq + 1
+			}
+		}
+		id = fmt.Sprintf("%d-%d", newMs, seq)
 	} else {
 		newMs, newSeq, err := parseStreamID(id)
 		if err != nil {
