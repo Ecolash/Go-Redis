@@ -738,6 +738,11 @@ func TestXAddPartialAutoID(t *testing.T) {
 			wantSeq: "0",
 		},
 		{
+			name:    "0-* on empty stream gives seq 1 (0-0 is invalid)",
+			id:      "0-*",
+			wantSeq: "1",
+		},
+		{
 			name:    "ms-* with larger ms gives seq 0",
 			setup:   []string{"3-2"},
 			id:      "5-*",

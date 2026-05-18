@@ -258,6 +258,9 @@ func (s *Store) XAdd(key, id string, fields []string) (string, error) {
 			return "", err
 		}
 		seq := int64(0)
+		if newMs == 0 {
+			seq = 1
+		}
 		if len(e.streamVal) > 0 {
 			lastMs, lastSeq, _ := parseStreamID(e.streamVal[len(e.streamVal)-1].ID)
 			if newMs < lastMs {
