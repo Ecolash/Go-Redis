@@ -779,3 +779,74 @@ func TestHandleLRange(t *testing.T) {
 		})
 	}
 }
+
+func TestHandleXReadMultiStream(t *testing.T) {
+	xadd := func(key, id string, kvs ...string) string {
+		parts := append([]string{key, id}, kvs...)
+		n := len(parts) + 1
+		s := "*" + strconv.Itoa(n) + "\r\n$5\r\nXADD\r\n"
+		for _, p := range parts {
+			s += "$" + strconv.Itoa(len(p)) + "\r\n" + p + "\r\n"
+		}
+		return s
+	}
+	// xreadMulti builds XREAD STREAMS key1 key2 ... id1 id2 ...
+	xreadMulti := func(keysAndIDs ...string) string {
+		s := "*" + strconv.Itoa(len(keysAndIDs)+2) + "\r\n$5\r\nXREAD\r\n$7\r\nSTREAMS\r\n"
+		for _, p := range keysAndIDs {
+			s += "$" + strconv.Itoa(len(p)) + "\r\n" + p + "\r\n"
+		}
+		return s
+	}
+
+	tests := []struct {
+		name  string
+		setup []string
+		input string
+		want  string
+	}{
+		{
+			name: "two streams both with results",
+			setup: []string{
+				xadd("s1", "1-0", "k", "a"),
+				xadd("s2", "2-0", "k", "b"),
+			},
+			input: xreadMulti("s1", "s2", "0-0", "0-0"),
+			want: "*2\r\n" +
+				"*2\r\n$2\r\ns1\r\n" +
+				"*1\r\n*2\r\n$3\r\n1-0\r\n*2\r\n$1\r\nk\r\n$1\r\na\r\n" +
+				"*2\r\n$2\r\ns2\r\n" +
+				"*1\r\n*2\r\n$3\r\n2-0\r\n*2\r\n$1\r\nk\r\n$1\r\nb\r\n",
+		},
+		{
+			name: "one stream has results, other does not",
+			setup: []string{
+				xadd("s1", "1-0", "k", "a"),
+				xadd("s2", "1-0", "k", "b"),
+			},
+			// s2 queried after its last entry — no new results
+			input: xreadMulti("s1", "s2", "0-0", "1-0"),
+			want: "*1\r\n" +
+				"*2\r\n$2\r\ns1\r\n" +
+				"*1\r\n*2\r\n$3\r\n1-0\r\n*2\r\n$1\r\nk\r\n$1\r\na\r\n",
+		},
+		{
+			name: "two streams neither with results returns null array",
+			setup: []string{
+				xadd("s1", "1-0", "k", "a"),
+				xadd("s2", "1-0", "k", "b"),
+			},
+			input: xreadMulti("s1", "s2", "1-0", "1-0"),
+			want:  "*-1\r\n",
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			h := newHandler()
+			runCommands(h, tt.setup)
+			if got := h.Handle([]byte(tt.input)); got != tt.want {
+				t.Errorf("got %q, want %q", got, tt.want)
+			}
+		})
+	}
+}

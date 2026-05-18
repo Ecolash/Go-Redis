@@ -219,22 +219,37 @@ func (h *Handler) handleLRange(parts []string) string {
 }
 
 func (h *Handler) handleXRead(parts []string) string {
+	// XREAD STREAMS <key1> ... <keyN> <id1> ... <idN>
 	if len(parts) < 4 || !strings.EqualFold(parts[1], "STREAMS") {
 		return errWrongArgs
 	}
-	key, afterID := parts[2], parts[3]
-	entries, err := h.store.XRead(key, afterID)
-	if err != nil {
-		return resp.Error(err.Error())
+	rest := parts[2:]
+	if len(rest)%2 != 0 {
+		return errWrongArgs
 	}
-	if len(entries) == 0 {
+	n := len(rest) / 2
+	keys := rest[:n]
+	afterIDs := rest[n:]
+
+	var results []resp.XReadResult
+	for i, key := range keys {
+		entries, err := h.store.XRead(key, afterIDs[i])
+		if err != nil {
+			return resp.Error(err.Error())
+		}
+		if len(entries) == 0 {
+			continue
+		}
+		respEntries := make([]resp.Entry, len(entries))
+		for j, e := range entries {
+			respEntries[j] = resp.Entry{ID: e.ID, Fields: e.Fields}
+		}
+		results = append(results, resp.XReadResult{Key: key, Entries: respEntries})
+	}
+	if len(results) == 0 {
 		return nullArray
 	}
-	respEntries := make([]resp.Entry, len(entries))
-	for i, e := range entries {
-		respEntries[i] = resp.Entry{ID: e.ID, Fields: e.Fields}
-	}
-	return resp.StreamResult(key, respEntries)
+	return resp.StreamResults(results)
 }
 
 func (h *Handler) handleXRange(parts []string) string {
