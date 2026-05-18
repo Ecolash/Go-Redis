@@ -176,6 +176,53 @@ func TestLPush(t *testing.T) {
 	}
 }
 
+func TestIncr(t *testing.T) {
+	tests := []struct {
+		name    string
+		setup   func(s *store.Store) error
+		key     string
+		wantVal int64
+		wantErr bool
+	}{
+		{
+			name:    "missing key treated as 0",
+			setup:   func(s *store.Store) error { return nil },
+			key:     "counter",
+			wantVal: 1,
+		},
+		{
+			name: "existing integer value incremented",
+			setup: func(s *store.Store) error {
+				s.Set("counter", "5", 0)
+				return nil
+			},
+			key:     "counter",
+			wantVal: 6,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			s := store.New()
+			if err := tt.setup(s); err != nil {
+				t.Fatalf("setup failed: %v", err)
+			}
+			val, err := s.Incr(tt.key)
+			if tt.wantErr {
+				if err == nil {
+					t.Error("expected error but got none")
+				}
+			} else {
+				if err != nil {
+					t.Fatalf("unexpected error: %v", err)
+				}
+				if val != tt.wantVal {
+					t.Errorf("val = %d, want %d", val, tt.wantVal)
+				}
+			}
+		})
+	}
+}
+
 func TestLLen(t *testing.T) {
 	tests := []struct {
 		name   string

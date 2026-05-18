@@ -7,6 +7,8 @@ const (
 	ECHO  Command = "ECHO"
 	SET   Command = "SET"
 	GET   Command = "GET"
+	INCR  Command = "INCR"
+	DECR  Command = "DECR"
 
 	TYPE Command = "TYPE"
 

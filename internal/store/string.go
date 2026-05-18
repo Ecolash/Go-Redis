@@ -1,6 +1,21 @@
 package store
 
-import "time"
+import (
+	"strconv"
+	"time"
+)
+
+func parseInt(s string) (int64, error) {
+	n, err := strconv.ParseInt(s, 10, 64)
+	if err != nil {
+		return 0, errNotInteger
+	}
+	return n, nil
+}
+
+func intToStr(n int64) string {
+	return strconv.FormatInt(n, 10)
+}
 
 func (s *Store) Set(key, value string, ttl time.Duration) {
 	s.mu.Lock()
@@ -23,4 +38,44 @@ func (s *Store) Get(key string) (string, bool) {
 		return "", false
 	}
 	return e.strVal, true
+}
+
+func (s *Store) Incr(key string) (int64, error) {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	e, ok := s.data[key]
+	if ok && e.kind != kindString {
+		return 0, errWrongType
+	}
+	var val int64
+	if ok {
+		var err error
+		val, err = parseInt(e.strVal)
+		if err != nil {
+			return 0, err
+		}
+	}
+	val++
+	s.data[key] = entry{kind: kindString, strVal: intToStr(val)}
+	return val, nil
+}
+
+func (s *Store) Decr(key string) (int64, error) {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	e, ok := s.data[key]
+	if ok && e.kind != kindString {
+		return 0, errWrongType
+	}
+	var val int64
+	if ok {
+		var err error
+		val, err = parseInt(e.strVal)
+		if err != nil {
+			return 0, err
+		}
+	}
+	val--
+	s.data[key] = entry{kind: kindString, strVal: intToStr(val)}
+	return val, nil
 }

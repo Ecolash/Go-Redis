@@ -33,6 +33,8 @@ func New(s *store.Store) *Handler {
 		command.SET:   h.handleSet,
 		command.GET:   h.handleGet,
 		command.TYPE:  h.handleType,
+		command.INCR:  h.handleIncr,
+		command.DECR:  h.handleDecr,
 		command.XADD:   h.handleXAdd,
 		command.XRANGE: h.handleXRange,
 		command.XREAD:  h.handleXRead,
@@ -87,6 +89,28 @@ func (h *Handler) handleGet(parts []string) string {
 		return nullBulk
 	}
 	return resp.BulkString(val)
+}
+
+func (h *Handler) handleIncr(parts []string) string {
+	if len(parts) < 2 {
+		return errWrongArgs
+	}
+	val, err := h.store.Incr(parts[1])
+	if err != nil {
+		return resp.Error(err.Error())
+	}
+	return resp.Integer(int(val))
+}
+
+func (h *Handler) handleDecr(parts []string) string {
+	if len(parts) < 2 {
+		return errWrongArgs
+	}
+	val, err := h.store.Decr(parts[1])
+	if err != nil {
+		return resp.Error(err.Error())
+	}
+	return resp.Integer(int(val))
 }
 
 func (h *Handler) handleXAdd(parts []string) string {

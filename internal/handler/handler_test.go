@@ -123,6 +123,60 @@ func TestHandleGetReturnsNullAfterPXExpiry(t *testing.T) {
 	}
 }
 
+func TestHandleIncrandDecr(t *testing.T) {
+	tests := []struct {
+		name  string
+		setup []string
+		input string
+		want  string
+	}{
+		{
+			name: "returns 1 when key does not exist",
+			input: "*2\r\n$4\r\nINCR\r\n$1\r\nk\r\n",
+			want:  ":1\r\n",
+		},
+		{
+			name:  "increments existing integer value",
+			setup: []string{"*3\r\n$3\r\nSET\r\n$1\r\nk\r\n$1\r\n5\r\n"},
+			input: "*2\r\n$4\r\nINCR\r\n$1\r\nk\r\n",
+			want:  ":6\r\n",
+		},
+		{
+			name:  "returns error if value is not an integer",
+			setup: []string{"*3\r\n$3\r\nSET\r\n$1\r\nk\r\n$3\r\nfoo\r\n"},
+			input: "*2\r\n$4\r\nINCR\r\n$1\r\nk\r\n",
+			want:  "-ERR value is not an integer or out of range\r\n",
+		},
+		{
+			name:  "decrements existing integer value",
+			setup: []string{"*3\r\n$3\r\nSET\r\n$1\r\nk\r\n$1\r\n5\r\n"},
+			input: "*2\r\n$4\r\nDECR\r\n$1\r\nk\r\n",
+			want:  ":4\r\n",
+		},
+		{
+			name:  "returns error if value is not an integer on DECR",
+			setup: []string{"*3\r\n$3\r\nSET\r\n$1\r\nk\r\n$3\r\nfoo\r\n"},
+			input: "*2\r\n$4\r\nDECR\r\n$1\r\nk\r\n",
+			want:  "-ERR value is not an integer or out of range\r\n",
+		},
+		{
+			name: "returns -1 if key does not exist on DECR",
+			input: "*2\r\n$4\r\nDECR\r\n$1\r\nk\r\n",
+			want:  ":-1\r\n",
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			h := newHandler()
+			runCommands(h, tt.setup)
+			if got := h.Handle([]byte(tt.input)); got != tt.want {
+				t.Errorf("got %q, want %q", got, tt.want)
+			}
+		})
+	}
+}
+
 func TestHandleRPush(t *testing.T) {
 	tests := []struct {
 		name  string
