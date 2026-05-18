@@ -3,6 +3,7 @@ package store
 import (
 	"errors"
 	"fmt"
+	"math"
 	"strconv"
 	"strings"
 	"sync"
@@ -290,6 +291,47 @@ func (s *Store) XAdd(key, id string, fields []string) (string, error) {
 	e.streamVal = append(e.streamVal, StreamEntry{ID: id, Fields: fields})
 	s.data[key] = e
 	return id, nil
+}
+
+// parseRangeID parses a stream ID for XRANGE bounds.
+// If the ID has no "-", defaultSeq is used as the sequence number.
+func parseRangeID(id string, defaultSeq int64) (ms, seq int64, err error) {
+	if strings.Contains(id, "-") {
+		ms, seq, err = parseStreamID(id)
+		return
+	}
+	ms, err = strconv.ParseInt(id, 10, 64)
+	seq = defaultSeq
+	return
+}
+
+func (s *Store) XRange(key, startID, endID string) ([]StreamEntry, error) {
+	s.mu.RLock()
+	defer s.mu.RUnlock()
+
+	e, ok := s.data[key]
+	if !ok || e.kind != kindStream {
+		return []StreamEntry{}, nil
+	}
+
+	startMs, startSeq, err := parseRangeID(startID, 0)
+	if err != nil {
+		return nil, err
+	}
+	endMs, endSeq, err := parseRangeID(endID, math.MaxInt64)
+	if err != nil {
+		return nil, err
+	}
+
+	var result []StreamEntry
+	for _, entry := range e.streamVal {
+		ms, seq, _ := parseStreamID(entry.ID)
+		if (ms > startMs || (ms == startMs && seq >= startSeq)) &&
+			(ms < endMs || (ms == endMs && seq <= endSeq)) {
+			result = append(result, entry)
+		}
+	}
+	return result, nil
 }
 
 func (s *Store) Type(key string) string {

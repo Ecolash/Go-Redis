@@ -11,7 +11,8 @@ const (
 	TYPE Command = "TYPE"
 
 	// STREAM Commands
-	XADD Command = "XADD"
+	XADD   Command = "XADD"
+	XRANGE Command = "XRANGE"
 
 	// LIST Commands
 	BLPOP  Command = "BLPOP"

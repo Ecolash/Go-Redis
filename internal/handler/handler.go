@@ -1,6 +1,7 @@
 package handler
 
 import (
+	"fmt"
 	"strconv"
 	"strings"
 	"time"
@@ -33,7 +34,8 @@ func New(s *store.Store) *Handler {
 		command.SET:   h.handleSet,
 		command.GET:   h.handleGet,
 		command.TYPE:  h.handleType,
-		command.XADD:  h.handleXAdd,
+		command.XADD:   h.handleXAdd,
+		command.XRANGE: h.handleXRange,
 		command.LPOP:  h.handleLPop,
 		command.RPOP:  h.handleRPop,
 		command.BLPOP: h.handleBLPop,
@@ -214,6 +216,27 @@ func (h *Handler) handleLRange(parts []string) string {
 	}
 	vals, _ := h.store.LRange(parts[1], start, stop)
 	return resp.Array(vals)
+}
+
+func (h *Handler) handleXRange(parts []string) string {
+	if len(parts) < 4 {
+		return errWrongArgs
+	}
+	entries, err := h.store.XRange(parts[1], parts[2], parts[3])
+	if err != nil {
+		return resp.Error(err.Error())
+	}
+	var sb strings.Builder
+	fmt.Fprintf(&sb, "*%d\r\n", len(entries))
+	for _, e := range entries {
+		sb.WriteString("*2\r\n")
+		sb.WriteString(resp.BulkString(e.ID))
+		fmt.Fprintf(&sb, "*%d\r\n", len(e.Fields))
+		for _, f := range e.Fields {
+			sb.WriteString(resp.BulkString(f))
+		}
+	}
+	return sb.String()
 }
 
 // parseTTL extracts the TTL duration from optional SET arguments (PX <ms> or EX <s>).

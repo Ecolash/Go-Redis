@@ -588,6 +588,84 @@ func TestHandleTypeForStream(t *testing.T) {
 	}
 }
 
+func TestHandleXRange(t *testing.T) {
+	xadd := func(key, id string, kvs ...string) string {
+		parts := append([]string{key, id}, kvs...)
+		n := len(parts) + 1
+		s := "*" + strconv.Itoa(n) + "\r\n$5\r\nXADD\r\n"
+		for _, p := range parts {
+			s += "$" + strconv.Itoa(len(p)) + "\r\n" + p + "\r\n"
+		}
+		return s
+	}
+	xrange := func(key, start, end string) string {
+		return "*4\r\n$6\r\nXRANGE\r\n" +
+			"$" + strconv.Itoa(len(key)) + "\r\n" + key + "\r\n" +
+			"$" + strconv.Itoa(len(start)) + "\r\n" + start + "\r\n" +
+			"$" + strconv.Itoa(len(end)) + "\r\n" + end + "\r\n"
+	}
+
+	tests := []struct {
+		name  string
+		setup []string
+		input string
+		want  string
+	}{
+		{
+			name:  "missing key returns empty array",
+			input: xrange("nokey", "0-1", "9-9"),
+			want:  "*0\r\n",
+		},
+		{
+			name:  "wrong number of arguments",
+			input: "*2\r\n$6\r\nXRANGE\r\n$1\r\ns\r\n",
+			want:  "-ERR wrong number of arguments\r\n",
+		},
+		{
+			name: "spec example with partial IDs",
+			setup: []string{
+				xadd("mystream", "1526985054069-0", "temperature", "36", "humidity", "95"),
+				xadd("mystream", "1526985054079-0", "temperature", "37", "humidity", "94"),
+			},
+			input: xrange("mystream", "1526985054069", "1526985054079"),
+			want: "*2\r\n" +
+				"*2\r\n$15\r\n1526985054069-0\r\n" +
+				"*4\r\n$11\r\ntemperature\r\n$2\r\n36\r\n$8\r\nhumidity\r\n$2\r\n95\r\n" +
+				"*2\r\n$15\r\n1526985054079-0\r\n" +
+				"*4\r\n$11\r\ntemperature\r\n$2\r\n37\r\n$8\r\nhumidity\r\n$2\r\n94\r\n",
+		},
+		{
+			name: "exact full IDs returns matching entries",
+			setup: []string{
+				xadd("s", "1-0", "k", "a"),
+				xadd("s", "2-0", "k", "b"),
+				xadd("s", "3-0", "k", "c"),
+			},
+			input: xrange("s", "2-0", "2-0"),
+			want:  "*1\r\n*2\r\n$3\r\n2-0\r\n*2\r\n$1\r\nk\r\n$1\r\nb\r\n",
+		},
+		{
+			name: "range returns subset excluding out-of-range entries",
+			setup: []string{
+				xadd("s", "1-0", "k", "a"),
+				xadd("s", "2-0", "k", "b"),
+				xadd("s", "3-0", "k", "c"),
+			},
+			input: xrange("s", "1-1", "2-0"),
+			want:  "*1\r\n*2\r\n$3\r\n2-0\r\n*2\r\n$1\r\nk\r\n$1\r\nb\r\n",
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			h := newHandler()
+			runCommands(h, tt.setup)
+			if got := h.Handle([]byte(tt.input)); got != tt.want {
+				t.Errorf("got %q, want %q", got, tt.want)
+			}
+		})
+	}
+}
+
 func TestHandleLRange(t *testing.T) {
 	rpushABC := []string{
 		"*3\r\n$5\r\nRPUSH\r\n$6\r\nmylist\r\n$1\r\na\r\n",

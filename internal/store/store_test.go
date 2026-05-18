@@ -811,6 +811,148 @@ func TestXAddAutoID(t *testing.T) {
 	}
 }
 
+func TestXRange(t *testing.T) {
+	type entry struct {
+		id     string
+		fields []string
+	}
+	tests := []struct {
+		name    string
+		entries []entry
+		start   string
+		end     string
+		wantIDs []string
+	}{
+		{
+			name:    "missing key returns empty slice",
+			start:   "0-1",
+			end:     "9-9",
+			wantIDs: nil,
+		},
+		{
+			name: "full range returns all entries",
+			entries: []entry{
+				{"1-0", []string{"k", "v"}},
+				{"2-0", []string{"k", "v"}},
+				{"3-0", []string{"k", "v"}},
+			},
+			start:   "1-0",
+			end:     "3-0",
+			wantIDs: []string{"1-0", "2-0", "3-0"},
+		},
+		{
+			name: "partial start ID defaults seq to 0",
+			entries: []entry{
+				{"2-0", []string{"k", "v"}},
+				{"2-5", []string{"k", "v"}},
+				{"3-0", []string{"k", "v"}},
+			},
+			start:   "2",
+			end:     "3-0",
+			wantIDs: []string{"2-0", "2-5", "3-0"},
+		},
+		{
+			name: "partial end ID defaults seq to max",
+			entries: []entry{
+				{"1-0", []string{"k", "v"}},
+				{"2-0", []string{"k", "v"}},
+				{"2-999", []string{"k", "v"}},
+			},
+			start:   "1-0",
+			end:     "2",
+			wantIDs: []string{"1-0", "2-0", "2-999"},
+		},
+		{
+			name: "range excludes entries before start",
+			entries: []entry{
+				{"1-0", []string{"k", "v"}},
+				{"2-0", []string{"k", "v"}},
+				{"3-0", []string{"k", "v"}},
+			},
+			start:   "2-0",
+			end:     "9-9",
+			wantIDs: []string{"2-0", "3-0"},
+		},
+		{
+			name: "range excludes entries after end",
+			entries: []entry{
+				{"1-0", []string{"k", "v"}},
+				{"2-0", []string{"k", "v"}},
+				{"3-0", []string{"k", "v"}},
+			},
+			start:   "0-1",
+			end:     "2-0",
+			wantIDs: []string{"1-0", "2-0"},
+		},
+		{
+			name: "boundaries are inclusive",
+			entries: []entry{
+				{"5-0", []string{"k", "v"}},
+				{"6-0", []string{"k", "v"}},
+				{"7-0", []string{"k", "v"}},
+			},
+			start:   "6-0",
+			end:     "6-0",
+			wantIDs: []string{"6-0"},
+		},
+		{
+			name: "start after end returns empty",
+			entries: []entry{
+				{"1-0", []string{"k", "v"}},
+				{"2-0", []string{"k", "v"}},
+			},
+			start:   "3-0",
+			end:     "1-0",
+			wantIDs: nil,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			s := store.New()
+			for _, e := range tt.entries {
+				if _, err := s.XAdd("mystream", e.id, e.fields); err != nil {
+					t.Fatalf("XAdd %q failed: %v", e.id, err)
+				}
+			}
+			got, err := s.XRange("mystream", tt.start, tt.end)
+			if err != nil {
+				t.Fatalf("unexpected error: %v", err)
+			}
+			if len(got) != len(tt.wantIDs) {
+				t.Fatalf("len = %d, want %d; got %v", len(got), len(tt.wantIDs), got)
+			}
+			for i, wantID := range tt.wantIDs {
+				if got[i].ID != wantID {
+					t.Errorf("index %d: got ID %q, want %q", i, got[i].ID, wantID)
+				}
+			}
+		})
+	}
+}
+
+func TestXRangeReturnsFields(t *testing.T) {
+	s := store.New()
+	if _, err := s.XAdd("s", "1-0", []string{"temperature", "36", "humidity", "95"}); err != nil {
+		t.Fatalf("XAdd failed: %v", err)
+	}
+	got, err := s.XRange("s", "1-0", "1-0")
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if len(got) != 1 {
+		t.Fatalf("expected 1 entry, got %d", len(got))
+	}
+	wantFields := []string{"temperature", "36", "humidity", "95"}
+	if len(got[0].Fields) != len(wantFields) {
+		t.Fatalf("fields len = %d, want %d", len(got[0].Fields), len(wantFields))
+	}
+	for i, f := range wantFields {
+		if got[0].Fields[i] != f {
+			t.Errorf("field[%d]: got %q, want %q", i, got[0].Fields[i], f)
+		}
+	}
+}
+
 func TestTypeExpiredKeyReturnsNone(t *testing.T) {
 	s := store.New()
 	s.Set("k", "v", 20*time.Millisecond)
