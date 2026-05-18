@@ -23,6 +23,12 @@ func parseStreamID(id string) (ms, seq int64, err error) {
 }
 
 func parseRangeID(id string, defaultSeq int64) (ms, seq int64, err error) {
+	if id == "-" {
+		return 0, 0, nil
+	}
+	if id == "+" {
+		return math.MaxInt64, math.MaxInt64, nil
+	}
 	if strings.Contains(id, "-") {
 		ms, seq, err = parseStreamID(id)
 		return

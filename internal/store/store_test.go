@@ -905,6 +905,39 @@ func TestXRange(t *testing.T) {
 			end:     "1-0",
 			wantIDs: nil,
 		},
+		{
+			name: "- as start returns all entries from beginning",
+			entries: []entry{
+				{"1-0", []string{"k", "v"}},
+				{"2-0", []string{"k", "v"}},
+				{"3-0", []string{"k", "v"}},
+			},
+			start:   "-",
+			end:     "2-0",
+			wantIDs: []string{"1-0", "2-0"},
+		},
+		{
+			name: "+ as end returns all entries to the end",
+			entries: []entry{
+				{"1-0", []string{"k", "v"}},
+				{"2-0", []string{"k", "v"}},
+				{"3-0", []string{"k", "v"}},
+			},
+			start:   "2-0",
+			end:     "+",
+			wantIDs: []string{"2-0", "3-0"},
+		},
+		{
+			name: "- and + return all entries",
+			entries: []entry{
+				{"1-0", []string{"k", "v"}},
+				{"2-0", []string{"k", "v"}},
+				{"3-0", []string{"k", "v"}},
+			},
+			start:   "-",
+			end:     "+",
+			wantIDs: []string{"1-0", "2-0", "3-0"},
+		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
