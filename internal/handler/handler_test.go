@@ -1,6 +1,8 @@
 package handler_test
 
 import (
+	"strconv"
+	"strings"
 	"testing"
 	"time"
 
@@ -515,6 +517,29 @@ func TestHandleXAdd(t *testing.T) {
 				t.Errorf("got %q, want %q", got, tt.want)
 			}
 		})
+	}
+}
+
+func TestHandleXAddAutoID(t *testing.T) {
+	h := newHandler()
+	// XADD stream_key * foo bar
+	got := h.Handle([]byte("*5\r\n$4\r\nXADD\r\n$10\r\nstream_key\r\n$1\r\n*\r\n$3\r\nfoo\r\n$3\r\nbar\r\n"))
+	if !strings.HasPrefix(got, "$") {
+		t.Fatalf("expected bulk string response, got %q", got)
+	}
+	lines := strings.Split(strings.TrimSuffix(got, "\r\n"), "\r\n")
+	if len(lines) < 2 {
+		t.Fatalf("malformed bulk string: %q", got)
+	}
+	idParts := strings.SplitN(lines[1], "-", 2)
+	if len(idParts) != 2 {
+		t.Fatalf("expected ms-seq format in ID, got %q", lines[1])
+	}
+	if _, err := strconv.ParseInt(idParts[0], 10, 64); err != nil {
+		t.Errorf("ms part %q is not a number", idParts[0])
+	}
+	if idParts[1] != "0" {
+		t.Errorf("expected seq 0, got %q", idParts[1])
 	}
 }
 

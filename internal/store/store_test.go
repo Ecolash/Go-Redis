@@ -1,6 +1,8 @@
 package store_test
 
 import (
+	"strconv"
+	"strings"
 	"testing"
 	"time"
 
@@ -719,6 +721,30 @@ func TestXAddIDValidation(t *testing.T) {
 				}
 			}
 		})
+	}
+}
+
+func TestXAddAutoID(t *testing.T) {
+	s := store.New()
+	before := time.Now().UnixMilli()
+	id, err := s.XAdd("mystream", "*", []string{"field", "value"})
+	after := time.Now().UnixMilli()
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	parts := strings.SplitN(id, "-", 2)
+	if len(parts) != 2 {
+		t.Fatalf("expected ms-seq format, got %q", id)
+	}
+	ms, err := strconv.ParseInt(parts[0], 10, 64)
+	if err != nil {
+		t.Fatalf("ms part %q is not a number: %v", parts[0], err)
+	}
+	if ms < before || ms > after {
+		t.Errorf("ms %d not in range [%d, %d]", ms, before, after)
+	}
+	if parts[1] != "0" {
+		t.Errorf("expected seq 0, got %q", parts[1])
 	}
 }
 

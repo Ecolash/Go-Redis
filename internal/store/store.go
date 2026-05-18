@@ -2,6 +2,7 @@ package store
 
 import (
 	"errors"
+	"fmt"
 	"strconv"
 	"strings"
 	"sync"
@@ -233,11 +234,6 @@ func parseStreamID(id string) (ms, seq int64, err error) {
 }
 
 func (s *Store) XAdd(key, id string, fields []string) (string, error) {
-	newMs, newSeq, err := parseStreamID(id)
-	if err != nil {
-		return "", err
-	}
-
 	s.mu.Lock()
 	defer s.mu.Unlock()
 
@@ -246,15 +242,29 @@ func (s *Store) XAdd(key, id string, fields []string) (string, error) {
 		e = entry{kind: kindStream}
 	}
 
-	if newMs == 0 && newSeq == 0 {
-		return "", errStreamIDZero
-	}
-
-	if len(e.streamVal) > 0 {
-		last := e.streamVal[len(e.streamVal)-1]
-		lastMs, lastSeq, _ := parseStreamID(last.ID)
-		if newMs < lastMs || (newMs == lastMs && newSeq <= lastSeq) {
-			return "", errStreamIDSmall
+	if id == "*" {
+		ms := time.Now().UnixMilli()
+		seq := int64(0)
+		if len(e.streamVal) > 0 {
+			lastMs, lastSeq, _ := parseStreamID(e.streamVal[len(e.streamVal)-1].ID)
+			if lastMs == ms {
+				seq = lastSeq + 1
+			}
+		}
+		id = fmt.Sprintf("%d-%d", ms, seq)
+	} else {
+		newMs, newSeq, err := parseStreamID(id)
+		if err != nil {
+			return "", err
+		}
+		if newMs == 0 && newSeq == 0 {
+			return "", errStreamIDZero
+		}
+		if len(e.streamVal) > 0 {
+			lastMs, lastSeq, _ := parseStreamID(e.streamVal[len(e.streamVal)-1].ID)
+			if newMs < lastMs || (newMs == lastMs && newSeq <= lastSeq) {
+				return "", errStreamIDSmall
+			}
 		}
 	}
 
