@@ -33,6 +33,7 @@ func New(s *store.Store) *Handler {
 		command.SET:   h.handleSet,
 		command.GET:   h.handleGet,
 		command.TYPE:  h.handleType,
+		command.XADD:  h.handleXAdd,
 		command.LPOP:  h.handleLPop,
 		command.RPOP:  h.handleRPop,
 		command.BLPOP: h.handleBLPop,
@@ -84,6 +85,15 @@ func (h *Handler) handleGet(parts []string) string {
 		return nullBulk
 	}
 	return resp.BulkString(val)
+}
+
+func (h *Handler) handleXAdd(parts []string) string {
+	// XADD key id field value [field value ...]
+	if len(parts) < 5 || (len(parts)-3)%2 != 0 {
+		return errWrongArgs
+	}
+	id := h.store.XAdd(parts[1], parts[2], parts[3:])
+	return resp.BulkString(id)
 }
 
 func (h *Handler) handleType(parts []string) string {

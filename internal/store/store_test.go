@@ -582,6 +582,57 @@ func TestType(t *testing.T) {
 	}
 }
 
+func TestXAdd(t *testing.T) {
+	tests := []struct {
+		name   string
+		id     string
+		fields []string
+		wantID string
+	}{
+		{
+			name:   "returns the entry ID",
+			id:     "1526919030474-0",
+			fields: []string{"temperature", "36", "humidity", "95"},
+			wantID: "1526919030474-0",
+		},
+		{
+			name:   "short ID",
+			id:     "0-1",
+			fields: []string{"foo", "bar"},
+			wantID: "0-1",
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			s := store.New()
+			got := s.XAdd("mystream", tt.id, tt.fields)
+			if got != tt.wantID {
+				t.Errorf("got %q, want %q", got, tt.wantID)
+			}
+		})
+	}
+}
+
+func TestXAddCreatesStreamType(t *testing.T) {
+	s := store.New()
+	s.XAdd("mystream", "0-1", []string{"foo", "bar"})
+	if got := s.Type("mystream"); got != "stream" {
+		t.Errorf("Type = %q, want \"stream\"", got)
+	}
+}
+
+func TestXAddAppendsMultipleEntries(t *testing.T) {
+	s := store.New()
+	s.XAdd("mystream", "0-1", []string{"foo", "bar"})
+	id := s.XAdd("mystream", "0-2", []string{"baz", "qux"})
+	if id != "0-2" {
+		t.Errorf("second XAdd returned %q, want \"0-2\"", id)
+	}
+	if got := s.Type("mystream"); got != "stream" {
+		t.Errorf("Type after second XAdd = %q, want \"stream\"", got)
+	}
+}
+
 func TestTypeExpiredKeyReturnsNone(t *testing.T) {
 	s := store.New()
 	s.Set("k", "v", 20*time.Millisecond)

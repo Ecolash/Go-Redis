@@ -467,6 +467,49 @@ func TestHandleType(t *testing.T) {
 	}
 }
 
+func TestHandleXAdd(t *testing.T) {
+	tests := []struct {
+		name  string
+		setup []string
+		input string
+		want  string
+	}{
+		{
+			name:  "returns bulk string entry ID",
+			input: "*5\r\n$4\r\nXADD\r\n$10\r\nstream_key\r\n$3\r\n0-1\r\n$3\r\nfoo\r\n$3\r\nbar\r\n",
+			want:  "$3\r\n0-1\r\n",
+		},
+		{
+			name:  "creates stream and TYPE returns stream",
+			input: "*5\r\n$4\r\nXADD\r\n$1\r\ns\r\n$3\r\n0-1\r\n$1\r\nk\r\n$1\r\nv\r\n",
+			want:  "$3\r\n0-1\r\n",
+		},
+		{
+			name:  "wrong number of arguments",
+			input: "*3\r\n$4\r\nXADD\r\n$1\r\ns\r\n$3\r\n0-1\r\n",
+			want:  "-ERR wrong number of arguments\r\n",
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			h := newHandler()
+			runCommands(h, tt.setup)
+			if got := h.Handle([]byte(tt.input)); got != tt.want {
+				t.Errorf("got %q, want %q", got, tt.want)
+			}
+		})
+	}
+}
+
+func TestHandleTypeForStream(t *testing.T) {
+	h := newHandler()
+	h.Handle([]byte("*5\r\n$4\r\nXADD\r\n$1\r\ns\r\n$3\r\n0-1\r\n$1\r\nk\r\n$1\r\nv\r\n"))
+	got := h.Handle([]byte("*2\r\n$4\r\nTYPE\r\n$1\r\ns\r\n"))
+	if got != "+stream\r\n" {
+		t.Errorf("got %q, want \"+stream\\r\\n\"", got)
+	}
+}
+
 func TestHandleLRange(t *testing.T) {
 	rpushABC := []string{
 		"*3\r\n$5\r\nRPUSH\r\n$6\r\nmylist\r\n$1\r\na\r\n",

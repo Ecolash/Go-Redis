@@ -10,12 +10,20 @@ type valueKind int
 const (
 	kindString valueKind = iota
 	kindList
+	kindStream
 )
+
+// StreamEntry is a single entry in a Redis stream.
+type StreamEntry struct {
+	ID     string
+	Fields []string // flat alternating key-value pairs: ["k1","v1","k2","v2"]
+}
 
 type entry struct {
 	kind      valueKind
 	strVal    string
 	listVal   []string
+	streamVal []StreamEntry
 	expiresAt time.Time // zero means no expiry
 }
 
@@ -203,6 +211,18 @@ func (s *Store) LRange(key string, start, stop int) ([]string, bool) {
 	return e.listVal[start : stop+1], true
 }
 
+func (s *Store) XAdd(key, id string, fields []string) string {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	e := s.data[key]
+	if e.kind != kindStream {
+		e = entry{kind: kindStream}
+	}
+	e.streamVal = append(e.streamVal, StreamEntry{ID: id, Fields: fields})
+	s.data[key] = e
+	return id
+}
+
 func (s *Store) Type(key string) string {
 	s.mu.RLock()
 	defer s.mu.RUnlock()
@@ -217,6 +237,7 @@ func (s *Store) Type(key string) string {
 	kindToString := map[valueKind]string{
 		kindString: "string",
 		kindList:   "list",
+		kindStream: "stream",
 	}
 	if typeStr, ok := kindToString[e.kind]; ok {
 		return typeStr

@@ -10,6 +10,9 @@ const (
 
 	TYPE Command = "TYPE"
 
+	// STREAM Commands
+	XADD Command = "XADD"
+
 	// LIST Commands
 	BLPOP  Command = "BLPOP"
 	LPUSH  Command = "LPUSH"
