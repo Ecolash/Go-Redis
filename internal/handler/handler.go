@@ -35,6 +35,7 @@ func New(s *store.Store) *Handler {
 		command.TYPE:  h.handleType,
 		command.XADD:   h.handleXAdd,
 		command.XRANGE: h.handleXRange,
+		command.XREAD:  h.handleXRead,
 		command.LPOP:  h.handleLPop,
 		command.RPOP:  h.handleRPop,
 		command.BLPOP: h.handleBLPop,
@@ -215,6 +216,25 @@ func (h *Handler) handleLRange(parts []string) string {
 	}
 	vals, _ := h.store.LRange(parts[1], start, stop)
 	return resp.Array(vals)
+}
+
+func (h *Handler) handleXRead(parts []string) string {
+	if len(parts) < 4 || !strings.EqualFold(parts[1], "STREAMS") {
+		return errWrongArgs
+	}
+	key, afterID := parts[2], parts[3]
+	entries, err := h.store.XRead(key, afterID)
+	if err != nil {
+		return resp.Error(err.Error())
+	}
+	if len(entries) == 0 {
+		return nullArray
+	}
+	respEntries := make([]resp.Entry, len(entries))
+	for i, e := range entries {
+		respEntries[i] = resp.Entry{ID: e.ID, Fields: e.Fields}
+	}
+	return resp.StreamResult(key, respEntries)
 }
 
 func (h *Handler) handleXRange(parts []string) string {

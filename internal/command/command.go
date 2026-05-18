@@ -13,6 +13,7 @@ const (
 	// STREAM Commands
 	XADD   Command = "XADD"
 	XRANGE Command = "XRANGE"
+	XREAD  Command = "XREAD"
 
 	// LIST Commands
 	BLPOP  Command = "BLPOP"

@@ -67,6 +67,11 @@ type Entry struct {
 	Fields []string
 }
 
+// StreamResult encodes XREAD's outer array: *1 → [*2 → [key, entries]].
+func StreamResult(key string, entries []Entry) string {
+	return "*1\r\n*2\r\n" + BulkString(key) + StreamEntries(entries)
+}
+
 // StreamEntries encodes a slice of stream entries as a RESP array of arrays.
 // Each entry encodes as *2[id, *N[fields...]].
 func StreamEntries(entries []Entry) string {

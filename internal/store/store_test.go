@@ -1065,3 +1065,72 @@ func TestLRange(t *testing.T) {
 		})
 	}
 }
+
+func TestXRead(t *testing.T) {
+	type entry struct {
+		id     string
+		fields []string
+	}
+	tests := []struct {
+		name    string
+		entries []entry
+		afterID string
+		wantIDs []string
+	}{
+		{
+			name:    "missing key returns empty slice",
+			afterID: "0-0",
+			wantIDs: nil,
+		},
+		{
+			name: "returns all entries strictly after given ID",
+			entries: []entry{
+				{"1-0", []string{"k", "v"}},
+				{"2-0", []string{"k", "v"}},
+				{"3-0", []string{"k", "v"}},
+			},
+			afterID: "1-0",
+			wantIDs: []string{"2-0", "3-0"},
+		},
+		{
+			name: "ID 0-0 returns all entries",
+			entries: []entry{
+				{"1-0", []string{"k", "v"}},
+				{"2-0", []string{"k", "v"}},
+			},
+			afterID: "0-0",
+			wantIDs: []string{"1-0", "2-0"},
+		},
+		{
+			name: "ID equal to last entry returns empty",
+			entries: []entry{
+				{"1-0", []string{"k", "v"}},
+				{"2-0", []string{"k", "v"}},
+			},
+			afterID: "2-0",
+			wantIDs: nil,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			s := store.New()
+			for _, e := range tt.entries {
+				if _, err := s.XAdd("mystream", e.id, e.fields); err != nil {
+					t.Fatalf("XAdd %q failed: %v", e.id, err)
+				}
+			}
+			got, err := s.XRead("mystream", tt.afterID)
+			if err != nil {
+				t.Fatalf("unexpected error: %v", err)
+			}
+			if len(got) != len(tt.wantIDs) {
+				t.Fatalf("len = %d, want %d; got %v", len(got), len(tt.wantIDs), got)
+			}
+			for i, wantID := range tt.wantIDs {
+				if got[i].ID != wantID {
+					t.Errorf("index %d: got ID %q, want %q", i, got[i].ID, wantID)
+				}
+			}
+		})
+	}
+}

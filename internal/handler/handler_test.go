@@ -666,6 +666,79 @@ func TestHandleXRange(t *testing.T) {
 	}
 }
 
+func TestHandleXRead(t *testing.T) {
+	xadd := func(key, id string, kvs ...string) string {
+		parts := append([]string{key, id}, kvs...)
+		n := len(parts) + 1
+		s := "*" + strconv.Itoa(n) + "\r\n$5\r\nXADD\r\n"
+		for _, p := range parts {
+			s += "$" + strconv.Itoa(len(p)) + "\r\n" + p + "\r\n"
+		}
+		return s
+	}
+	xread := func(key, id string) string {
+		return "*4\r\n$5\r\nXREAD\r\n$7\r\nSTREAMS\r\n" +
+			"$" + strconv.Itoa(len(key)) + "\r\n" + key + "\r\n" +
+			"$" + strconv.Itoa(len(id)) + "\r\n" + id + "\r\n"
+	}
+
+	tests := []struct {
+		name  string
+		setup []string
+		input string
+		want  string
+	}{
+		{
+			name:  "wrong number of arguments",
+			input: "*2\r\n$5\r\nXREAD\r\n$7\r\nSTREAMS\r\n",
+			want:  "-ERR wrong number of arguments\r\n",
+		},
+		{
+			name:  "missing key returns null array",
+			input: xread("nokey", "0-0"),
+			want:  "*-1\r\n",
+		},
+		{
+			name: "returns entries strictly after given ID",
+			setup: []string{
+				xadd("s", "1-0", "k", "a"),
+				xadd("s", "2-0", "k", "b"),
+				xadd("s", "3-0", "k", "c"),
+			},
+			input: xread("s", "1-0"),
+			want: "*1\r\n" +
+				"*2\r\n" +
+				"$1\r\ns\r\n" +
+				"*2\r\n" +
+				"*2\r\n$3\r\n2-0\r\n*2\r\n$1\r\nk\r\n$1\r\nb\r\n" +
+				"*2\r\n$3\r\n3-0\r\n*2\r\n$1\r\nk\r\n$1\r\nc\r\n",
+		},
+		{
+			name: "ID 0-0 returns all entries",
+			setup: []string{
+				xadd("s", "1-0", "k", "v"),
+				xadd("s", "2-0", "k", "v"),
+			},
+			input: xread("s", "0-0"),
+			want: "*1\r\n" +
+				"*2\r\n" +
+				"$1\r\ns\r\n" +
+				"*2\r\n" +
+				"*2\r\n$3\r\n1-0\r\n*2\r\n$1\r\nk\r\n$1\r\nv\r\n" +
+				"*2\r\n$3\r\n2-0\r\n*2\r\n$1\r\nk\r\n$1\r\nv\r\n",
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			h := newHandler()
+			runCommands(h, tt.setup)
+			if got := h.Handle([]byte(tt.input)); got != tt.want {
+				t.Errorf("got %q, want %q", got, tt.want)
+			}
+		})
+	}
+}
+
 func TestHandleLRange(t *testing.T) {
 	rpushABC := []string{
 		"*3\r\n$5\r\nRPUSH\r\n$6\r\nmylist\r\n$1\r\na\r\n",

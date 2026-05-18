@@ -97,6 +97,30 @@ func (s *Store) XAdd(key, id string, fields []string) (string, error) {
 	return id, nil
 }
 
+func (s *Store) XRead(key, afterID string) ([]StreamEntry, error) {
+	s.mu.RLock()
+	defer s.mu.RUnlock()
+
+	e, ok := s.data[key]
+	if !ok || e.kind != kindStream {
+		return nil, nil
+	}
+
+	afterMs, afterSeq, err := parseStreamID(afterID)
+	if err != nil {
+		return nil, err
+	}
+
+	var result []StreamEntry
+	for _, entry := range e.streamVal {
+		ms, seq, _ := parseStreamID(entry.ID)
+		if ms > afterMs || (ms == afterMs && seq > afterSeq) {
+			result = append(result, entry)
+		}
+	}
+	return result, nil
+}
+
 func (s *Store) XRange(key, startID, endID string) ([]StreamEntry, error) {
 	s.mu.RLock()
 	defer s.mu.RUnlock()
