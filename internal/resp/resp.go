@@ -41,6 +41,10 @@ func ParseArray(data []byte) ([]string, error) {
 	return result, nil
 }
 
+func Error(msg string) string {
+	return "-" + msg + "\r\n"
+}
+
 func BulkString(s string) string {
 	return fmt.Sprintf("$%d\r\n%s\r\n", len(s), s)
 }

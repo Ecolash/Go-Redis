@@ -94,7 +94,7 @@ func (h *Handler) handleXAdd(parts []string) string {
 	}
 	id, err := h.store.XAdd(parts[1], parts[2], parts[3:])
 	if err != nil {
-		return "-" + err.Error() + "\r\n"
+		return resp.Error(err.Error())
 	}
 	return resp.BulkString(id)
 }

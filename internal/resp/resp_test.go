@@ -62,6 +62,13 @@ func TestArray(t *testing.T) {
 	}
 }
 
+func TestError(t *testing.T) {
+	got := resp.Error("ERR something went wrong")
+	if got != "-ERR something went wrong\r\n" {
+		t.Errorf("got %q, want \"-ERR something went wrong\\r\\n\"", got)
+	}
+}
+
 func TestArrayEmpty(t *testing.T) {
 	got := resp.Array([]string{})
 	expected := "*0\r\n"
