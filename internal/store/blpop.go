@@ -10,6 +10,7 @@ func (s *Store) BLPopWait(keys []string) (<-chan BLPOPResult, func()) {
 		ch:   make(chan BLPOPResult, 1),
 	}
 
+	// Try immediate pop in key priority order.
 	s.mu.Lock()
 	for _, key := range keys {
 		e, ok := s.data[key]
@@ -24,6 +25,7 @@ func (s *Store) BLPopWait(keys []string) (<-chan BLPOPResult, func()) {
 		return w.ch, func() {}
 	}
 
+	// No immediate element, register waiter for all keys.
 	s.wmu.Lock()
 	for _, key := range keys {
 		s.waiters[key] = append(s.waiters[key], w)
