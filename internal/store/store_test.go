@@ -1183,4 +1183,36 @@ func TestXReadWait(t *testing.T) {
 			// correct: no delivery after cancel
 		}
 	})
+
+	t.Run("$ does not deliver existing entries immediately", func(t *testing.T) {
+		s := store.New()
+		s.XAdd("mystream", "1-0", []string{"k", "v"})
+		ch, cancel := s.XReadWait("mystream", "$")
+		defer cancel()
+		select {
+		case entries := <-ch:
+			t.Fatalf("expected no immediate delivery, got %v", entries)
+		case <-time.After(50 * time.Millisecond):
+			// correct: $ skips existing entries
+		}
+	})
+
+	t.Run("$ delivers entries added after the call", func(t *testing.T) {
+		s := store.New()
+		s.XAdd("mystream", "1-0", []string{"old", "entry"})
+		ch, cancel := s.XReadWait("mystream", "$")
+		defer cancel()
+		go func() {
+			time.Sleep(20 * time.Millisecond)
+			s.XAdd("mystream", "2-0", []string{"new", "entry"})
+		}()
+		select {
+		case entries := <-ch:
+			if len(entries) != 1 || entries[0].ID != "2-0" {
+				t.Errorf("unexpected entries: %v", entries)
+			}
+		case <-time.After(200 * time.Millisecond):
+			t.Fatal("XReadWait with $ did not unblock after XAdd")
+		}
+	})
 }

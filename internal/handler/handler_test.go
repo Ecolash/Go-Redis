@@ -926,3 +926,71 @@ func TestHandleXReadBlocking(t *testing.T) {
 		}
 	})
 }
+
+func TestHandleXReadBlockingDollar(t *testing.T) {
+	xadd := func(key, id string, kvs ...string) string {
+		parts := append([]string{key, id}, kvs...)
+		n := len(parts) + 1
+		s := "*" + strconv.Itoa(n) + "\r\n$5\r\nXADD\r\n"
+		for _, p := range parts {
+			s += "$" + strconv.Itoa(len(p)) + "\r\n" + p + "\r\n"
+		}
+		return s
+	}
+	xreadBlockDollar := func(key string, ms int) string {
+		msStr := strconv.Itoa(ms)
+		return "*6\r\n$5\r\nXREAD\r\n$5\r\nBLOCK\r\n" +
+			"$" + strconv.Itoa(len(msStr)) + "\r\n" + msStr + "\r\n" +
+			"$7\r\nSTREAMS\r\n" +
+			"$" + strconv.Itoa(len(key)) + "\r\n" + key + "\r\n" +
+			"$1\r\n$\r\n"
+	}
+
+	t.Run("$ does not return existing entries, times out if no new data", func(t *testing.T) {
+		h := newHandler()
+		h.Handle([]byte(xadd("mystream", "1-0", "k", "v")))
+		got := h.Handle([]byte(xreadBlockDollar("mystream", 100)))
+		if got != "*-1\r\n" {
+			t.Errorf("got %q, want *-1\\r\\n", got)
+		}
+	})
+
+	t.Run("$ unblocks when new entry is added after command", func(t *testing.T) {
+		h := newHandler()
+		h.Handle([]byte(xadd("mystream", "1-0", "old", "val")))
+		done := make(chan string, 1)
+		go func() {
+			done <- h.Handle([]byte(xreadBlockDollar("mystream", 500)))
+		}()
+		time.Sleep(20 * time.Millisecond)
+		h.Handle([]byte(xadd("mystream", "2-0", "k", "v")))
+		select {
+		case got := <-done:
+			want := "*1\r\n*2\r\n$8\r\nmystream\r\n*1\r\n*2\r\n$3\r\n2-0\r\n*2\r\n$1\r\nk\r\n$1\r\nv\r\n"
+			if got != want {
+				t.Errorf("got %q, want %q", got, want)
+			}
+		case <-time.After(300 * time.Millisecond):
+			t.Fatal("XREAD BLOCK $ did not unblock after XADD")
+		}
+	})
+
+	t.Run("$ on empty stream unblocks when first entry is added", func(t *testing.T) {
+		h := newHandler()
+		done := make(chan string, 1)
+		go func() {
+			done <- h.Handle([]byte(xreadBlockDollar("mystream", 500)))
+		}()
+		time.Sleep(20 * time.Millisecond)
+		h.Handle([]byte(xadd("mystream", "1-0", "k", "v")))
+		select {
+		case got := <-done:
+			want := "*1\r\n*2\r\n$8\r\nmystream\r\n*1\r\n*2\r\n$3\r\n1-0\r\n*2\r\n$1\r\nk\r\n$1\r\nv\r\n"
+			if got != want {
+				t.Errorf("got %q, want %q", got, want)
+			}
+		case <-time.After(300 * time.Millisecond):
+			t.Fatal("XREAD BLOCK $ on empty stream did not unblock after XADD")
+		}
+	})
+}

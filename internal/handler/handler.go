@@ -244,6 +244,8 @@ func (h *Handler) handleXReadBlocking(parts []string) string {
 	if err != nil || ms < 0 {
 		return errWrongArgs
 	}
+
+
 	key, afterID := parts[4], parts[5]
 
 	ch, cancel := h.store.XReadWait(key, afterID)
