@@ -219,11 +219,57 @@ func (h *Handler) handleLRange(parts []string) string {
 }
 
 func (h *Handler) handleXRead(parts []string) string {
-	// XREAD STREAMS <key1> ... <keyN> <id1> ... <idN>
-	if len(parts) < 4 || !strings.EqualFold(parts[1], "STREAMS") {
+	// XREAD [BLOCK <ms>] STREAMS <key1>...<keyN> <id1>...<idN>
+	if len(parts) < 4 {
 		return errWrongArgs
 	}
-	rest := parts[2:]
+
+	blocking := strings.EqualFold(parts[1], "BLOCK")
+	if blocking {
+		return h.handleXReadBlocking(parts)
+	}
+
+	if !strings.EqualFold(parts[1], "STREAMS") {
+		return errWrongArgs
+	}
+	return h.xreadStreams(parts[2:])
+}
+
+func (h *Handler) handleXReadBlocking(parts []string) string {
+	// parts: [XREAD, BLOCK, <ms>, STREAMS, <key>, <id>]
+	if len(parts) < 6 || !strings.EqualFold(parts[3], "STREAMS") {
+		return errWrongArgs
+	}
+	ms, err := strconv.ParseInt(parts[2], 10, 64)
+	if err != nil || ms < 0 {
+		return errWrongArgs
+	}
+	key, afterID := parts[4], parts[5]
+
+	ch, cancel := h.store.XReadWait(key, afterID)
+	defer cancel()
+
+	var entries []store.StreamEntry
+	if ms == 0 {
+		entries = <-ch
+	} else {
+		timer := time.NewTimer(time.Duration(ms) * time.Millisecond)
+		defer timer.Stop()
+		select {
+		case entries = <-ch:
+		case <-timer.C:
+			return nullArray
+		}
+	}
+
+	respEntries := make([]resp.Entry, len(entries))
+	for i, e := range entries {
+		respEntries[i] = resp.Entry{ID: e.ID, Fields: e.Fields}
+	}
+	return resp.StreamResults([]resp.XReadResult{{Key: key, Entries: respEntries}})
+}
+
+func (h *Handler) xreadStreams(rest []string) string {
 	if len(rest)%2 != 0 {
 		return errWrongArgs
 	}

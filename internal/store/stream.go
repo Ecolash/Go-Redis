@@ -92,8 +92,10 @@ func (s *Store) XAdd(key, id string, fields []string) (string, error) {
 		}
 	}
 
-	e.streamVal = append(e.streamVal, StreamEntry{ID: id, Fields: fields})
+	newEntry := StreamEntry{ID: id, Fields: fields}
+	e.streamVal = append(e.streamVal, newEntry)
 	s.data[key] = e
+	s.notifyXReadWaiters(key, newEntry)
 	return id, nil
 }
 
@@ -149,3 +151,66 @@ func (s *Store) XRange(key, startID, endID string) ([]StreamEntry, error) {
 	}
 	return result, nil
 }
+
+// xreadLocked returns entries strictly after afterMs/afterSeq. Caller must hold s.mu.
+func (s *Store) xreadLocked(key string, afterMs, afterSeq int64) []StreamEntry {
+	e, ok := s.data[key]
+	if !ok || e.kind != kindStream {
+		return nil
+	}
+	var result []StreamEntry
+	for _, entry := range e.streamVal {
+		ms, seq, _ := parseStreamID(entry.ID)
+		if ms > afterMs || (ms == afterMs && seq > afterSeq) {
+			result = append(result, entry)
+		}
+	}
+	return result
+}
+
+func (s *Store) XReadWait(key, afterID string) (<-chan []StreamEntry, func()) {
+	afterMs, afterSeq, _ := parseStreamID(afterID)
+	w := &xreadWaiter{key: key, afterMs: afterMs, afterSeq: afterSeq, ch: make(chan []StreamEntry, 1)}
+
+	s.mu.Lock()
+	if entries := s.xreadLocked(key, afterMs, afterSeq); len(entries) > 0 {
+		w.ch <- entries
+		s.mu.Unlock()
+		return w.ch, func() {}
+	}
+	s.wmu.Lock()
+	s.xreadWaiters[key] = append(s.xreadWaiters[key], w)
+	s.wmu.Unlock()
+	s.mu.Unlock()
+
+	cancel := func() {
+		s.wmu.Lock()
+		defer s.wmu.Unlock()
+		waiters := s.xreadWaiters[key]
+		for i, waiter := range waiters {
+			if waiter == w {
+				s.xreadWaiters[key] = append(waiters[:i], waiters[i+1:]...)
+				return
+			}
+		}
+	}
+	return w.ch, cancel
+}
+
+func (s *Store) notifyXReadWaiters(key string, newEntry StreamEntry) {
+	s.wmu.Lock()
+	defer s.wmu.Unlock()
+	newMs, newSeq, _ := parseStreamID(newEntry.ID)
+	remaining := s.xreadWaiters[key][:0]
+	for _, w := range s.xreadWaiters[key] {
+		if newMs > w.afterMs || (newMs == w.afterMs && newSeq > w.afterSeq) {
+			entries := s.xreadLocked(key, w.afterMs, w.afterSeq)
+			w.ch <- entries
+		} else {
+			remaining = append(remaining, w)
+		}
+	}
+	s.xreadWaiters[key] = remaining
+}
+
+

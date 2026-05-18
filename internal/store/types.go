@@ -44,3 +44,11 @@ type blpopWaiter struct {
 	keys []string
 	ch   chan BLPOPResult // buffered size 1
 }
+
+// xreadWaiter tracks a single pending XREAD across one or more streams.
+type xreadWaiter struct {
+    key     string
+    afterMs  int64
+    afterSeq int64
+    ch      chan []StreamEntry // buffered 1
+}

@@ -1134,3 +1134,53 @@ func TestXRead(t *testing.T) {
 		})
 	}
 }
+
+func TestXReadWait(t *testing.T) {
+	t.Run("delivers immediately if entries already available", func(t *testing.T) {
+		s := store.New()
+		if _, err := s.XAdd("mystream", "1-0", []string{"k", "v"}); err != nil {
+			t.Fatalf("XAdd failed: %v", err)
+		}
+		ch, cancel := s.XReadWait("mystream", "0-0")
+		defer cancel()
+		select {
+		case entries := <-ch:
+			if len(entries) != 1 || entries[0].ID != "1-0" {
+				t.Errorf("unexpected entries: %v", entries)
+			}
+		case <-time.After(50 * time.Millisecond):
+			t.Fatal("expected immediate delivery, timed out")
+		}
+	})
+
+	t.Run("blocks then delivers when XAdd is called", func(t *testing.T) {
+		s := store.New()
+		ch, cancel := s.XReadWait("mystream", "0-0")
+		defer cancel()
+		go func() {
+			time.Sleep(20 * time.Millisecond)
+			s.XAdd("mystream", "1-0", []string{"k", "v"})
+		}()
+		select {
+		case entries := <-ch:
+			if len(entries) != 1 || entries[0].ID != "1-0" {
+				t.Errorf("unexpected entries: %v", entries)
+			}
+		case <-time.After(200 * time.Millisecond):
+			t.Fatal("XReadWait did not unblock after XAdd")
+		}
+	})
+
+	t.Run("cancel removes waiter so no delivery after cancel", func(t *testing.T) {
+		s := store.New()
+		ch, cancel := s.XReadWait("mystream", "0-0")
+		cancel()
+		s.XAdd("mystream", "1-0", []string{"k", "v"})
+		select {
+		case <-ch:
+			t.Fatal("expected no delivery after cancel")
+		case <-time.After(50 * time.Millisecond):
+			// correct: no delivery after cancel
+		}
+	})
+}

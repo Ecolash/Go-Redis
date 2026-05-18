@@ -14,12 +14,14 @@ type Store struct {
 	data    map[string]entry
 	wmu     sync.Mutex
 	waiters map[string][]*blpopWaiter
+	xreadWaiters map[string][]*xreadWaiter
 }
 
 func New() *Store {
 	return &Store{
 		data:    make(map[string]entry),
 		waiters: make(map[string][]*blpopWaiter),
+		xreadWaiters: make(map[string][]*xreadWaiter),
 	}
 }
 

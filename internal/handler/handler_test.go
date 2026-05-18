@@ -850,3 +850,79 @@ func TestHandleXReadMultiStream(t *testing.T) {
 		})
 	}
 }
+
+func TestHandleXReadBlocking(t *testing.T) {
+	xadd := func(key, id string, kvs ...string) string {
+		parts := append([]string{key, id}, kvs...)
+		n := len(parts) + 1
+		s := "*" + strconv.Itoa(n) + "\r\n$5\r\nXADD\r\n"
+		for _, p := range parts {
+			s += "$" + strconv.Itoa(len(p)) + "\r\n" + p + "\r\n"
+		}
+		return s
+	}
+	xreadBlock := func(key, afterID string, ms int) string {
+		msStr := strconv.Itoa(ms)
+		return "*6\r\n$5\r\nXREAD\r\n$5\r\nBLOCK\r\n" +
+			"$" + strconv.Itoa(len(msStr)) + "\r\n" + msStr + "\r\n" +
+			"$7\r\nSTREAMS\r\n" +
+			"$" + strconv.Itoa(len(key)) + "\r\n" + key + "\r\n" +
+			"$" + strconv.Itoa(len(afterID)) + "\r\n" + afterID + "\r\n"
+	}
+
+	t.Run("returns immediately if entries already exist after given ID", func(t *testing.T) {
+		h := newHandler()
+		h.Handle([]byte(xadd("mystream", "1-0", "k", "v")))
+		got := h.Handle([]byte(xreadBlock("mystream", "0-0", 100)))
+		want := "*1\r\n*2\r\n$8\r\nmystream\r\n*1\r\n*2\r\n$3\r\n1-0\r\n*2\r\n$1\r\nk\r\n$1\r\nv\r\n"
+		if got != want {
+			t.Errorf("got %q, want %q", got, want)
+		}
+	})
+
+	t.Run("returns null array when timeout expires with no data", func(t *testing.T) {
+		h := newHandler()
+		got := h.Handle([]byte(xreadBlock("mystream", "0-0", 100)))
+		if got != "*-1\r\n" {
+			t.Errorf("got %q, want *-1\\r\\n", got)
+		}
+	})
+
+	t.Run("unblocks and returns entry when XADD happens before timeout", func(t *testing.T) {
+		h := newHandler()
+		done := make(chan string, 1)
+		go func() {
+			done <- h.Handle([]byte(xreadBlock("mystream", "0-0", 500)))
+		}()
+		time.Sleep(20 * time.Millisecond)
+		h.Handle([]byte(xadd("mystream", "1-0", "k", "v")))
+		select {
+		case got := <-done:
+			want := "*1\r\n*2\r\n$8\r\nmystream\r\n*1\r\n*2\r\n$3\r\n1-0\r\n*2\r\n$1\r\nk\r\n$1\r\nv\r\n"
+			if got != want {
+				t.Errorf("got %q, want %q", got, want)
+			}
+		case <-time.After(300 * time.Millisecond):
+			t.Fatal("XREAD BLOCK did not unblock after XADD")
+		}
+	})
+
+	t.Run("BLOCK 0 waits indefinitely until XADD arrives", func(t *testing.T) {
+		h := newHandler()
+		done := make(chan string, 1)
+		go func() {
+			done <- h.Handle([]byte(xreadBlock("mystream", "0-0", 0)))
+		}()
+		time.Sleep(20 * time.Millisecond)
+		h.Handle([]byte(xadd("mystream", "1-0", "k", "v")))
+		select {
+		case got := <-done:
+			want := "*1\r\n*2\r\n$8\r\nmystream\r\n*1\r\n*2\r\n$3\r\n1-0\r\n*2\r\n$1\r\nk\r\n$1\r\nv\r\n"
+			if got != want {
+				t.Errorf("got %q, want %q", got, want)
+			}
+		case <-time.After(300 * time.Millisecond):
+			t.Fatal("XREAD BLOCK 0 did not unblock after XADD")
+		}
+	})
+}
