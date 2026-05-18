@@ -203,18 +203,26 @@ func (s *Store) LRange(key string, start, stop int) ([]string, bool) {
 	return e.listVal[start : stop+1], true
 }
 
-// BLPopWait atomically checks each key in priority order for an available element.
-// If found, the result is pre-loaded into the returned channel (no blocking needed).
-// If not, the caller is registered as a waiter; the channel receives a value when
-// any push delivers an element. The returned cancel must be called on timeout/cleanup.
+
+
+/*
+BLPopWait atomically checks each key in priority order for an available element.
+If found, the result is pre-loaded into the returned channel (no blocking needed).
+If not, the caller is registered as a waiter; the channel receives a value when
+any push delivers an element. The returned cancel must be called on timeout/cleanup.
+
+ch <- 10      // send 10 into channel
+x := <- ch    // receive from channel
+
+*/
 func (s *Store) BLPopWait(keys []string) (<-chan BLPOPResult, func()) {
 	w := &blpopWaiter{
 		keys: keys,
 		ch:   make(chan BLPOPResult, 1),
 	}
 
-	s.mu.Lock()
 	// Try immediate pop in key priority order.
+	s.mu.Lock()
 	for _, key := range keys {
 		e, ok := s.data[key]
 		if !ok || e.kind != kindList || len(e.listVal) == 0 {
@@ -228,7 +236,7 @@ func (s *Store) BLPopWait(keys []string) (<-chan BLPOPResult, func()) {
 		return w.ch, func() {}
 	}
 
-	// No immediate element — register waiter for all keys.
+	// No immediate element, register waiter for all keys.
 	s.wmu.Lock()
 	for _, key := range keys {
 		s.waiters[key] = append(s.waiters[key], w)
@@ -263,7 +271,6 @@ func (s *Store) deliverToWaitersLocked(key string) {
 		val := e.listVal[0]
 		e.listVal = e.listVal[1:]
 		s.data[key] = e
-		// Remove waiter from all its registered keys.
 		for _, k := range waiter.keys {
 			s.removeWaiter(k, waiter)
 		}

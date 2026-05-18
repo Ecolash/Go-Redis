@@ -43,7 +43,6 @@ func New(s *store.Store) *Handler {
 	return h
 }
 
-// Handle parses a RESP-encoded command and dispatches to the appropriate handler.
 func (h *Handler) Handle(data []byte) string {
 	parts, err := resp.ParseArray(data)
 	if err != nil || len(parts) == 0 {
@@ -141,11 +140,11 @@ func (h *Handler) handleBLPop(parts []string) string {
 		return errWrongArgs
 	}
 
-	ch, cancel := h.store.BLPopWait(keys)
+	channel, cancel := h.store.BLPopWait(keys)
 	defer cancel()
 
 	if timeoutSecs == 0 {
-		result := <-ch
+		result := <-channel
 		return resp.Array([]string{result.Key, result.Val})
 	}
 
@@ -153,7 +152,7 @@ func (h *Handler) handleBLPop(parts []string) string {
 	defer timer.Stop()
 
 	select {
-	case result := <-ch:
+	case result := <-channel:
 		return resp.Array([]string{result.Key, result.Val})
 	case <-timer.C:
 		return nullArray
