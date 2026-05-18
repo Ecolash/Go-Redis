@@ -32,6 +32,7 @@ func New(s *store.Store) *Handler {
 		command.ECHO:  h.handleEcho,
 		command.SET:   h.handleSet,
 		command.GET:   h.handleGet,
+		command.TYPE:  h.handleType,
 		command.LPOP:  h.handleLPop,
 		command.RPOP:  h.handleRPop,
 		command.BLPOP: h.handleBLPop,
@@ -83,6 +84,13 @@ func (h *Handler) handleGet(parts []string) string {
 		return nullBulk
 	}
 	return resp.BulkString(val)
+}
+
+func (h *Handler) handleType(parts []string) string {
+	if len(parts) < 2 {
+		return errWrongArgs
+	}
+	return "+" + h.store.Type(parts[1]) + "\r\n"
 }
 
 func (h *Handler) handleLPop(parts []string) string {

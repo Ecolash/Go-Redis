@@ -8,6 +8,8 @@ const (
 	SET   Command = "SET"
 	GET   Command = "GET"
 
+	TYPE Command = "TYPE"
+
 	// LIST Commands
 	BLPOP  Command = "BLPOP"
 	LPUSH  Command = "LPUSH"

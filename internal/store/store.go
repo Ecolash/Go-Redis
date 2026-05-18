@@ -203,18 +203,31 @@ func (s *Store) LRange(key string, start, stop int) ([]string, bool) {
 	return e.listVal[start : stop+1], true
 }
 
+func (s *Store) Type(key string) string {
+	s.mu.RLock()
+	defer s.mu.RUnlock()
+	e, ok := s.data[key]
+	if !ok {
+		return "none"
+	}
+	if !e.expiresAt.IsZero() && time.Now().After(e.expiresAt) {
+		return "none"
+	}
 
+	kindToString := map[valueKind]string{
+		kindString: "string",
+		kindList:   "list",
+	}
+	if typeStr, ok := kindToString[e.kind]; ok {
+		return typeStr
+	}
+	return "none"
+}
 
-/*
-BLPopWait atomically checks each key in priority order for an available element.
-If found, the result is pre-loaded into the returned channel (no blocking needed).
-If not, the caller is registered as a waiter; the channel receives a value when
-any push delivers an element. The returned cancel must be called on timeout/cleanup.
-
-ch <- 10      // send 10 into channel
-x := <- ch    // receive from channel
-
-*/
+// BLPopWait atomically checks each key in priority order for an available element.
+// If found, the result is pre-loaded into the returned channel (no blocking needed).
+// If not, the caller is registered as a waiter; the channel receives a value when
+// any push delivers an element. The returned cancel must be called on timeout/cleanup.
 func (s *Store) BLPopWait(keys []string) (<-chan BLPOPResult, func()) {
 	w := &blpopWaiter{
 		keys: keys,

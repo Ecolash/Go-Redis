@@ -545,6 +545,52 @@ func TestBLPopWait(t *testing.T) {
 	})
 }
 
+func TestType(t *testing.T) {
+	tests := []struct {
+		name  string
+		setup func(s *store.Store)
+		key   string
+		want  string
+	}{
+		{
+			name:  "missing key returns none",
+			setup: func(s *store.Store) {},
+			key:   "missing",
+			want:  "none",
+		},
+		{
+			name:  "string key returns string",
+			setup: func(s *store.Store) { s.Set("k", "v", 0) },
+			key:   "k",
+			want:  "string",
+		},
+		{
+			name:  "list key returns list",
+			setup: func(s *store.Store) { s.RPush("k", "v") },
+			key:   "k",
+			want:  "list",
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			s := store.New()
+			tt.setup(s)
+			if got := s.Type(tt.key); got != tt.want {
+				t.Errorf("got %q, want %q", got, tt.want)
+			}
+		})
+	}
+}
+
+func TestTypeExpiredKeyReturnsNone(t *testing.T) {
+	s := store.New()
+	s.Set("k", "v", 20*time.Millisecond)
+	time.Sleep(30 * time.Millisecond)
+	if got := s.Type("k"); got != "none" {
+		t.Errorf("got %q, want \"none\"", got)
+	}
+}
+
 func TestLRange(t *testing.T) {
 	tests := []struct {
 		name   string
