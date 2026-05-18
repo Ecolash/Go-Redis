@@ -123,3 +123,65 @@ func TestStreamEntries(t *testing.T) {
 		})
 	}
 }
+
+func TestStreamResults(t *testing.T) {
+	tests := []struct {
+		name    string
+		results []resp.XReadResult
+		want    string
+	}{
+		{
+			name:    "empty slice returns empty outer array",
+			results: []resp.XReadResult{},
+			want:    "*0\r\n",
+		},
+		{
+			name: "single stream with two entries",
+			results: []resp.XReadResult{
+				{
+					Key: "mystream",
+					Entries: []resp.Entry{
+						{ID: "0-1", Fields: []string{"k", "v"}},
+						{ID: "0-2", Fields: []string{"a", "b"}},
+					},
+				},
+			},
+			want: "*1\r\n" +
+				"*2\r\n$8\r\nmystream\r\n" +
+				"*2\r\n" + // entries count: 2
+				"*2\r\n$3\r\n0-1\r\n*2\r\n$1\r\nk\r\n$1\r\nv\r\n" +
+				"*2\r\n$3\r\n0-2\r\n*2\r\n$1\r\na\r\n$1\r\nb\r\n",
+		},
+		{
+			name: "multiple streams with entries",
+			results: []resp.XReadResult{
+				{
+					Key: "stream1",
+					Entries: []resp.Entry{
+						{ID: "0-1", Fields: []string{"k", "v"}},
+					},
+				},
+				{
+					Key: "stream2",
+					Entries: []resp.Entry{
+						{ID: "0-2", Fields: []string{"a", "b"}},
+					},
+				},
+			},
+			want: "*2\r\n" +
+				"*2\r\n$7\r\nstream1\r\n" +
+				"*1\r\n" + // entries count: 1
+				"*2\r\n$3\r\n0-1\r\n*2\r\n$1\r\nk\r\n$1\r\nv\r\n" +
+				"*2\r\n$7\r\nstream2\r\n" +
+				"*1\r\n" + // entries count: 1
+				"*2\r\n$3\r\n0-2\r\n*2\r\n$1\r\na\r\n$1\r\nb\r\n",
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if got := resp.StreamResults(tt.results); got != tt.want {
+				t.Errorf("got %q, want %q", got, tt.want)
+			}
+		})
+	}
+}

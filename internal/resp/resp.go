@@ -67,9 +67,27 @@ type Entry struct {
 	Fields []string
 }
 
-// StreamResult encodes XREAD's outer array: *1 → [*2 → [key, entries]].
+// XReadResult is a single stream result for use with StreamResults.
+type XReadResult struct {
+	Key     string
+	Entries []Entry
+}
+
+// StreamResults encodes XREAD's response: *N → [[key, entries], ...].
+func StreamResults(results []XReadResult) string {
+	var sb strings.Builder
+	fmt.Fprintf(&sb, "*%d\r\n", len(results))
+	for _, r := range results {
+		sb.WriteString("*2\r\n")
+		sb.WriteString(BulkString(r.Key))
+		sb.WriteString(StreamEntries(r.Entries))
+	}
+	return sb.String()
+}
+
+// StreamResult encodes a single-stream XREAD response.
 func StreamResult(key string, entries []Entry) string {
-	return "*1\r\n*2\r\n" + BulkString(key) + StreamEntries(entries)
+	return StreamResults([]XReadResult{{Key: key, Entries: entries}})
 }
 
 // StreamEntries encodes a slice of stream entries as a RESP array of arrays.
