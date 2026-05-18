@@ -19,9 +19,10 @@ const (
 )
 
 // StreamEntry is a single entry in a Redis stream.
+// Fields is a flat alternating list of keys and values, e.g. ["k1","v1","k2","v2"].
 type StreamEntry struct {
 	ID     string
-	Fields []string // flat alternating key-value pairs: ["k1","v1","k2","v2"]
+	Fields []string 
 }
 
 type entry struct {

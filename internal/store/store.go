@@ -5,10 +5,14 @@ import (
 	"time"
 )
 
+// LOCKING STRATEGY
+// - s.mu  protects all access to s.data and s.waiters, including checking expirations.
+// - s.wmu protects only the logic around waiting and notifying BLPOP waiters. 
+
 type Store struct {
 	mu      sync.RWMutex
 	data    map[string]entry
-	wmu     sync.Mutex // always acquired after mu when both are needed
+	wmu     sync.Mutex
 	waiters map[string][]*blpopWaiter
 }
 
