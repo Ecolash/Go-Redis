@@ -29,7 +29,7 @@ type entry struct {
 	strVal    string
 	listVal   []string
 	streamVal []StreamEntry
-	expiresAt time.Time
+	expiresAt time.Time // zero means no expiry
 }
 
 // BLPOPResult is the key+value returned by a blocking pop.
