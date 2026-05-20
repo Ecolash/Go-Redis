@@ -46,7 +46,7 @@ func (s *Server) handshakeWithMaster() {
 		return
 	}
 
-	s.processPropagated(r)
+	s.processPropagated(conn, r)
 }
 
 func sendAndAwait(conn net.Conn, r *bufio.Reader, args []string) error {
@@ -95,7 +95,7 @@ func completePsync(conn net.Conn, r *bufio.Reader) error {
 	return nil
 }
 
-func (s *Server) processPropagated(r *bufio.Reader) {
+func (s *Server) processPropagated(conn net.Conn, r *bufio.Reader) {
 	h := handler.New(s.store, s.role)
 	for {
 		cmd, err := readArray(r)
@@ -105,7 +105,13 @@ func (s *Server) processPropagated(r *bufio.Reader) {
 			}
 			return
 		}
-		h.Handle(cmd)
+		reply := h.Handle(cmd)
+		if h.ShouldReplyToMaster() {
+			if _, werr := conn.Write([]byte(reply)); werr != nil {
+				log.Printf("replication: write reply to master: %v", werr)
+				return
+			}
+		}
 	}
 }
 

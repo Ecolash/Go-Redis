@@ -2,12 +2,17 @@ package handler
 
 import (
 	"fmt"
+	"strings"
 
 	"github.com/codecrafters-io/redis-starter-go/internal/rdb"
 	"github.com/codecrafters-io/redis-starter-go/internal/resp"
 )
 
-func (h *Handler) handleReplConf(_ []string) string {
+func (h *Handler) handleReplConf(parts []string) string {
+	if len(parts) >= 2 && strings.EqualFold(parts[1], "GETACK") {
+		h.replyToMaster = true
+		return resp.Array([]string{"REPLCONF", "ACK", "0"})
+	}
 	return "+OK\r\n"
 }
 

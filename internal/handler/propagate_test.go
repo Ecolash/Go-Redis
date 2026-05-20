@@ -98,6 +98,29 @@ func TestPropagateOnExecRunsForEachQueuedWrite(t *testing.T) {
 	}
 }
 
+func TestReplConfGetAckProducesAckReply(t *testing.T) {
+	h := handler.New(store.New(), "slave")
+	got := h.Handle([]byte("*3\r\n$8\r\nREPLCONF\r\n$6\r\nGETACK\r\n$1\r\n*\r\n"))
+	want := "*3\r\n$8\r\nREPLCONF\r\n$3\r\nACK\r\n$1\r\n0\r\n"
+	if got != want {
+		t.Errorf("REPLCONF GETACK reply = %q, want %q", got, want)
+	}
+	if !h.ShouldReplyToMaster() {
+		t.Error("ShouldReplyToMaster() = false, want true after GETACK")
+	}
+	if h.ShouldReplyToMaster() {
+		t.Error("ShouldReplyToMaster() should reset after read")
+	}
+}
+
+func TestReplConfNonGetAckDoesNotRequestMasterReply(t *testing.T) {
+	h := handler.New(store.New(), "master")
+	h.Handle([]byte("*3\r\n$8\r\nREPLCONF\r\n$4\r\ncapa\r\n$6\r\npsync2\r\n"))
+	if h.ShouldReplyToMaster() {
+		t.Error("ShouldReplyToMaster() = true for non-GETACK REPLCONF")
+	}
+}
+
 func TestBecameReplicaSetOnlyAfterPsync(t *testing.T) {
 	h, _ := newPropHandler(t)
 	if h.BecameReplica() {

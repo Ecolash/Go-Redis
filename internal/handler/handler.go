@@ -47,6 +47,7 @@ type Handler struct {
 	watching map[string]uint64
 	onPropagate func(parts []string)
 	replica bool
+	replyToMaster bool
 
 	commands map[command.Command]commandFunc
 	txCommands map[command.Command]commandFunc
@@ -128,6 +129,15 @@ func (h *Handler) dispatch(parts []string) string {
 func (h *Handler) BecameReplica() bool {
 	b := h.replica
 	h.replica = false
+	return b
+}
+
+// ShouldReplyToMaster reports whether the previous Handle call produced a reply
+// that the replica must forward back over its master connection (e.g. the ACK
+// for REPLCONF GETACK). The flag is consumed on read.
+func (h *Handler) ShouldReplyToMaster() bool {
+	b := h.replyToMaster
+	h.replyToMaster = false
 	return b
 }
 
