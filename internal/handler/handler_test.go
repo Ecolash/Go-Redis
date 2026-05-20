@@ -1137,3 +1137,65 @@ func TestHandleExec(t *testing.T) {
 		}
 	})
 }
+
+func TestHandleDiscard(t *testing.T) {
+	t.Run("DISCARD without MULTI returns error", func(t *testing.T) {
+		h := newHandler()
+		got := h.Handle([]byte("*1\r\n$7\r\nDISCARD\r\n"))
+		if got != "-ERR DISCARD without MULTI\r\n" {
+			t.Errorf("got %q, want -ERR DISCARD without MULTI\\r\\n", got)
+		}
+	})
+
+	t.Run("DISCARD inside MULTI returns OK and drops queued commands", func(t *testing.T) {
+		h := newHandler()
+		h.Handle([]byte("*1\r\n$5\r\nMULTI\r\n"))
+		h.Handle([]byte("*3\r\n$3\r\nSET\r\n$3\r\nfoo\r\n$2\r\n41\r\n"))
+		got := h.Handle([]byte("*1\r\n$7\r\nDISCARD\r\n"))
+		if got != "+OK\r\n" {
+			t.Errorf("got %q, want +OK\\r\\n", got)
+		}
+
+		// foo must not have been set: a subsequent GET sees a null bulk.
+		got = h.Handle([]byte("*2\r\n$3\r\nGET\r\n$3\r\nfoo\r\n"))
+		if got != "$-1\r\n" {
+			t.Errorf("expected null bulk after DISCARD, got %q", got)
+		}
+	})
+
+	t.Run("second DISCARD after first returns DISCARD without MULTI", func(t *testing.T) {
+		h := newHandler()
+		h.Handle([]byte("*1\r\n$5\r\nMULTI\r\n"))
+		h.Handle([]byte("*1\r\n$7\r\nDISCARD\r\n"))
+		got := h.Handle([]byte("*1\r\n$7\r\nDISCARD\r\n"))
+		if got != "-ERR DISCARD without MULTI\r\n" {
+			t.Errorf("got %q, want -ERR DISCARD without MULTI\\r\\n", got)
+		}
+	})
+
+	t.Run("EXEC after DISCARD returns EXEC without MULTI", func(t *testing.T) {
+		h := newHandler()
+		h.Handle([]byte("*1\r\n$5\r\nMULTI\r\n"))
+		h.Handle([]byte("*3\r\n$3\r\nSET\r\n$1\r\nk\r\n$1\r\nv\r\n"))
+		h.Handle([]byte("*1\r\n$7\r\nDISCARD\r\n"))
+		got := h.Handle([]byte("*1\r\n$4\r\nEXEC\r\n"))
+		if got != "-ERR EXEC without MULTI\r\n" {
+			t.Errorf("got %q, want -ERR EXEC without MULTI\\r\\n", got)
+		}
+	})
+
+	t.Run("commands after DISCARD execute normally", func(t *testing.T) {
+		h := newHandler()
+		h.Handle([]byte("*1\r\n$5\r\nMULTI\r\n"))
+		h.Handle([]byte("*3\r\n$3\r\nSET\r\n$1\r\nk\r\n$1\r\nv\r\n"))
+		h.Handle([]byte("*1\r\n$7\r\nDISCARD\r\n"))
+		got := h.Handle([]byte("*3\r\n$3\r\nSET\r\n$1\r\nk\r\n$1\r\nw\r\n"))
+		if got != "+OK\r\n" {
+			t.Errorf("got %q, want +OK\\r\\n", got)
+		}
+		got = h.Handle([]byte("*2\r\n$3\r\nGET\r\n$1\r\nk\r\n"))
+		if got != "$1\r\nw\r\n" {
+			t.Errorf("got %q, want $1\\r\\nw\\r\\n", got)
+		}
+	})
+}

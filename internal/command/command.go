@@ -13,8 +13,9 @@ const (
 	TYPE Command = "TYPE"
 
 	// Transaction commands
-	MULTI Command = "MULTI"
-	EXEC  Command = "EXEC"
+	MULTI   Command = "MULTI"
+	EXEC    Command = "EXEC"
+	DISCARD Command = "DISCARD"
 
 	// STREAM Commands
 	XADD   Command = "XADD"

@@ -14,6 +14,7 @@ const (
 	errResponse  = "-ERR unknown command\r\n"
 	errWrongArgs = "-ERR wrong number of arguments\r\n"
 	errExecNoMulti = "-ERR EXEC without MULTI\r\n"
+	errDiscardNoMulti = "-ERR DISCARD without MULTI\r\n"
 	okResponse   = "+OK\r\n"
 	queuedResp   = "+QUEUED\r\n"
 	nullBulk     = "$-1\r\n"
@@ -69,6 +70,8 @@ func (h *Handler) Handle(data []byte) string {
 		return h.handleMulti(parts)
 	case command.EXEC:
 		return h.handleExec(parts)
+	case command.DISCARD:
+		return h.handleDiscard(parts)
 	}
 
 	if h.inMulti {
@@ -88,6 +91,15 @@ func (h *Handler) dispatch(parts []string) string {
 
 func (h *Handler) handleMulti(_ []string) string {
 	h.inMulti = true
+	h.queue = nil
+	return okResponse
+}
+
+func (h *Handler) handleDiscard(_ []string) string {
+	if !h.inMulti {
+		return errDiscardNoMulti
+	}
+	h.inMulti = false
 	h.queue = nil
 	return okResponse
 }
