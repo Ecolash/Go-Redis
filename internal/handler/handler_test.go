@@ -13,7 +13,7 @@ import (
 )
 
 func newHandler() *handler.Handler {
-	return handler.New(store.New())
+	return handler.New(store.New(), "master")
 }
 
 func runCommands(h *handler.Handler, cmds []string) {
@@ -1206,7 +1206,7 @@ func TestHandleDiscard(t *testing.T) {
 // connected clients hitting the same server.
 func newPair() (*handler.Handler, *handler.Handler) {
 	s := store.New()
-	return handler.New(s), handler.New(s)
+	return handler.New(s, "master"), handler.New(s, "master")
 }
 
 func TestHandleWatch(t *testing.T) {

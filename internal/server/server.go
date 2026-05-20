@@ -12,6 +12,7 @@ import (
 type Server struct {
 	listener net.Listener
 	store    *store.Store
+	role     string
 }
 
 func New(addr string) (*Server, error) {
@@ -22,6 +23,7 @@ func New(addr string) (*Server, error) {
 	return &Server{
 		listener: l,
 		store:    store.New(),
+		role:     "master",
 	}, nil
 }
 
@@ -45,7 +47,7 @@ func (s *Server) Run() {
 
 func (s *Server) handleConn(conn net.Conn) {
 	defer conn.Close()
-	h := handler.New(s.store)
+	h := handler.New(s.store, s.role)
 	buf := make([]byte, 512)
 	for {
 		n, err := conn.Read(buf)

@@ -23,6 +23,7 @@ type commandFunc func(parts []string) string
 // per-connection, so callers must create one Handler per client connection.
 type Handler struct {
 	store *store.Store
+	role  string
 
 	// commands are normal data commands. While inMulti is true, they are
 	// queued instead of executed.
@@ -40,11 +41,12 @@ type Handler struct {
 	watching map[string]uint64
 }
 
-func New(s *store.Store) *Handler {
-	h := &Handler{store: s}
+func New(s *store.Store, role string) *Handler {
+	h := &Handler{store: s, role: role}
 	h.commands = map[command.Command]commandFunc{
 		command.PING:   h.handlePing,
 		command.ECHO:   h.handleEcho,
+		command.INFO:   h.handleInfo,
 		command.SET:    h.handleSet,
 		command.GET:    h.handleGet,
 		command.TYPE:   h.handleType,

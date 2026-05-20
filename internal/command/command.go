@@ -11,6 +11,7 @@ const (
 	DECR  Command = "DECR"
 
 	TYPE Command = "TYPE"
+	INFO Command = "INFO"
 
 	// Transaction commands
 	MULTI   Command = "MULTI"
