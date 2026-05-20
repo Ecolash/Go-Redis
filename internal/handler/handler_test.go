@@ -1428,3 +1428,46 @@ func TestHandleUnwatch(t *testing.T) {
 		}
 	})
 }
+
+func TestHandleReplConf(t *testing.T) {
+	tests := []struct {
+		name  string
+		input string
+		want  string
+	}{
+		{
+			name:  "listening-port returns OK",
+			input: "*3\r\n$8\r\nREPLCONF\r\n$14\r\nlistening-port\r\n$4\r\n6380\r\n",
+			want:  "+OK\r\n",
+		},
+		{
+			name:  "capa psync2 returns OK",
+			input: "*3\r\n$8\r\nREPLCONF\r\n$4\r\ncapa\r\n$6\r\npsync2\r\n",
+			want:  "+OK\r\n",
+		},
+		{
+			name:  "case insensitive",
+			input: "*3\r\n$8\r\nreplconf\r\n$4\r\ncapa\r\n$6\r\npsync2\r\n",
+			want:  "+OK\r\n",
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			h := newHandler()
+			if got := h.Handle([]byte(tt.input)); got != tt.want {
+				t.Errorf("got %q, want %q", got, tt.want)
+			}
+		})
+	}
+}
+
+func TestHandlePsync(t *testing.T) {
+	t.Run("PSYNC ? -1 returns FULLRESYNC with master replid and offset 0", func(t *testing.T) {
+		h := newHandler()
+		got := h.Handle([]byte("*3\r\n$5\r\nPSYNC\r\n$1\r\n?\r\n$2\r\n-1\r\n"))
+		want := "+FULLRESYNC 8371b4fb1155b71f4a04d3e1bc3e18c4a990aeeb 0\r\n"
+		if got != want {
+			t.Errorf("got %q, want %q", got, want)
+		}
+	})
+}

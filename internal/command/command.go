@@ -34,6 +34,7 @@ const (
 	LLEN   Command = "LLEN"
 	LRANGE Command = "LRANGE"
 
-	// Replication Commands	
+	// Replication Commands
 	REPLCONF Command = "REPLCONF"
+	PSYNC    Command = "PSYNC"
 )
