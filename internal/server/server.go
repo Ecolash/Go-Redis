@@ -10,20 +10,22 @@ import (
 )
 
 type Server struct {
-	listener net.Listener
-	store    *store.Store
-	role     string
+	listener   net.Listener
+	store      *store.Store
+	role       string
+	masterAddr string
 }
 
-func New(addr, role string) (*Server, error) {
+func New(addr, role, masterAddr string) (*Server, error) {
 	l, err := net.Listen("tcp", addr)
 	if err != nil {
 		return nil, err
 	}
 	return &Server{
-		listener: l,
-		store:    store.New(),
-		role:     role,
+		listener:   l,
+		store:      store.New(),
+		role:       role,
+		masterAddr: masterAddr,
 	}, nil
 }
 
@@ -36,6 +38,9 @@ func (s *Server) Close() error {
 }
 
 func (s *Server) Run() {
+	if s.role == "slave" {
+		go s.handshakeWithMaster()
+	}
 	for {
 		conn, err := s.listener.Accept()
 		if err != nil {

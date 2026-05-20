@@ -11,7 +11,7 @@ import (
 
 func newTestServer(t *testing.T) (*server.Server, *bufio.Reader, net.Conn) {
 	t.Helper()
-	srv, err := server.New("127.0.0.1:0", "master")
+	srv, err := server.New("127.0.0.1:0", "master", "")
 	if err != nil {
 		t.Fatalf("failed to create server: %v", err)
 	}
