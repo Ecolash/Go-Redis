@@ -1199,3 +1199,170 @@ func TestHandleDiscard(t *testing.T) {
 		}
 	})
 }
+
+// newPair returns two handlers sharing a single store, simulating two
+// connected clients hitting the same server.
+func newPair() (*handler.Handler, *handler.Handler) {
+	s := store.New()
+	return handler.New(s), handler.New(s)
+}
+
+func TestHandleWatch(t *testing.T) {
+	t.Run("WATCH with no keys returns wrong args", func(t *testing.T) {
+		h := newHandler()
+		got := h.Handle([]byte("*1\r\n$5\r\nWATCH\r\n"))
+		if got != "-ERR wrong number of arguments\r\n" {
+			t.Errorf("got %q, want -ERR wrong number of arguments\\r\\n", got)
+		}
+	})
+
+	t.Run("WATCH returns OK", func(t *testing.T) {
+		h := newHandler()
+		got := h.Handle([]byte("*2\r\n$5\r\nWATCH\r\n$3\r\nfoo\r\n"))
+		if got != "+OK\r\n" {
+			t.Errorf("got %q, want +OK\\r\\n", got)
+		}
+	})
+
+	t.Run("WATCH inside MULTI returns error", func(t *testing.T) {
+		h := newHandler()
+		h.Handle([]byte("*1\r\n$5\r\nMULTI\r\n"))
+		got := h.Handle([]byte("*2\r\n$5\r\nWATCH\r\n$3\r\nfoo\r\n"))
+		if got != "-ERR WATCH inside MULTI is not allowed\r\n" {
+			t.Errorf("got %q, want -ERR WATCH inside MULTI is not allowed\\r\\n", got)
+		}
+	})
+
+	t.Run("EXEC succeeds when watched key is untouched", func(t *testing.T) {
+		h := newHandler()
+		h.Handle([]byte("*3\r\n$3\r\nSET\r\n$3\r\nfoo\r\n$1\r\n1\r\n"))
+		h.Handle([]byte("*2\r\n$5\r\nWATCH\r\n$3\r\nfoo\r\n"))
+		h.Handle([]byte("*1\r\n$5\r\nMULTI\r\n"))
+		h.Handle([]byte("*3\r\n$3\r\nSET\r\n$3\r\nfoo\r\n$1\r\n2\r\n"))
+		got := h.Handle([]byte("*1\r\n$4\r\nEXEC\r\n"))
+		if got != "*1\r\n+OK\r\n" {
+			t.Errorf("got %q, want *1\\r\\n+OK\\r\\n", got)
+		}
+		// Verify the queued SET actually ran.
+		if got := h.Handle([]byte("*2\r\n$3\r\nGET\r\n$3\r\nfoo\r\n")); got != "$1\r\n2\r\n" {
+			t.Errorf("expected foo=2 after EXEC, got %q", got)
+		}
+	})
+
+	t.Run("EXEC aborts when watched key is modified by another client", func(t *testing.T) {
+		h1, h2 := newPair()
+		h1.Handle([]byte("*3\r\n$3\r\nSET\r\n$3\r\nfoo\r\n$1\r\n1\r\n"))
+		h1.Handle([]byte("*2\r\n$5\r\nWATCH\r\n$3\r\nfoo\r\n"))
+		// Another client modifies foo before h1 calls EXEC.
+		h2.Handle([]byte("*3\r\n$3\r\nSET\r\n$3\r\nfoo\r\n$1\r\n9\r\n"))
+		h1.Handle([]byte("*1\r\n$5\r\nMULTI\r\n"))
+		h1.Handle([]byte("*3\r\n$3\r\nSET\r\n$3\r\nfoo\r\n$1\r\n2\r\n"))
+		got := h1.Handle([]byte("*1\r\n$4\r\nEXEC\r\n"))
+		if got != "*-1\r\n" {
+			t.Errorf("got %q, want *-1\\r\\n (nil array)", got)
+		}
+		// The queued SET must NOT have run; foo still equals 9.
+		if got := h1.Handle([]byte("*2\r\n$3\r\nGET\r\n$3\r\nfoo\r\n")); got != "$1\r\n9\r\n" {
+			t.Errorf("expected foo=9 after aborted EXEC, got %q", got)
+		}
+	})
+
+	t.Run("EXEC aborts when watched missing key is created", func(t *testing.T) {
+		h1, h2 := newPair()
+		h1.Handle([]byte("*2\r\n$5\r\nWATCH\r\n$7\r\nnewkey1\r\n"))
+		h2.Handle([]byte("*3\r\n$3\r\nSET\r\n$7\r\nnewkey1\r\n$3\r\nval\r\n"))
+		h1.Handle([]byte("*1\r\n$5\r\nMULTI\r\n"))
+		h1.Handle([]byte("*3\r\n$3\r\nSET\r\n$7\r\nnewkey1\r\n$5\r\nother\r\n"))
+		got := h1.Handle([]byte("*1\r\n$4\r\nEXEC\r\n"))
+		if got != "*-1\r\n" {
+			t.Errorf("got %q, want *-1\\r\\n", got)
+		}
+	})
+
+	t.Run("EXEC succeeds when watched missing key stays missing", func(t *testing.T) {
+		h := newHandler()
+		h.Handle([]byte("*2\r\n$5\r\nWATCH\r\n$7\r\nnewkey2\r\n"))
+		h.Handle([]byte("*1\r\n$5\r\nMULTI\r\n"))
+		h.Handle([]byte("*3\r\n$3\r\nSET\r\n$3\r\nfoo\r\n$1\r\n1\r\n"))
+		got := h.Handle([]byte("*1\r\n$4\r\nEXEC\r\n"))
+		if got != "*1\r\n+OK\r\n" {
+			t.Errorf("got %q, want *1\\r\\n+OK\\r\\n", got)
+		}
+	})
+
+	t.Run("WATCH multiple keys aborts if any one changes", func(t *testing.T) {
+		h1, h2 := newPair()
+		h1.Handle([]byte("*3\r\n$3\r\nSET\r\n$1\r\na\r\n$1\r\n1\r\n"))
+		h1.Handle([]byte("*3\r\n$3\r\nSET\r\n$1\r\nb\r\n$1\r\n2\r\n"))
+		h1.Handle([]byte("*3\r\n$5\r\nWATCH\r\n$1\r\na\r\n$1\r\nb\r\n"))
+		// Modify only b.
+		h2.Handle([]byte("*3\r\n$3\r\nSET\r\n$1\r\nb\r\n$1\r\n9\r\n"))
+		h1.Handle([]byte("*1\r\n$5\r\nMULTI\r\n"))
+		h1.Handle([]byte("*2\r\n$4\r\nINCR\r\n$1\r\na\r\n"))
+		got := h1.Handle([]byte("*1\r\n$4\r\nEXEC\r\n"))
+		if got != "*-1\r\n" {
+			t.Errorf("got %q, want *-1\\r\\n", got)
+		}
+	})
+
+	t.Run("WATCH accumulates across calls", func(t *testing.T) {
+		h1, h2 := newPair()
+		h1.Handle([]byte("*2\r\n$5\r\nWATCH\r\n$1\r\na\r\n"))
+		h1.Handle([]byte("*2\r\n$5\r\nWATCH\r\n$1\r\nb\r\n"))
+		h2.Handle([]byte("*3\r\n$3\r\nSET\r\n$1\r\nb\r\n$1\r\nx\r\n"))
+		h1.Handle([]byte("*1\r\n$5\r\nMULTI\r\n"))
+		h1.Handle([]byte("*2\r\n$4\r\nINCR\r\n$1\r\na\r\n"))
+		got := h1.Handle([]byte("*1\r\n$4\r\nEXEC\r\n"))
+		if got != "*-1\r\n" {
+			t.Errorf("got %q, want *-1\\r\\n", got)
+		}
+	})
+
+	t.Run("watches are cleared after successful EXEC", func(t *testing.T) {
+		h1, h2 := newPair()
+		h1.Handle([]byte("*3\r\n$3\r\nSET\r\n$3\r\nfoo\r\n$1\r\n1\r\n"))
+		h1.Handle([]byte("*2\r\n$5\r\nWATCH\r\n$3\r\nfoo\r\n"))
+		h1.Handle([]byte("*1\r\n$5\r\nMULTI\r\n"))
+		h1.Handle([]byte("*2\r\n$3\r\nGET\r\n$3\r\nfoo\r\n"))
+		h1.Handle([]byte("*1\r\n$4\r\nEXEC\r\n"))
+
+		// h2 modifies foo; next transaction without re-WATCH must succeed.
+		h2.Handle([]byte("*3\r\n$3\r\nSET\r\n$3\r\nfoo\r\n$1\r\n9\r\n"))
+		h1.Handle([]byte("*1\r\n$5\r\nMULTI\r\n"))
+		h1.Handle([]byte("*3\r\n$3\r\nSET\r\n$3\r\nfoo\r\n$1\r\n2\r\n"))
+		got := h1.Handle([]byte("*1\r\n$4\r\nEXEC\r\n"))
+		if got != "*1\r\n+OK\r\n" {
+			t.Errorf("got %q, want *1\\r\\n+OK\\r\\n", got)
+		}
+	})
+
+	t.Run("DISCARD clears watches", func(t *testing.T) {
+		h1, h2 := newPair()
+		h1.Handle([]byte("*3\r\n$3\r\nSET\r\n$3\r\nfoo\r\n$1\r\n1\r\n"))
+		h1.Handle([]byte("*2\r\n$5\r\nWATCH\r\n$3\r\nfoo\r\n"))
+		h1.Handle([]byte("*1\r\n$5\r\nMULTI\r\n"))
+		h1.Handle([]byte("*1\r\n$7\r\nDISCARD\r\n"))
+
+		// After DISCARD, an external change must not affect a fresh transaction.
+		h2.Handle([]byte("*3\r\n$3\r\nSET\r\n$3\r\nfoo\r\n$1\r\n9\r\n"))
+		h1.Handle([]byte("*1\r\n$5\r\nMULTI\r\n"))
+		h1.Handle([]byte("*3\r\n$3\r\nSET\r\n$3\r\nfoo\r\n$1\r\n2\r\n"))
+		got := h1.Handle([]byte("*1\r\n$4\r\nEXEC\r\n"))
+		if got != "*1\r\n+OK\r\n" {
+			t.Errorf("got %q, want *1\\r\\n+OK\\r\\n", got)
+		}
+	})
+
+	t.Run("WATCH then LPUSH from another client aborts", func(t *testing.T) {
+		h1, h2 := newPair()
+		h1.Handle([]byte("*3\r\n$5\r\nRPUSH\r\n$1\r\nl\r\n$1\r\na\r\n"))
+		h1.Handle([]byte("*2\r\n$5\r\nWATCH\r\n$1\r\nl\r\n"))
+		h2.Handle([]byte("*3\r\n$5\r\nLPUSH\r\n$1\r\nl\r\n$1\r\nb\r\n"))
+		h1.Handle([]byte("*1\r\n$5\r\nMULTI\r\n"))
+		h1.Handle([]byte("*2\r\n$4\r\nLLEN\r\n$1\r\nl\r\n"))
+		got := h1.Handle([]byte("*1\r\n$4\r\nEXEC\r\n"))
+		if got != "*-1\r\n" {
+			t.Errorf("got %q, want *-1\\r\\n", got)
+		}
+	})
+}

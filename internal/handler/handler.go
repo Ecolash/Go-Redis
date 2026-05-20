@@ -13,6 +13,7 @@ const (
 	errWrongArgs      = "-ERR wrong number of arguments\r\n"
 	errExecNoMulti    = "-ERR EXEC without MULTI\r\n"
 	errDiscardNoMulti = "-ERR DISCARD without MULTI\r\n"
+	errWatchInMulti   = "-ERR WATCH inside MULTI is not allowed\r\n"
 	okResponse        = "+OK\r\n"
 	queuedResp        = "+QUEUED\r\n"
 	nullBulk          = "$-1\r\n"
@@ -37,6 +38,10 @@ type Handler struct {
 
 	inMulti bool
 	queue   [][]string
+
+	// watching maps each WATCH'd key to the store version at the time of
+	// WATCH. EXEC aborts if any key's current version differs.
+	watching map[string]uint64
 }
 
 func New(s *store.Store) *Handler {
@@ -64,6 +69,7 @@ func New(s *store.Store) *Handler {
 		command.MULTI:   h.handleMulti,
 		command.EXEC:    h.handleExec,
 		command.DISCARD: h.handleDiscard,
+		command.WATCH:   h.handleWatch,
 	}
 	return h
 }
