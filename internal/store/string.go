@@ -25,6 +25,7 @@ func (s *Store) Set(key, value string, ttl time.Duration) {
 		e.expiresAt = time.Now().Add(ttl)
 	}
 	s.data[key] = e
+	s.bumpVersionLocked(key)
 }
 
 func (s *Store) Get(key string) (string, bool) {
@@ -57,6 +58,7 @@ func (s *Store) Incr(key string) (int64, error) {
 	}
 	val++
 	s.data[key] = entry{kind: kindString, strVal: intToStr(val)}
+	s.bumpVersionLocked(key)
 	return val, nil
 }
 
@@ -77,5 +79,6 @@ func (s *Store) Decr(key string) (int64, error) {
 	}
 	val--
 	s.data[key] = entry{kind: kindString, strVal: intToStr(val)}
+	s.bumpVersionLocked(key)
 	return val, nil
 }

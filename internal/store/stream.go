@@ -95,6 +95,7 @@ func (s *Store) XAdd(key, id string, fields []string) (string, error) {
 	newEntry := StreamEntry{ID: id, Fields: fields}
 	e.streamVal = append(e.streamVal, newEntry)
 	s.data[key] = e
+	s.bumpVersionLocked(key)
 	s.notifyXReadWaiters(key, newEntry)
 	return id, nil
 }

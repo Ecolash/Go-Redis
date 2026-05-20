@@ -10,9 +10,11 @@ import (
 // - s.wmu protects only the logic around waiting and notifying BLPOP waiters. 
 
 type Store struct {
-	mu      sync.RWMutex
 	data    map[string]entry
+	mu      sync.RWMutex
 	wmu     sync.Mutex
+
+	versions map[string]uint64
 	waiters map[string][]*blpopWaiter
 	xreadWaiters map[string][]*xreadWaiter
 }
@@ -20,9 +22,21 @@ type Store struct {
 func New() *Store {
 	return &Store{
 		data:    make(map[string]entry),
+		versions: make(map[string]uint64),
 		waiters: make(map[string][]*blpopWaiter),
 		xreadWaiters: make(map[string][]*xreadWaiter),
 	}
+}
+
+func (s *Store) Version(key string) uint64 {
+	s.mu.RLock()
+	defer s.mu.RUnlock()
+	return s.versions[key]
+}
+
+func (s *Store) bumpVersionLocked(key string) {
+	// NOTE: To be called only when s.mu() is LOCKED
+	s.versions[key]++
 }
 
 func (s *Store) Type(key string) string {

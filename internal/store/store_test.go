@@ -1263,3 +1263,180 @@ func TestXReadWait(t *testing.T) {
 		}
 	})
 }
+
+func TestVersion(t *testing.T) {
+	t.Run("missing key has version 0", func(t *testing.T) {
+		s := store.New()
+		if got := s.Version("nope"); got != 0 {
+			t.Errorf("got %d, want 0", got)
+		}
+	})
+
+	t.Run("read-only operations do not bump version", func(t *testing.T) {
+		s := store.New()
+		s.Set("k", "v", 0)
+		v := s.Version("k")
+		s.Get("k")
+		s.Type("k")
+		s.LRange("k", 0, -1)
+		s.LLen("k")
+		if got := s.Version("k"); got != v {
+			t.Errorf("version changed after reads: got %d, want %d", got, v)
+		}
+	})
+
+	t.Run("Set bumps version each call", func(t *testing.T) {
+		s := store.New()
+		v0 := s.Version("k")
+		s.Set("k", "a", 0)
+		v1 := s.Version("k")
+		s.Set("k", "b", 0)
+		v2 := s.Version("k")
+		if !(v1 > v0 && v2 > v1) {
+			t.Errorf("expected monotonic increases, got %d -> %d -> %d", v0, v1, v2)
+		}
+	})
+
+	t.Run("Incr and Decr bump version", func(t *testing.T) {
+		s := store.New()
+		v0 := s.Version("k")
+		if _, err := s.Incr("k"); err != nil {
+			t.Fatalf("Incr: %v", err)
+		}
+		v1 := s.Version("k")
+		if _, err := s.Decr("k"); err != nil {
+			t.Fatalf("Decr: %v", err)
+		}
+		v2 := s.Version("k")
+		if !(v1 > v0 && v2 > v1) {
+			t.Errorf("expected monotonic increases, got %d -> %d -> %d", v0, v1, v2)
+		}
+	})
+
+	t.Run("RPush and LPush bump version", func(t *testing.T) {
+		s := store.New()
+		v0 := s.Version("l")
+		s.RPush("l", "a")
+		v1 := s.Version("l")
+		s.LPush("l", "b")
+		v2 := s.Version("l")
+		if !(v1 > v0 && v2 > v1) {
+			t.Errorf("expected monotonic increases, got %d -> %d -> %d", v0, v1, v2)
+		}
+	})
+
+	t.Run("LPop and RPop bump version", func(t *testing.T) {
+		s := store.New()
+		s.RPush("l", "a", "b", "c")
+		v0 := s.Version("l")
+		s.LPop("l")
+		v1 := s.Version("l")
+		s.RPop("l")
+		v2 := s.Version("l")
+		if !(v1 > v0 && v2 > v1) {
+			t.Errorf("expected monotonic increases, got %d -> %d -> %d", v0, v1, v2)
+		}
+	})
+
+	t.Run("LPopCount and RPopCount bump version only when something is popped", func(t *testing.T) {
+		s := store.New()
+		s.RPush("l", "a", "b", "c", "d")
+		v0 := s.Version("l")
+		s.LPopCount("l", 0) // no-op
+		if got := s.Version("l"); got != v0 {
+			t.Errorf("LPopCount(0) bumped version: got %d, want %d", got, v0)
+		}
+		s.LPopCount("l", 2)
+		v1 := s.Version("l")
+		if v1 <= v0 {
+			t.Errorf("LPopCount(2) did not bump version: got %d, want >%d", v1, v0)
+		}
+		s.RPopCount("l", 0) // no-op
+		if got := s.Version("l"); got != v1 {
+			t.Errorf("RPopCount(0) bumped version: got %d, want %d", got, v1)
+		}
+		s.RPopCount("l", 1)
+		v2 := s.Version("l")
+		if v2 <= v1 {
+			t.Errorf("RPopCount(1) did not bump version: got %d, want >%d", v2, v1)
+		}
+	})
+
+	t.Run("BLPopWait immediate pop bumps version", func(t *testing.T) {
+		s := store.New()
+		s.RPush("l", "a")
+		v0 := s.Version("l")
+		ch, cancel := s.BLPopWait([]string{"l"})
+		defer cancel()
+		<-ch
+		if got := s.Version("l"); got <= v0 {
+			t.Errorf("BLPopWait immediate pop did not bump version: got %d, want >%d", got, v0)
+		}
+	})
+
+	t.Run("BLPopWait delivery via push bumps version", func(t *testing.T) {
+		s := store.New()
+		ch, cancel := s.BLPopWait([]string{"l"})
+		defer cancel()
+		v0 := s.Version("l")
+		s.RPush("l", "x") // delivers to the waiter, which pops
+		<-ch
+		// One push + one delivery pop both bump; version must be > v0 by at least 2.
+		if got := s.Version("l"); got < v0+2 {
+			t.Errorf("expected at least 2 bumps (push + pop), got %d -> %d", v0, got)
+		}
+	})
+
+	t.Run("XAdd bumps version", func(t *testing.T) {
+		s := store.New()
+		v0 := s.Version("s")
+		if _, err := s.XAdd("s", "1-0", []string{"k", "v"}); err != nil {
+			t.Fatalf("XAdd: %v", err)
+		}
+		v1 := s.Version("s")
+		if _, err := s.XAdd("s", "2-0", []string{"k", "v"}); err != nil {
+			t.Fatalf("XAdd: %v", err)
+		}
+		v2 := s.Version("s")
+		if !(v1 > v0 && v2 > v1) {
+			t.Errorf("expected monotonic increases, got %d -> %d -> %d", v0, v1, v2)
+		}
+	})
+
+	t.Run("XAdd error does not bump version", func(t *testing.T) {
+		s := store.New()
+		if _, err := s.XAdd("s", "1-1", []string{"k", "v"}); err != nil {
+			t.Fatalf("setup XAdd: %v", err)
+		}
+		v0 := s.Version("s")
+		// Smaller ID is rejected.
+		if _, err := s.XAdd("s", "0-1", []string{"k", "v"}); err == nil {
+			t.Fatal("expected XAdd error for smaller ID")
+		}
+		if got := s.Version("s"); got != v0 {
+			t.Errorf("failed XAdd bumped version: got %d, want %d", got, v0)
+		}
+	})
+
+	t.Run("versions are independent per key", func(t *testing.T) {
+		s := store.New()
+		s.Set("a", "1", 0)
+		s.Set("a", "2", 0)
+		s.Set("b", "1", 0)
+		if va, vb := s.Version("a"), s.Version("b"); va == vb {
+			t.Errorf("expected per-key versions to differ; got a=%d b=%d", va, vb)
+		}
+	})
+
+	t.Run("Incr error on non-integer does not bump version", func(t *testing.T) {
+		s := store.New()
+		s.Set("k", "notanint", 0)
+		v0 := s.Version("k")
+		if _, err := s.Incr("k"); err == nil {
+			t.Fatal("expected Incr error on non-integer value")
+		}
+		if got := s.Version("k"); got != v0 {
+			t.Errorf("failed Incr bumped version: got %d, want %d", got, v0)
+		}
+	})
+}

@@ -11,6 +11,7 @@ func (s *Store) RPush(key string, vals ...string) int {
 	}
 	e.listVal = append(e.listVal, vals...)
 	s.data[key] = e
+	s.bumpVersionLocked(key)
 	n := len(e.listVal)
 	s.deliverToWaitersLocked(key)
 	return n
@@ -29,6 +30,7 @@ func (s *Store) LPush(key string, vals ...string) int {
 	}
 	e.listVal = append(prepend, e.listVal...)
 	s.data[key] = e
+	s.bumpVersionLocked(key)
 	n := len(e.listVal)
 	s.deliverToWaitersLocked(key)
 	return n
@@ -44,6 +46,7 @@ func (s *Store) LPop(key string) (string, bool) {
 	val := e.listVal[0]
 	e.listVal = e.listVal[1:]
 	s.data[key] = e
+	s.bumpVersionLocked(key)
 	return val, true
 }
 
@@ -58,6 +61,7 @@ func (s *Store) RPop(key string) (string, bool) {
 	val := e.listVal[n-1]
 	e.listVal = e.listVal[:n-1]
 	s.data[key] = e
+	s.bumpVersionLocked(key)
 	return val, true
 }
 
@@ -75,6 +79,9 @@ func (s *Store) LPopCount(key string, count int) ([]string, bool) {
 	copy(vals, e.listVal[:count])
 	e.listVal = e.listVal[count:]
 	s.data[key] = e
+	if count > 0 {
+		s.bumpVersionLocked(key)
+	}
 	return vals, true
 }
 
@@ -95,6 +102,9 @@ func (s *Store) RPopCount(key string, count int) ([]string, bool) {
 	}
 	e.listVal = e.listVal[:n-count]
 	s.data[key] = e
+	if count > 0 {
+		s.bumpVersionLocked(key)
+	}
 	return vals, true
 }
 
@@ -158,6 +168,7 @@ func (s *Store) BLPopWait(keys []string) (<-chan BLPOPResult, func()) {
 		val := e.listVal[0]
 		e.listVal = e.listVal[1:]
 		s.data[key] = e
+		s.bumpVersionLocked(key)
 		w.ch <- BLPOPResult{Key: key, Val: val}
 		s.mu.Unlock()
 		return w.ch, func() {}
@@ -198,6 +209,7 @@ func (s *Store) deliverToWaitersLocked(key string) {
 		val := e.listVal[0]
 		e.listVal = e.listVal[1:]
 		s.data[key] = e
+		s.bumpVersionLocked(key)
 		for _, k := range waiter.keys {
 			s.removeWaiter(k, waiter)
 		}
