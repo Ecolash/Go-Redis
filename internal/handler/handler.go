@@ -23,13 +23,10 @@ const (
 
 type commandFunc func(parts []string) string
 
-// Handler holds the per-connection command dispatch state. The underlying
-// store is shared across connections; transaction state (inMulti, queue) is
-// per-connection, so callers must create one Handler per client connection.
 type Handler struct {
-	store    *store.Store
+	store *store.Store
 	commands map[command.Command]commandFunc
-
+	txCommands map[command.Command]commandFunc
 	inMulti bool
 	queue   [][]string
 }
@@ -55,6 +52,11 @@ func New(s *store.Store) *Handler {
 		command.RPUSH: h.handleRPush,
 		command.LRANGE: h.handleLRange,
 	}
+	h.txCommands = map[command.Command]commandFunc{
+		command.MULTI:   h.handleMulti,
+		command.EXEC:    h.handleExec,
+		command.DISCARD: h.handleDiscard,
+	}
 	return h
 }
 
@@ -65,13 +67,8 @@ func (h *Handler) Handle(data []byte) string {
 	}
 	cmd := command.Command(strings.ToUpper(parts[0]))
 
-	switch cmd {
-	case command.MULTI:
-		return h.handleMulti(parts)
-	case command.EXEC:
-		return h.handleExec(parts)
-	case command.DISCARD:
-		return h.handleDiscard(parts)
+	if fn, ok := h.txCommands[cmd]; ok {
+		return fn(parts)
 	}
 
 	if h.inMulti {
