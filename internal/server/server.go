@@ -15,7 +15,7 @@ type Server struct {
 	role     string
 }
 
-func New(addr string) (*Server, error) {
+func New(addr, role string) (*Server, error) {
 	l, err := net.Listen("tcp", addr)
 	if err != nil {
 		return nil, err
@@ -23,7 +23,7 @@ func New(addr string) (*Server, error) {
 	return &Server{
 		listener: l,
 		store:    store.New(),
-		role:     "master",
+		role:     role,
 	}, nil
 }
 
