@@ -1462,12 +1462,38 @@ func TestHandleReplConf(t *testing.T) {
 }
 
 func TestHandlePsync(t *testing.T) {
-	t.Run("PSYNC ? -1 returns FULLRESYNC with master replid and offset 0", func(t *testing.T) {
+	t.Run("PSYNC ? -1 returns FULLRESYNC followed by an empty RDB file", func(t *testing.T) {
 		h := newHandler()
 		got := h.Handle([]byte("*3\r\n$5\r\nPSYNC\r\n$1\r\n?\r\n$2\r\n-1\r\n"))
-		want := "+FULLRESYNC 8371b4fb1155b71f4a04d3e1bc3e18c4a990aeeb 0\r\n"
-		if got != want {
-			t.Errorf("got %q, want %q", got, want)
+
+		const header = "+FULLRESYNC 8371b4fb1155b71f4a04d3e1bc3e18c4a990aeeb 0\r\n"
+		if !strings.HasPrefix(got, header) {
+			t.Fatalf("response should start with FULLRESYNC header, got %q", got)
+		}
+
+		// After the simple-string header comes a bulk-style payload with no
+		// trailing CRLF: "$<len>\r\n<bytes>".
+		rest := got[len(header):]
+		if !strings.HasPrefix(rest, "$") {
+			t.Fatalf("RDB payload should start with $, got %q", rest)
+		}
+		idx := strings.Index(rest, "\r\n")
+		if idx == -1 {
+			t.Fatalf("RDB payload missing length terminator, got %q", rest)
+		}
+		length, err := strconv.Atoi(rest[1:idx])
+		if err != nil {
+			t.Fatalf("invalid RDB length %q: %v", rest[1:idx], err)
+		}
+		body := rest[idx+2:]
+		if len(body) != length {
+			t.Errorf("RDB body length %d, want %d", len(body), length)
+		}
+		if strings.HasSuffix(body, "\r\n") {
+			t.Errorf("RDB body must not have a trailing CRLF, got tail %q", body[max(0, len(body)-4):])
+		}
+		if !strings.HasPrefix(body, "REDIS") {
+			t.Errorf("RDB body should start with REDIS magic, got %q", body[:min(5, len(body))])
 		}
 	})
 }
