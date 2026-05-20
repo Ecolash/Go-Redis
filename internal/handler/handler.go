@@ -4,20 +4,16 @@ import (
 	"strings"
 
 	"github.com/codecrafters-io/redis-starter-go/internal/command"
+	"github.com/codecrafters-io/redis-starter-go/internal/errs"
 	"github.com/codecrafters-io/redis-starter-go/internal/resp"
 	"github.com/codecrafters-io/redis-starter-go/internal/store"
 )
 
 const (
-	errResponse       = "-ERR unknown command\r\n"
-	errWrongArgs      = "-ERR wrong number of arguments\r\n"
-	errExecNoMulti    = "-ERR EXEC without MULTI\r\n"
-	errDiscardNoMulti = "-ERR DISCARD without MULTI\r\n"
-	errWatchInMulti   = "-ERR WATCH inside MULTI is not allowed\r\n"
-	okResponse        = "+OK\r\n"
-	queuedResp        = "+QUEUED\r\n"
-	nullBulk          = "$-1\r\n"
-	nullArray         = "*-1\r\n"
+	okResponse = "+OK\r\n"
+	queuedResp = "+QUEUED\r\n"
+	nullBulk   = "$-1\r\n"
+	nullArray  = "*-1\r\n"
 )
 
 type commandFunc func(parts []string) string
@@ -78,7 +74,7 @@ func New(s *store.Store) *Handler {
 func (h *Handler) Handle(data []byte) string {
 	parts, err := resp.ParseArray(data)
 	if err != nil || len(parts) == 0 {
-		return errResponse
+		return errs.UnknownCommand
 	}
 	cmd := command.Command(strings.ToUpper(parts[0]))
 
@@ -96,7 +92,7 @@ func (h *Handler) Handle(data []byte) string {
 func (h *Handler) dispatch(parts []string) string {
 	fn, ok := h.commands[command.Command(strings.ToUpper(parts[0]))]
 	if !ok {
-		return errResponse
+		return errs.UnknownCommand
 	}
 	return fn(parts)
 }

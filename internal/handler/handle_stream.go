@@ -5,6 +5,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/codecrafters-io/redis-starter-go/internal/errs"
 	"github.com/codecrafters-io/redis-starter-go/internal/resp"
 	"github.com/codecrafters-io/redis-starter-go/internal/store"
 )
@@ -12,7 +13,7 @@ import (
 func (h *Handler) handleXAdd(parts []string) string {
 	// XADD key id field value [field value ...]
 	if len(parts) < 5 || (len(parts)-3)%2 != 0 {
-		return errWrongArgs
+		return errs.WrongArgs
 	}
 	id, err := h.store.XAdd(parts[1], parts[2], parts[3:])
 	if err != nil {
@@ -23,7 +24,7 @@ func (h *Handler) handleXAdd(parts []string) string {
 
 func (h *Handler) handleXRange(parts []string) string {
 	if len(parts) < 4 {
-		return errWrongArgs
+		return errs.WrongArgs
 	}
 	entries, err := h.store.XRange(parts[1], parts[2], parts[3])
 	if err != nil {
@@ -39,7 +40,7 @@ func (h *Handler) handleXRange(parts []string) string {
 func (h *Handler) handleXRead(parts []string) string {
 	// XREAD [BLOCK <ms>] STREAMS <key1>...<keyN> <id1>...<idN>
 	if len(parts) < 4 {
-		return errWrongArgs
+		return errs.WrongArgs
 	}
 
 	blocking := strings.EqualFold(parts[1], "BLOCK")
@@ -48,7 +49,7 @@ func (h *Handler) handleXRead(parts []string) string {
 	}
 
 	if !strings.EqualFold(parts[1], "STREAMS") {
-		return errWrongArgs
+		return errs.WrongArgs
 	}
 	return h.xreadStreams(parts[2:])
 }
@@ -56,11 +57,11 @@ func (h *Handler) handleXRead(parts []string) string {
 func (h *Handler) handleXReadBlocking(parts []string) string {
 	// parts: [XREAD, BLOCK, <ms>, STREAMS, <key>, <id>]
 	if len(parts) < 6 || !strings.EqualFold(parts[3], "STREAMS") {
-		return errWrongArgs
+		return errs.WrongArgs
 	}
 	ms, err := strconv.ParseInt(parts[2], 10, 64)
 	if err != nil || ms < 0 {
-		return errWrongArgs
+		return errs.WrongArgs
 	}
 
 	key, afterID := parts[4], parts[5]
@@ -90,7 +91,7 @@ func (h *Handler) handleXReadBlocking(parts []string) string {
 
 func (h *Handler) xreadStreams(rest []string) string {
 	if len(rest)%2 != 0 {
-		return errWrongArgs
+		return errs.WrongArgs
 	}
 	n := len(rest) / 2
 	keys := rest[:n]

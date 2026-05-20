@@ -6,6 +6,7 @@ import (
 	"testing"
 	"time"
 
+	"github.com/codecrafters-io/redis-starter-go/internal/errs"
 	"github.com/codecrafters-io/redis-starter-go/internal/store"
 )
 
@@ -693,8 +694,8 @@ func TestXAddAppendsMultipleEntries(t *testing.T) {
 }
 
 func TestXAddIDValidation(t *testing.T) {
-	const errZero = "ERR The ID specified in XADD must be greater than 0-0"
-	const errSmall = "ERR The ID specified in XADD is equal or smaller than the target stream top item"
+	errZero := errs.ErrStreamIDZero.Error()
+	errSmall := errs.ErrStreamIDSmall.Error()
 
 	tests := []struct {
 		name    string

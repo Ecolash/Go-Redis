@@ -1,18 +1,19 @@
 package store
 
 import (
-	"errors"
 	"fmt"
 	"math"
 	"strconv"
 	"strings"
 	"time"
+
+	"github.com/codecrafters-io/redis-starter-go/internal/errs"
 )
 
 func parseStreamID(id string) (ms, seq int64, err error) {
 	parts := strings.SplitN(id, "-", 2)
 	if len(parts) != 2 {
-		return 0, 0, errors.New("invalid stream ID")
+		return 0, 0, errs.ErrInvalidStreamID
 	}
 	ms, err = strconv.ParseInt(parts[0], 10, 64)
 	if err != nil {
@@ -69,7 +70,7 @@ func (s *Store) XAdd(key, id string, fields []string) (string, error) {
 		if len(e.streamVal) > 0 {
 			lastMs, lastSeq, _ := parseStreamID(e.streamVal[len(e.streamVal)-1].ID)
 			if newMs < lastMs {
-				return "", errStreamIDSmall
+				return "", errs.ErrStreamIDSmall
 			}
 			if newMs == lastMs {
 				seq = lastSeq + 1
@@ -82,12 +83,12 @@ func (s *Store) XAdd(key, id string, fields []string) (string, error) {
 			return "", err
 		}
 		if newMs == 0 && newSeq == 0 {
-			return "", errStreamIDZero
+			return "", errs.ErrStreamIDZero
 		}
 		if len(e.streamVal) > 0 {
 			lastMs, lastSeq, _ := parseStreamID(e.streamVal[len(e.streamVal)-1].ID)
 			if newMs < lastMs || (newMs == lastMs && newSeq <= lastSeq) {
-				return "", errStreamIDSmall
+				return "", errs.ErrStreamIDSmall
 			}
 		}
 	}

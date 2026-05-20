@@ -3,12 +3,14 @@ package store
 import (
 	"strconv"
 	"time"
+
+	"github.com/codecrafters-io/redis-starter-go/internal/errs"
 )
 
 func parseInt(s string) (int64, error) {
 	n, err := strconv.ParseInt(s, 10, 64)
 	if err != nil {
-		return 0, errNotInteger
+		return 0, errs.ErrNotInteger
 	}
 	return n, nil
 }
@@ -46,7 +48,7 @@ func (s *Store) Incr(key string) (int64, error) {
 	defer s.mu.Unlock()
 	e, ok := s.data[key]
 	if ok && e.kind != kindString {
-		return 0, errWrongType
+		return 0, errs.ErrWrongType
 	}
 	var val int64
 	if ok {
@@ -67,7 +69,7 @@ func (s *Store) Decr(key string) (int64, error) {
 	defer s.mu.Unlock()
 	e, ok := s.data[key]
 	if ok && e.kind != kindString {
-		return 0, errWrongType
+		return 0, errs.ErrWrongType
 	}
 	var val int64
 	if ok {

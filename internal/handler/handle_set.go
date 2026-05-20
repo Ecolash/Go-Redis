@@ -4,11 +4,13 @@ import (
 	"strconv"
 	"strings"
 	"time"
+
+	"github.com/codecrafters-io/redis-starter-go/internal/errs"
 )
 
 func (h *Handler) handleSet(parts []string) string {
 	if len(parts) < 3 {
-		return errWrongArgs
+		return errs.WrongArgs
 	}
 	h.store.Set(parts[1], parts[2], parseTTL(parts[3:]))
 	return okResponse

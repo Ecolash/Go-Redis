@@ -1,15 +1,7 @@
 package store
 
 import (
-	"errors"
 	"time"
-)
-
-var (
-	errStreamIDZero  = errors.New("ERR The ID specified in XADD must be greater than 0-0")
-	errStreamIDSmall = errors.New("ERR The ID specified in XADD is equal or smaller than the target stream top item")
-	errWrongType     = errors.New("WRONGTYPE Operation against a key holding the wrong kind of value")
-	errNotInteger    = errors.New("ERR value is not an integer or out of range")
 )
 
 type valueKind int

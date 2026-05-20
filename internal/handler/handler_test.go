@@ -6,7 +6,9 @@ import (
 	"testing"
 	"time"
 
+	"github.com/codecrafters-io/redis-starter-go/internal/errs"
 	"github.com/codecrafters-io/redis-starter-go/internal/handler"
+	"github.com/codecrafters-io/redis-starter-go/internal/resp"
 	"github.com/codecrafters-io/redis-starter-go/internal/store"
 )
 
@@ -145,7 +147,7 @@ func TestHandleIncrandDecr(t *testing.T) {
 			name:  "returns error if value is not an integer",
 			setup: []string{"*3\r\n$3\r\nSET\r\n$1\r\nk\r\n$3\r\nfoo\r\n"},
 			input: "*2\r\n$4\r\nINCR\r\n$1\r\nk\r\n",
-			want:  "-ERR value is not an integer or out of range\r\n",
+			want:  resp.Error(errs.ErrNotInteger.Error()),
 		},
 		{
 			name:  "decrements existing integer value",
@@ -157,7 +159,7 @@ func TestHandleIncrandDecr(t *testing.T) {
 			name:  "returns error if value is not an integer on DECR",
 			setup: []string{"*3\r\n$3\r\nSET\r\n$1\r\nk\r\n$3\r\nfoo\r\n"},
 			input: "*2\r\n$4\r\nDECR\r\n$1\r\nk\r\n",
-			want:  "-ERR value is not an integer or out of range\r\n",
+			want:  resp.Error(errs.ErrNotInteger.Error()),
 		},
 		{
 			name: "returns -1 if key does not exist on DECR",
@@ -509,7 +511,7 @@ func TestHandleType(t *testing.T) {
 		{
 			name:  "wrong number of arguments",
 			input: "*1\r\n$4\r\nTYPE\r\n",
-			want:  "-ERR wrong number of arguments\r\n",
+			want:  errs.WrongArgs,
 		},
 	}
 	for _, tt := range tests {
@@ -543,24 +545,24 @@ func TestHandleXAdd(t *testing.T) {
 		{
 			name:  "wrong number of arguments",
 			input: "*3\r\n$4\r\nXADD\r\n$1\r\ns\r\n$3\r\n0-1\r\n",
-			want:  "-ERR wrong number of arguments\r\n",
+			want:  errs.WrongArgs,
 		},
 		{
 			name:  "0-0 ID returns must be greater than 0-0 error",
 			input: "*5\r\n$4\r\nXADD\r\n$1\r\ns\r\n$3\r\n0-0\r\n$1\r\nk\r\n$1\r\nv\r\n",
-			want:  "-ERR The ID specified in XADD must be greater than 0-0\r\n",
+			want:  resp.Error(errs.ErrStreamIDZero.Error()),
 		},
 		{
 			name:  "ID equal to last returns equal or smaller error",
 			setup: []string{"*5\r\n$4\r\nXADD\r\n$1\r\ns\r\n$3\r\n1-1\r\n$1\r\nk\r\n$1\r\nv\r\n"},
 			input: "*5\r\n$4\r\nXADD\r\n$1\r\ns\r\n$3\r\n1-1\r\n$1\r\nk\r\n$1\r\nv\r\n",
-			want:  "-ERR The ID specified in XADD is equal or smaller than the target stream top item\r\n",
+			want:  resp.Error(errs.ErrStreamIDSmall.Error()),
 		},
 		{
 			name:  "ms smaller than last returns equal or smaller error",
 			setup: []string{"*5\r\n$4\r\nXADD\r\n$1\r\ns\r\n$3\r\n1-1\r\n$1\r\nk\r\n$1\r\nv\r\n"},
 			input: "*5\r\n$4\r\nXADD\r\n$1\r\ns\r\n$3\r\n0-3\r\n$1\r\nk\r\n$1\r\nv\r\n",
-			want:  "-ERR The ID specified in XADD is equal or smaller than the target stream top item\r\n",
+			want:  resp.Error(errs.ErrStreamIDSmall.Error()),
 		},
 	}
 	for _, tt := range tests {
@@ -596,7 +598,7 @@ func TestHandleXAddPartialAutoID(t *testing.T) {
 			name:  "ms-* with smaller ms returns error",
 			setup: []string{"*5\r\n$4\r\nXADD\r\n$1\r\ns\r\n$3\r\n5-1\r\n$1\r\nk\r\n$1\r\nv\r\n"},
 			input: "*5\r\n$4\r\nXADD\r\n$1\r\ns\r\n$3\r\n3-*\r\n$1\r\nk\r\n$1\r\nv\r\n",
-			want:  "-ERR The ID specified in XADD is equal or smaller than the target stream top item\r\n",
+			want:  resp.Error(errs.ErrStreamIDSmall.Error()),
 		},
 	}
 	for _, tt := range tests {
@@ -673,7 +675,7 @@ func TestHandleXRange(t *testing.T) {
 		{
 			name:  "wrong number of arguments",
 			input: "*2\r\n$6\r\nXRANGE\r\n$1\r\ns\r\n",
-			want:  "-ERR wrong number of arguments\r\n",
+			want:  errs.WrongArgs,
 		},
 		{
 			name: "spec example with partial IDs",
@@ -745,7 +747,7 @@ func TestHandleXRead(t *testing.T) {
 		{
 			name:  "wrong number of arguments",
 			input: "*2\r\n$5\r\nXREAD\r\n$7\r\nSTREAMS\r\n",
-			want:  "-ERR wrong number of arguments\r\n",
+			want:  errs.WrongArgs,
 		},
 		{
 			name:  "missing key returns null array",
@@ -1090,7 +1092,7 @@ func TestHandleExec(t *testing.T) {
 	t.Run("EXEC without MULTI returns error", func(t *testing.T) {
 		h := newHandler()
 		got := h.Handle([]byte("*1\r\n$4\r\nEXEC\r\n"))
-		if got != "-ERR EXEC without MULTI\r\n" {
+		if got != errs.ExecNoMulti {
 			t.Errorf("got %q, want -ERR EXEC without MULTI\\r\\n", got)
 		}
 	})
@@ -1132,7 +1134,7 @@ func TestHandleExec(t *testing.T) {
 		h.Handle([]byte("*1\r\n$5\r\nMULTI\r\n"))
 		h.Handle([]byte("*1\r\n$4\r\nEXEC\r\n"))
 		got := h.Handle([]byte("*1\r\n$4\r\nEXEC\r\n"))
-		if got != "-ERR EXEC without MULTI\r\n" {
+		if got != errs.ExecNoMulti {
 			t.Errorf("got %q, want -ERR EXEC without MULTI\\r\\n", got)
 		}
 	})
@@ -1142,7 +1144,7 @@ func TestHandleDiscard(t *testing.T) {
 	t.Run("DISCARD without MULTI returns error", func(t *testing.T) {
 		h := newHandler()
 		got := h.Handle([]byte("*1\r\n$7\r\nDISCARD\r\n"))
-		if got != "-ERR DISCARD without MULTI\r\n" {
+		if got != errs.DiscardNoMulti {
 			t.Errorf("got %q, want -ERR DISCARD without MULTI\\r\\n", got)
 		}
 	})
@@ -1168,7 +1170,7 @@ func TestHandleDiscard(t *testing.T) {
 		h.Handle([]byte("*1\r\n$5\r\nMULTI\r\n"))
 		h.Handle([]byte("*1\r\n$7\r\nDISCARD\r\n"))
 		got := h.Handle([]byte("*1\r\n$7\r\nDISCARD\r\n"))
-		if got != "-ERR DISCARD without MULTI\r\n" {
+		if got != errs.DiscardNoMulti {
 			t.Errorf("got %q, want -ERR DISCARD without MULTI\\r\\n", got)
 		}
 	})
@@ -1179,7 +1181,7 @@ func TestHandleDiscard(t *testing.T) {
 		h.Handle([]byte("*3\r\n$3\r\nSET\r\n$1\r\nk\r\n$1\r\nv\r\n"))
 		h.Handle([]byte("*1\r\n$7\r\nDISCARD\r\n"))
 		got := h.Handle([]byte("*1\r\n$4\r\nEXEC\r\n"))
-		if got != "-ERR EXEC without MULTI\r\n" {
+		if got != errs.ExecNoMulti {
 			t.Errorf("got %q, want -ERR EXEC without MULTI\\r\\n", got)
 		}
 	})
@@ -1211,7 +1213,7 @@ func TestHandleWatch(t *testing.T) {
 	t.Run("WATCH with no keys returns wrong args", func(t *testing.T) {
 		h := newHandler()
 		got := h.Handle([]byte("*1\r\n$5\r\nWATCH\r\n"))
-		if got != "-ERR wrong number of arguments\r\n" {
+		if got != errs.WrongArgs {
 			t.Errorf("got %q, want -ERR wrong number of arguments\\r\\n", got)
 		}
 	})
@@ -1228,7 +1230,7 @@ func TestHandleWatch(t *testing.T) {
 		h := newHandler()
 		h.Handle([]byte("*1\r\n$5\r\nMULTI\r\n"))
 		got := h.Handle([]byte("*2\r\n$5\r\nWATCH\r\n$3\r\nfoo\r\n"))
-		if got != "-ERR WATCH inside MULTI is not allowed\r\n" {
+		if got != errs.WatchInMulti {
 			t.Errorf("got %q, want -ERR WATCH inside MULTI is not allowed\\r\\n", got)
 		}
 	})

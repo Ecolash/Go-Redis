@@ -1,10 +1,13 @@
 package handler
 
-import "github.com/codecrafters-io/redis-starter-go/internal/resp"
+import (
+	"github.com/codecrafters-io/redis-starter-go/internal/errs"
+	"github.com/codecrafters-io/redis-starter-go/internal/resp"
+)
 
 func (h *Handler) handleIncr(parts []string) string {
 	if len(parts) < 2 {
-		return errWrongArgs
+		return errs.WrongArgs
 	}
 	val, err := h.store.Incr(parts[1])
 	if err != nil {
@@ -15,7 +18,7 @@ func (h *Handler) handleIncr(parts []string) string {
 
 func (h *Handler) handleDecr(parts []string) string {
 	if len(parts) < 2 {
-		return errWrongArgs
+		return errs.WrongArgs
 	}
 	val, err := h.store.Decr(parts[1])
 	if err != nil {

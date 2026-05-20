@@ -1,6 +1,9 @@
 package handler
 
-import "github.com/codecrafters-io/redis-starter-go/internal/resp"
+import (
+	"github.com/codecrafters-io/redis-starter-go/internal/errs"
+	"github.com/codecrafters-io/redis-starter-go/internal/resp"
+)
 
 func (h *Handler) handleMulti(_ []string) string {
 	h.inMulti = true
@@ -10,7 +13,7 @@ func (h *Handler) handleMulti(_ []string) string {
 
 func (h *Handler) handleDiscard(_ []string) string {
 	if !h.inMulti {
-		return errDiscardNoMulti
+		return errs.DiscardNoMulti
 	}
 	h.inMulti = false
 	h.queue = nil
@@ -20,7 +23,7 @@ func (h *Handler) handleDiscard(_ []string) string {
 
 func (h *Handler) handleExec(_ []string) string {
 	if !h.inMulti {
-		return errExecNoMulti
+		return errs.ExecNoMulti
 	}
 	queued := h.queue
 	watching := h.watching
@@ -53,10 +56,10 @@ func (h *Handler) handleUnwatch(_ []string) string {
 // re-snapshots it (matching Redis semantics).
 func (h *Handler) handleWatch(parts []string) string {
 	if len(parts) < 2 {
-		return errWrongArgs
+		return errs.WrongArgs
 	}
 	if h.inMulti {
-		return errWatchInMulti
+		return errs.WatchInMulti
 	}
 	if h.watching == nil {
 		h.watching = make(map[string]uint64)
