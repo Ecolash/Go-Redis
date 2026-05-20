@@ -6,6 +6,7 @@ import (
 	"net"
 
 	"github.com/codecrafters-io/redis-starter-go/internal/handler"
+	"github.com/codecrafters-io/redis-starter-go/internal/resp"
 	"github.com/codecrafters-io/redis-starter-go/internal/store"
 )
 
@@ -14,6 +15,7 @@ type Server struct {
 	store      *store.Store
 	role       string
 	masterAddr string
+	replicas   *Replicas
 }
 
 func New(addr, role, masterAddr string) (*Server, error) {
@@ -26,6 +28,7 @@ func New(addr, role, masterAddr string) (*Server, error) {
 		store:      store.New(),
 		role:       role,
 		masterAddr: masterAddr,
+		replicas:   newReplicas(),
 	}, nil
 }
 
@@ -51,8 +54,18 @@ func (s *Server) Run() {
 }
 
 func (s *Server) handleConn(conn net.Conn) {
-	defer conn.Close()
-	h := handler.New(s.store, s.role)
+	handedOff := false
+	defer func() {
+		if !handedOff {
+			conn.Close()
+		}
+	}()
+
+	propagate := func(parts []string) {
+		s.replicas.Broadcast([]byte(resp.Array(parts)))
+	}
+	h := handler.New(s.store, s.role, handler.WithPropagate(propagate))
+
 	buf := make([]byte, 512)
 	for {
 		n, err := conn.Read(buf)
@@ -65,6 +78,11 @@ func (s *Server) handleConn(conn net.Conn) {
 		response := h.Handle(buf[:n])
 		if _, err := conn.Write([]byte(response)); err != nil {
 			log.Printf("write error: %v", err)
+			return
+		}
+		if h.BecameReplica() {
+			s.replicas.Add(conn)
+			handedOff = true
 			return
 		}
 	}
