@@ -12,6 +12,10 @@ const (
 
 	TYPE Command = "TYPE"
 
+	// Transaction commands
+	MULTI Command = "MULTI"
+	EXEC  Command = "EXEC"
+
 	// STREAM Commands
 	XADD   Command = "XADD"
 	XRANGE Command = "XRANGE"

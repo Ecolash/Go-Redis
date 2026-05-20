@@ -11,7 +11,7 @@ import (
 
 type Server struct {
 	listener net.Listener
-	handler  *handler.Handler
+	store    *store.Store
 }
 
 func New(addr string) (*Server, error) {
@@ -19,10 +19,9 @@ func New(addr string) (*Server, error) {
 	if err != nil {
 		return nil, err
 	}
-	s := store.New()
 	return &Server{
 		listener: l,
-		handler:  handler.New(s),
+		store:    store.New(),
 	}, nil
 }
 
@@ -46,6 +45,7 @@ func (s *Server) Run() {
 
 func (s *Server) handleConn(conn net.Conn) {
 	defer conn.Close()
+	h := handler.New(s.store)
 	buf := make([]byte, 512)
 	for {
 		n, err := conn.Read(buf)
@@ -55,7 +55,7 @@ func (s *Server) handleConn(conn net.Conn) {
 			}
 			return
 		}
-		response := s.handler.Handle(buf[:n])
+		response := h.Handle(buf[:n])
 		if _, err := conn.Write([]byte(response)); err != nil {
 			log.Printf("write error: %v", err)
 			return

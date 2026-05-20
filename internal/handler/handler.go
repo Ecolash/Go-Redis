@@ -13,16 +13,24 @@ import (
 const (
 	errResponse  = "-ERR unknown command\r\n"
 	errWrongArgs = "-ERR wrong number of arguments\r\n"
+	errExecNoMulti = "-ERR EXEC without MULTI\r\n"
 	okResponse   = "+OK\r\n"
+	queuedResp   = "+QUEUED\r\n"
 	nullBulk     = "$-1\r\n"
 	nullArray    = "*-1\r\n"
 )
 
 type commandFunc func(parts []string) string
 
+// Handler holds the per-connection command dispatch state. The underlying
+// store is shared across connections; transaction state (inMulti, queue) is
+// per-connection, so callers must create one Handler per client connection.
 type Handler struct {
 	store    *store.Store
 	commands map[command.Command]commandFunc
+
+	inMulti bool
+	queue   [][]string
 }
 
 func New(s *store.Store) *Handler {
@@ -54,11 +62,49 @@ func (h *Handler) Handle(data []byte) string {
 	if err != nil || len(parts) == 0 {
 		return errResponse
 	}
+	cmd := command.Command(strings.ToUpper(parts[0]))
+
+	switch cmd {
+	case command.MULTI:
+		return h.handleMulti(parts)
+	case command.EXEC:
+		return h.handleExec(parts)
+	}
+
+	if h.inMulti {
+		h.queue = append(h.queue, parts)
+		return queuedResp
+	}
+	return h.dispatch(parts)
+}
+
+func (h *Handler) dispatch(parts []string) string {
 	fn, ok := h.commands[command.Command(strings.ToUpper(parts[0]))]
 	if !ok {
 		return errResponse
 	}
 	return fn(parts)
+}
+
+func (h *Handler) handleMulti(_ []string) string {
+	h.inMulti = true
+	h.queue = nil
+	return okResponse
+}
+
+func (h *Handler) handleExec(_ []string) string {
+	if !h.inMulti {
+		return errExecNoMulti
+	}
+	queued := h.queue
+	h.inMulti = false
+	h.queue = nil
+
+	responses := make([]string, len(queued))
+	for i, parts := range queued {
+		responses[i] = h.dispatch(parts)
+	}
+	return resp.RawArray(responses)
 }
 
 func (h *Handler) handlePing(_ []string) string {

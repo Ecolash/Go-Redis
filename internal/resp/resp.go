@@ -61,6 +61,16 @@ func Array(strs []string) string {
 	return result
 }
 
+// RawArray concatenates already-encoded RESP values into an array
+func RawArray(parts []string) string {
+	var sb strings.Builder
+	fmt.Fprintf(&sb, "*%d\r\n", len(parts))
+	for _, p := range parts {
+		sb.WriteString(p)
+	}
+	return sb.String()
+}
+
 // Entry is a single stream entry for use with StreamEntries.
 type Entry struct {
 	ID     string

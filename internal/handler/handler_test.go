@@ -1048,3 +1048,92 @@ func TestHandleXReadBlockingDollar(t *testing.T) {
 		}
 	})
 }
+
+func TestHandleMulti(t *testing.T) {
+	t.Run("MULTI returns OK", func(t *testing.T) {
+		h := newHandler()
+		got := h.Handle([]byte("*1\r\n$5\r\nMULTI\r\n"))
+		if got != "+OK\r\n" {
+			t.Errorf("got %q, want +OK\\r\\n", got)
+		}
+	})
+
+	t.Run("commands after MULTI return QUEUED", func(t *testing.T) {
+		h := newHandler()
+		h.Handle([]byte("*1\r\n$5\r\nMULTI\r\n"))
+		got := h.Handle([]byte("*3\r\n$3\r\nSET\r\n$3\r\nfoo\r\n$2\r\n41\r\n"))
+		if got != "+QUEUED\r\n" {
+			t.Errorf("got %q, want +QUEUED\\r\\n", got)
+		}
+		got = h.Handle([]byte("*2\r\n$4\r\nINCR\r\n$3\r\nfoo\r\n"))
+		if got != "+QUEUED\r\n" {
+			t.Errorf("got %q, want +QUEUED\\r\\n", got)
+		}
+	})
+
+	t.Run("queued commands do not execute before EXEC", func(t *testing.T) {
+		h := newHandler()
+		h.Handle([]byte("*1\r\n$5\r\nMULTI\r\n"))
+		h.Handle([]byte("*3\r\n$3\r\nSET\r\n$3\r\nfoo\r\n$3\r\nbar\r\n"))
+		// GET in a separate connection would still see nothing; here GET is
+		// also queued, but we can verify via the underlying handler state by
+		// checking that a fresh handler against the same store sees no value.
+		h2 := newHandler()
+		got := h2.Handle([]byte("*2\r\n$3\r\nGET\r\n$3\r\nfoo\r\n"))
+		if got != "$-1\r\n" {
+			t.Errorf("expected null bulk before EXEC across handlers, got %q", got)
+		}
+	})
+}
+
+func TestHandleExec(t *testing.T) {
+	t.Run("EXEC without MULTI returns error", func(t *testing.T) {
+		h := newHandler()
+		got := h.Handle([]byte("*1\r\n$4\r\nEXEC\r\n"))
+		if got != "-ERR EXEC without MULTI\r\n" {
+			t.Errorf("got %q, want -ERR EXEC without MULTI\\r\\n", got)
+		}
+	})
+
+	t.Run("EXEC with empty queue returns empty array", func(t *testing.T) {
+		h := newHandler()
+		h.Handle([]byte("*1\r\n$5\r\nMULTI\r\n"))
+		got := h.Handle([]byte("*1\r\n$4\r\nEXEC\r\n"))
+		if got != "*0\r\n" {
+			t.Errorf("got %q, want *0\\r\\n", got)
+		}
+	})
+
+	t.Run("EXEC runs queued commands and returns array of replies", func(t *testing.T) {
+		h := newHandler()
+		h.Handle([]byte("*1\r\n$5\r\nMULTI\r\n"))
+		h.Handle([]byte("*3\r\n$3\r\nSET\r\n$3\r\nfoo\r\n$2\r\n41\r\n"))
+		h.Handle([]byte("*2\r\n$4\r\nINCR\r\n$3\r\nfoo\r\n"))
+		got := h.Handle([]byte("*1\r\n$4\r\nEXEC\r\n"))
+		want := "*2\r\n+OK\r\n:42\r\n"
+		if got != want {
+			t.Errorf("got %q, want %q", got, want)
+		}
+	})
+
+	t.Run("commands after EXEC execute normally", func(t *testing.T) {
+		h := newHandler()
+		h.Handle([]byte("*1\r\n$5\r\nMULTI\r\n"))
+		h.Handle([]byte("*3\r\n$3\r\nSET\r\n$1\r\nk\r\n$1\r\nv\r\n"))
+		h.Handle([]byte("*1\r\n$4\r\nEXEC\r\n"))
+		got := h.Handle([]byte("*2\r\n$3\r\nGET\r\n$1\r\nk\r\n"))
+		if got != "$1\r\nv\r\n" {
+			t.Errorf("got %q, want $1\\r\\nv\\r\\n", got)
+		}
+	})
+
+	t.Run("second EXEC after first returns EXEC without MULTI", func(t *testing.T) {
+		h := newHandler()
+		h.Handle([]byte("*1\r\n$5\r\nMULTI\r\n"))
+		h.Handle([]byte("*1\r\n$4\r\nEXEC\r\n"))
+		got := h.Handle([]byte("*1\r\n$4\r\nEXEC\r\n"))
+		if got != "-ERR EXEC without MULTI\r\n" {
+			t.Errorf("got %q, want -ERR EXEC without MULTI\\r\\n", got)
+		}
+	})
+}
