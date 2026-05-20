@@ -1366,3 +1366,63 @@ func TestHandleWatch(t *testing.T) {
 		}
 	})
 }
+
+func TestHandleUnwatch(t *testing.T) {
+	t.Run("UNWATCH returns OK with no prior WATCH", func(t *testing.T) {
+		h := newHandler()
+		got := h.Handle([]byte("*1\r\n$7\r\nUNWATCH\r\n"))
+		if got != "+OK\r\n" {
+			t.Errorf("got %q, want +OK\\r\\n", got)
+		}
+	})
+
+	t.Run("UNWATCH returns OK after WATCH", func(t *testing.T) {
+		h := newHandler()
+		h.Handle([]byte("*3\r\n$5\r\nWATCH\r\n$3\r\nfoo\r\n$3\r\nbar\r\n"))
+		got := h.Handle([]byte("*1\r\n$7\r\nUNWATCH\r\n"))
+		if got != "+OK\r\n" {
+			t.Errorf("got %q, want +OK\\r\\n", got)
+		}
+	})
+
+	t.Run("UNWATCH clears watches so EXEC succeeds after external modification", func(t *testing.T) {
+		h1, h2 := newPair()
+		h1.Handle([]byte("*3\r\n$3\r\nSET\r\n$3\r\nfoo\r\n$1\r\n1\r\n"))
+		h1.Handle([]byte("*2\r\n$5\r\nWATCH\r\n$3\r\nfoo\r\n"))
+		// Another client modifies foo before UNWATCH.
+		h2.Handle([]byte("*3\r\n$3\r\nSET\r\n$3\r\nfoo\r\n$3\r\n100\r\n"))
+		// UNWATCH should clear the watch state.
+		h1.Handle([]byte("*1\r\n$7\r\nUNWATCH\r\n"))
+		h1.Handle([]byte("*1\r\n$5\r\nMULTI\r\n"))
+		h1.Handle([]byte("*3\r\n$3\r\nSET\r\n$3\r\nbar\r\n$3\r\n200\r\n"))
+		got := h1.Handle([]byte("*1\r\n$4\r\nEXEC\r\n"))
+		if got != "*1\r\n+OK\r\n" {
+			t.Errorf("got %q, want *1\\r\\n+OK\\r\\n", got)
+		}
+	})
+
+	t.Run("UNWATCH clears all watched keys at once", func(t *testing.T) {
+		h1, h2 := newPair()
+		h1.Handle([]byte("*3\r\n$5\r\nWATCH\r\n$1\r\na\r\n$1\r\nb\r\n"))
+		h1.Handle([]byte("*1\r\n$7\r\nUNWATCH\r\n"))
+		// Modify both previously-watched keys.
+		h2.Handle([]byte("*3\r\n$3\r\nSET\r\n$1\r\na\r\n$1\r\nx\r\n"))
+		h2.Handle([]byte("*3\r\n$3\r\nSET\r\n$1\r\nb\r\n$1\r\ny\r\n"))
+		h1.Handle([]byte("*1\r\n$5\r\nMULTI\r\n"))
+		h1.Handle([]byte("*3\r\n$3\r\nSET\r\n$1\r\nc\r\n$1\r\nz\r\n"))
+		got := h1.Handle([]byte("*1\r\n$4\r\nEXEC\r\n"))
+		if got != "*1\r\n+OK\r\n" {
+			t.Errorf("got %q, want *1\\r\\n+OK\\r\\n", got)
+		}
+	})
+
+	t.Run("UNWATCH is idempotent", func(t *testing.T) {
+		h := newHandler()
+		h.Handle([]byte("*2\r\n$5\r\nWATCH\r\n$3\r\nfoo\r\n"))
+		h.Handle([]byte("*1\r\n$7\r\nUNWATCH\r\n"))
+		got := h.Handle([]byte("*1\r\n$7\r\nUNWATCH\r\n"))
+		if got != "+OK\r\n" {
+			t.Errorf("got %q, want +OK\\r\\n", got)
+		}
+	})
+}

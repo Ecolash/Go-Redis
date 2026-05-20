@@ -70,6 +70,7 @@ func New(s *store.Store) *Handler {
 		command.EXEC:    h.handleExec,
 		command.DISCARD: h.handleDiscard,
 		command.WATCH:   h.handleWatch,
+		command.UNWATCH: h.handleUnwatch,
 	}
 	return h
 }

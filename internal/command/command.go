@@ -17,6 +17,7 @@ const (
 	EXEC    Command = "EXEC"
 	DISCARD Command = "DISCARD"
 	WATCH   Command = "WATCH"
+	UNWATCH Command = "UNWATCH"
 
 	// STREAM Commands
 	XADD   Command = "XADD"

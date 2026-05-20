@@ -42,6 +42,11 @@ func (h *Handler) handleExec(_ []string) string {
 	return resp.RawArray(responses)
 }
 
+func (h *Handler) handleUnwatch(_ []string) string {
+	h.watching = nil
+	return okResponse
+}
+
 // handleWatch snapshots current versions of the given keys. Subsequent EXEC
 // aborts if any of those versions change. WATCH inside MULTI is rejected.
 // Calling WATCH again accumulates keys; later WATCH on the same key
