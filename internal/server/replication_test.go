@@ -138,6 +138,79 @@ func TestReplicaRespondsToGetAck(t *testing.T) {
 	}
 }
 
+// TestReplicaGetAckOffsetMatchesSpecExample replays the exact sequence from the
+// stage spec (GETACK / PING / GETACK / SET×2 / GETACK) and verifies the offset
+// values reported in each ACK reply match the expected 0 → 51 → 146.
+func TestReplicaGetAckOffsetMatchesSpecExample(t *testing.T) {
+	ml, err := net.Listen("tcp", "127.0.0.1:0")
+	if err != nil {
+		t.Fatalf("fake master listen: %v", err)
+	}
+	t.Cleanup(func() { ml.Close() })
+
+	connCh := make(chan net.Conn, 1)
+	go func() {
+		c, err := ml.Accept()
+		if err != nil {
+			return
+		}
+		connCh <- c
+	}()
+
+	replica, err := server.New("127.0.0.1:0", "slave", ml.Addr().String())
+	if err != nil {
+		t.Fatalf("create replica: %v", err)
+	}
+	t.Cleanup(func() { replica.Close() })
+	go replica.Run()
+
+	var mconn net.Conn
+	select {
+	case mconn = <-connCh:
+	case <-time.After(2 * time.Second):
+		t.Fatal("replica never dialed fake master")
+	}
+	t.Cleanup(func() { mconn.Close() })
+	mconn.SetDeadline(time.Now().Add(5 * time.Second))
+	mr := bufio.NewReader(mconn)
+
+	drainArray(t, mr, 1)
+	mconn.Write([]byte("+PONG\r\n"))
+	drainArray(t, mr, 3)
+	mconn.Write([]byte("+OK\r\n"))
+	drainArray(t, mr, 3)
+	mconn.Write([]byte("+OK\r\n"))
+	drainArray(t, mr, 3)
+	mconn.Write([]byte("+FULLRESYNC 0000000000000000000000000000000000000000 0\r\n"))
+	mconn.Write(resp.File(rdb.Empty()))
+
+	getack := "*3\r\n$8\r\nREPLCONF\r\n$6\r\nGETACK\r\n$1\r\n*\r\n"
+	expectAck := func(offset int) {
+		t.Helper()
+		o := strconv.Itoa(offset)
+		want := "*3\r\n$8\r\nREPLCONF\r\n$3\r\nACK\r\n$" + strconv.Itoa(len(o)) + "\r\n" + o + "\r\n"
+		got := make([]byte, len(want))
+		if _, err := io.ReadFull(mr, got); err != nil {
+			t.Fatalf("read ACK reply for offset=%d: %v", offset, err)
+		}
+		if string(got) != want {
+			t.Errorf("ACK reply = %q, want %q", string(got), want)
+		}
+	}
+
+	mconn.Write([]byte(getack))
+	expectAck(0)
+
+	mconn.Write([]byte("*1\r\n$4\r\nPING\r\n"))
+	mconn.Write([]byte(getack))
+	expectAck(51)
+
+	mconn.Write([]byte("*3\r\n$3\r\nSET\r\n$3\r\nfoo\r\n$1\r\n1\r\n"))
+	mconn.Write([]byte("*3\r\n$3\r\nSET\r\n$3\r\nbar\r\n$1\r\n2\r\n"))
+	mconn.Write([]byte(getack))
+	expectAck(146)
+}
+
 // drainArray reads a single RESP array of n bulk strings off r and discards it.
 func drainArray(t *testing.T, r *bufio.Reader, n int) {
 	t.Helper()

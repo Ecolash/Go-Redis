@@ -33,6 +33,9 @@ It can be configured with a callback to propagate write commands to connected re
 - watching: keys being WATCHed for optimistic locking
 - onPropagate: callback func for propagating write commands to replicas
 - replica: whether this connection has become a replica after PSYNC
+- replyToMaster: whether the next response should be forwarded to the master (e.g. for REPLCONF GETACK)
+- trackOffset: whether to track the byte length of processed commands for REPLCONF GETACK
+- offset: accumulated byte length of processed commands for REPLCONF GETACK
 
 - Handle() : main entry point for processing incoming RESP commands.
 - dispatch() : looks up the command handler and executes it, also handles propagation for write commands.
@@ -48,6 +51,8 @@ type Handler struct {
 	onPropagate func(parts []string)
 	replica bool
 	replyToMaster bool
+	trackOffset bool
+	offset int
 
 	commands map[command.Command]commandFunc
 	txCommands map[command.Command]commandFunc
@@ -57,6 +62,13 @@ type Option func(*Handler)
 
 func WithPropagate(fn func(parts []string)) Option {
 	return func(h *Handler) { h.onPropagate = fn }
+}
+
+// WithOffsetTracking makes the handler accumulate the byte length of every
+// command passed to Handle. Used by replicas so REPLCONF GETACK can report the
+// number of bytes processed before the current request.
+func WithOffsetTracking() Option {
+	return func(h *Handler) { h.trackOffset = true }
 }
 
 func New(s *store.Store, role string, opts ...Option) *Handler {
@@ -97,6 +109,11 @@ func New(s *store.Store, role string, opts ...Option) *Handler {
 }
 
 func (h *Handler) Handle(data []byte) string {
+	if h.trackOffset {
+		// Increment AFTER dispatch so the current command's bytes aren't
+		// reflected in its own reply (matters for REPLCONF GETACK).
+		defer func() { h.offset += len(data) }()
+	}
 	parts, err := resp.ParseArray(data)
 	if err != nil || len(parts) == 0 {
 		return errs.UnknownCommand

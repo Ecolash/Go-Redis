@@ -1613,6 +1613,49 @@ func TestReplConfNonGetAckDoesNotRequestMasterReply(t *testing.T) {
 	}
 }
 
+func TestGetAckOffsetTracksProcessedBytesExcludingCurrent(t *testing.T) {
+	h := handler.New(store.New(), "slave", handler.WithOffsetTracking())
+	getack := "*3\r\n$8\r\nREPLCONF\r\n$6\r\nGETACK\r\n$1\r\n*\r\n" // 37 bytes
+	ping := "*1\r\n$4\r\nPING\r\n"                                  // 14 bytes
+	setfoo := "*3\r\n$3\r\nSET\r\n$3\r\nfoo\r\n$1\r\n1\r\n"          // 29 bytes
+	setbar := "*3\r\n$3\r\nSET\r\n$3\r\nbar\r\n$1\r\n2\r\n"          // 29 bytes
+
+	// Sanity-check the literal byte counts the spec example relies on.
+	if len(getack) != 37 || len(ping) != 14 || len(setfoo) != 29 || len(setbar) != 29 {
+		t.Fatalf("test fixture byte counts off: getack=%d ping=%d setfoo=%d setbar=%d",
+			len(getack), len(ping), len(setfoo), len(setbar))
+	}
+
+	ackReply := func(offset int) string {
+		o := strconv.Itoa(offset)
+		return "*3\r\n$8\r\nREPLCONF\r\n$3\r\nACK\r\n$" + strconv.Itoa(len(o)) + "\r\n" + o + "\r\n"
+	}
+
+	if got := h.Handle([]byte(getack)); got != ackReply(0) {
+		t.Errorf("1st GETACK reply = %q, want %q", got, ackReply(0))
+	}
+	h.Handle([]byte(ping))
+	if got := h.Handle([]byte(getack)); got != ackReply(37+14) {
+		t.Errorf("2nd GETACK reply = %q, want %q", got, ackReply(51))
+	}
+	h.Handle([]byte(setfoo))
+	h.Handle([]byte(setbar))
+	if got := h.Handle([]byte(getack)); got != ackReply(51+37+29+29) {
+		t.Errorf("3rd GETACK reply = %q, want %q", got, ackReply(146))
+	}
+}
+
+func TestOffsetTrackingDisabledByDefault(t *testing.T) {
+	h := handler.New(store.New(), "slave")
+	h.Handle([]byte("*1\r\n$4\r\nPING\r\n"))
+	h.Handle([]byte("*3\r\n$3\r\nSET\r\n$1\r\nk\r\n$1\r\nv\r\n"))
+	got := h.Handle([]byte("*3\r\n$8\r\nREPLCONF\r\n$6\r\nGETACK\r\n$1\r\n*\r\n"))
+	want := "*3\r\n$8\r\nREPLCONF\r\n$3\r\nACK\r\n$1\r\n0\r\n"
+	if got != want {
+		t.Errorf("without WithOffsetTracking, GETACK reply = %q, want %q", got, want)
+	}
+}
+
 func TestBecameReplicaSetOnlyAfterPsync(t *testing.T) {
 	h, _ := newPropHandler(t)
 	if h.BecameReplica() {

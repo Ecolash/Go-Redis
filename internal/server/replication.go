@@ -96,7 +96,7 @@ func completePsync(conn net.Conn, r *bufio.Reader) error {
 }
 
 func (s *Server) processPropagated(conn net.Conn, r *bufio.Reader) {
-	h := handler.New(s.store, s.role)
+	h := handler.New(s.store, s.role, handler.WithOffsetTracking())
 	for {
 		cmd, err := readArray(r)
 		if err != nil {

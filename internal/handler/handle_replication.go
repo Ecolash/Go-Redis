@@ -2,6 +2,7 @@ package handler
 
 import (
 	"fmt"
+	"strconv"
 	"strings"
 
 	"github.com/codecrafters-io/redis-starter-go/internal/rdb"
@@ -11,7 +12,8 @@ import (
 func (h *Handler) handleReplConf(parts []string) string {
 	if len(parts) >= 2 && strings.EqualFold(parts[1], "GETACK") {
 		h.replyToMaster = true
-		return resp.Array([]string{"REPLCONF", "ACK", "0"})
+		offset := strconv.Itoa(h.offset)
+		return resp.Array([]string{"REPLCONF", "ACK", offset})
 	}
 	return "+OK\r\n"
 }
