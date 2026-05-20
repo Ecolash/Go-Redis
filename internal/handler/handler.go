@@ -62,6 +62,7 @@ func New(s *store.Store, role string) *Handler {
 		command.LPUSH:  h.handleLPush,
 		command.RPUSH:  h.handleRPush,
 		command.LRANGE: h.handleLRange,
+		command.REPLCONF: h.handleReplConf,
 	}
 	h.txCommands = map[command.Command]commandFunc{
 		command.MULTI:   h.handleMulti,

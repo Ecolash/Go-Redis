@@ -33,4 +33,7 @@ const (
 	RPOP   Command = "RPOP"
 	LLEN   Command = "LLEN"
 	LRANGE Command = "LRANGE"
+
+	// Replication Commands	
+	REPLCONF Command = "REPLCONF"
 )
