@@ -18,42 +18,42 @@ const (
 
 type commandFunc func(parts []string) string
 
-// Handler holds the per-connection command dispatch state. The underlying
-// store is shared across connections; transaction state (inMulti, queue) is
-// per-connection, so callers must create one Handler per client connection.
+/*
+
+Handler is responsible for parsing incoming RESP commands, executing them against the store, and returning RESP responses. 
+It also tracks transaction state for MULTI/EXEC and watches for WATCHed keys to implement optimistic locking.
+It can be configured with a callback to propagate write commands to connected replicas.
+
+- store: the underlying data store for executing commands
+- role: the server role (master | slave) for Leader-Follower Replication
+- commands: mapping of command names to respective handler functions
+- txCommands: mapping of transaction-related commands (MULTI/EXEC/WATCH) to their handlers
+- inMulti: whether the connection is currently in a MULTI block
+- queue: queued commands during a MULTI block
+- watching: keys being WATCHed for optimistic locking
+- onPropagate: callback func for propagating write commands to replicas
+- replica: whether this connection has become a replica after PSYNC
+
+- Handle() : main entry point for processing incoming RESP commands.
+- dispatch() : looks up the command handler and executes it, also handles propagation for write commands.
+- BecameReplica() : checks if the connection has become a replica (after PSYNC) and resets the replica flag.
+*/
+
 type Handler struct {
 	store *store.Store
 	role  string
-
-	// commands are normal data commands. While inMulti is true, they are
-	// queued instead of executed.
-	commands map[command.Command]commandFunc
-
-	// txCommands are transaction-control commands. They always execute
-	// immediately and bypass the queue, even inside MULTI.
-	txCommands map[command.Command]commandFunc
-
 	inMulti bool
 	queue   [][]string
-
-	// watching maps each WATCH'd key to the store version at the time of
-	// WATCH. EXEC aborts if any key's current version differs.
 	watching map[string]uint64
-
-	// onPropagate is invoked with the command parts after a successful write
-	// command runs, so the server can forward it to connected replicas.
 	onPropagate func(parts []string)
+	replica bool
 
-	// becameReplica is set true when this connection just completed PSYNC.
-	// The server checks it after writing the response and, if set, hands the
-	// connection over to the replica registry.
-	becameReplica bool
+	commands map[command.Command]commandFunc
+	txCommands map[command.Command]commandFunc
 }
 
-// Option configures a Handler at construction time.
 type Option func(*Handler)
 
-// WithPropagate registers a callback invoked for each successful write command.
 func WithPropagate(fn func(parts []string)) Option {
 	return func(h *Handler) { h.onPropagate = fn }
 }
@@ -101,7 +101,6 @@ func (h *Handler) Handle(data []byte) string {
 		return errs.UnknownCommand
 	}
 	cmd := command.Command(strings.ToUpper(parts[0]))
-
 	if fn, ok := h.txCommands[cmd]; ok {
 		return fn(parts)
 	}
@@ -126,17 +125,13 @@ func (h *Handler) dispatch(parts []string) string {
 	return result
 }
 
-// BecameReplica returns true exactly once after a PSYNC has been handled on
-// this connection, signalling the server to hand the conn over to the replica
-// registry instead of continuing to read commands from it.
 func (h *Handler) BecameReplica() bool {
-	b := h.becameReplica
-	h.becameReplica = false
+	b := h.replica
+	h.replica = false
 	return b
 }
 
-// writeCommands are the commands that mutate the dataset and therefore must
-// be forwarded to connected replicas.
+// writeCommands are the commands that mutate the dataset & must be forwarded to connected replicas.
 var writeCommands = map[command.Command]bool{
 	command.SET:   true,
 	command.INCR:  true,
