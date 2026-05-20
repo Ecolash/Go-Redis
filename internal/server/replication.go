@@ -29,6 +29,7 @@ func (s *Server) handshakeWithMaster() {
 		{"PING"},
 		{"REPLCONF", "listening-port", port},
 		{"REPLCONF", "capa", "psync2"},
+		{"PSYNC", "?", "-1"},
 	}
 	for _, cmd := range steps {
 		if err := sendAndAwait(conn, r, cmd); err != nil {
