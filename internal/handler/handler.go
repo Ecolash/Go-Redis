@@ -2,6 +2,7 @@ package handler
 
 import (
 	"strings"
+	"time"
 
 	"github.com/codecrafters-io/redis-starter-go/internal/command"
 	"github.com/codecrafters-io/redis-starter-go/internal/errs"
@@ -50,6 +51,7 @@ type Handler struct {
 	watching map[string]uint64
 	onPropagate func(parts []string)
 	replicaCount func() int
+	replicaWaiter func(numReplicas int, timeout time.Duration) int
 	replica bool
 	replyToMaster bool
 	trackOffset bool
@@ -70,6 +72,13 @@ func WithPropagate(fn func(parts []string)) Option {
 // count is always live.
 func WithReplicaCount(fn func() int) Option {
 	return func(h *Handler) { h.replicaCount = fn }
+}
+
+// WithReplicaWaiter wires the master's WAIT implementation: a blocking call
+// that returns the number of replicas which have acknowledged all previously
+// propagated writes within the given timeout.
+func WithReplicaWaiter(fn func(numReplicas int, timeout time.Duration) int) Option {
+	return func(h *Handler) { h.replicaWaiter = fn }
 }
 
 // WithOffsetTracking makes the handler accumulate the byte length of every

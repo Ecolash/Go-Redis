@@ -115,6 +115,42 @@ func (s *Server) processPropagated(conn net.Conn, r *bufio.Reader) {
 	}
 }
 
+// readArrayParts reads a single RESP array of bulk strings and returns just
+// the decoded elements. Used by the master to parse REPLCONF ACK replies.
+func readArrayParts(r *bufio.Reader) ([]string, error) {
+	header, err := r.ReadString('\n')
+	if err != nil {
+		return nil, err
+	}
+	if len(header) == 0 || header[0] != '*' {
+		return nil, fmt.Errorf("expected array, got %q", header)
+	}
+	count, err := strconv.Atoi(strings.TrimRight(header[1:], "\r\n"))
+	if err != nil {
+		return nil, fmt.Errorf("invalid array length %q: %w", header, err)
+	}
+	parts := make([]string, 0, count)
+	for i := 0; i < count; i++ {
+		lenLine, err := r.ReadString('\n')
+		if err != nil {
+			return nil, err
+		}
+		if len(lenLine) == 0 || lenLine[0] != '$' {
+			return nil, fmt.Errorf("expected bulk, got %q", lenLine)
+		}
+		size, err := strconv.Atoi(strings.TrimRight(lenLine[1:], "\r\n"))
+		if err != nil {
+			return nil, fmt.Errorf("invalid bulk length %q: %w", lenLine, err)
+		}
+		body := make([]byte, size+2)
+		if _, err := io.ReadFull(r, body); err != nil {
+			return nil, err
+		}
+		parts = append(parts, string(body[:size]))
+	}
+	return parts, nil
+}
+
 func readArray(r *bufio.Reader) ([]byte, error) {
 	header, err := r.ReadString('\n')
 	if err != nil {

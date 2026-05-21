@@ -67,6 +67,7 @@ func (s *Server) handleConn(conn net.Conn) {
 	h := handler.New(s.store, s.role,
 		handler.WithPropagate(propagate),
 		handler.WithReplicaCount(s.replicas.Count),
+		handler.WithReplicaWaiter(s.replicas.Wait),
 	)
 
 	buf := make([]byte, 512)

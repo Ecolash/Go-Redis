@@ -4,7 +4,9 @@ import (
 	"fmt"
 	"strconv"
 	"strings"
+	"time"
 
+	"github.com/codecrafters-io/redis-starter-go/internal/errs"
 	"github.com/codecrafters-io/redis-starter-go/internal/rdb"
 	"github.com/codecrafters-io/redis-starter-go/internal/resp"
 )
@@ -24,14 +26,25 @@ func (h *Handler) handlePsync(_ []string) string {
 	return header + string(resp.File(rdb.Empty()))
 }
 
-func (h *Handler) handleWait(_ []string) string {
-	replicaCnt := h.getReplicaCount()
-	return resp.Integer(replicaCnt)
-}
-
-func (h *Handler) getReplicaCount() int {
-	if h.role != "master" || h.replicaCount == nil {
-		return 0
+func (h *Handler) handleWait(parts []string) string {
+	if len(parts) < 3 {
+		return errs.WrongArgs
 	}
-	return h.replicaCount()
+	numReplicas, err := strconv.Atoi(parts[1])
+	if err != nil {
+		return resp.Error(errs.ErrNotInteger.Error())
+	}
+	timeoutMs, err := strconv.Atoi(parts[2])
+	if err != nil {
+		return resp.Error(errs.ErrNotInteger.Error())
+	}
+	if h.role == "master" {
+		if h.replicaWaiter != nil {
+			return resp.Integer(h.replicaWaiter(numReplicas, time.Duration(timeoutMs)*time.Millisecond))
+		}
+		if h.replicaCount != nil {
+			return resp.Integer(h.replicaCount())
+		}
+	}
+	return resp.Integer(0)
 }

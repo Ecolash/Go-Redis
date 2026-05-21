@@ -1656,6 +1656,67 @@ func TestOffsetTrackingDisabledByDefault(t *testing.T) {
 	}
 }
 
+func TestHandleWaitDelegatesToWaiter(t *testing.T) {
+	var got struct {
+		numReplicas int
+		timeout     time.Duration
+		calls       int
+	}
+	waiter := func(n int, d time.Duration) int {
+		got.numReplicas = n
+		got.timeout = d
+		got.calls++
+		return 3
+	}
+	h := handler.New(store.New(), "master", handler.WithReplicaWaiter(waiter))
+	resp := h.Handle([]byte("*3\r\n$4\r\nWAIT\r\n$1\r\n7\r\n$3\r\n500\r\n"))
+	if resp != ":3\r\n" {
+		t.Errorf("got %q, want :3\\r\\n", resp)
+	}
+	if got.calls != 1 {
+		t.Errorf("waiter called %d times, want 1", got.calls)
+	}
+	if got.numReplicas != 7 {
+		t.Errorf("numReplicas=%d, want 7", got.numReplicas)
+	}
+	if got.timeout != 500*time.Millisecond {
+		t.Errorf("timeout=%s, want 500ms", got.timeout)
+	}
+}
+
+func TestHandleWaitOnReplicaReturnsZero(t *testing.T) {
+	waiter := func(int, time.Duration) int {
+		t.Fatal("waiter should not be invoked on a replica")
+		return 0
+	}
+	h := handler.New(store.New(), "slave", handler.WithReplicaWaiter(waiter))
+	if got := h.Handle([]byte("*3\r\n$4\r\nWAIT\r\n$1\r\n1\r\n$3\r\n100\r\n")); got != ":0\r\n" {
+		t.Errorf("got %q, want :0\\r\\n", got)
+	}
+}
+
+func TestHandleWaitWithoutWaiterFallsBackToCount(t *testing.T) {
+	h := handler.New(store.New(), "master", handler.WithReplicaCount(func() int { return 4 }))
+	if got := h.Handle([]byte("*3\r\n$4\r\nWAIT\r\n$1\r\n2\r\n$3\r\n100\r\n")); got != ":4\r\n" {
+		t.Errorf("got %q, want :4\\r\\n", got)
+	}
+}
+
+func TestHandleWaitWithoutWaiterOrCountReturnsZero(t *testing.T) {
+	h := handler.New(store.New(), "master")
+	if got := h.Handle([]byte("*3\r\n$4\r\nWAIT\r\n$1\r\n2\r\n$3\r\n100\r\n")); got != ":0\r\n" {
+		t.Errorf("got %q, want :0\\r\\n", got)
+	}
+}
+
+func TestHandleWaitRejectsNonIntegerArgs(t *testing.T) {
+	h := handler.New(store.New(), "master", handler.WithReplicaWaiter(func(int, time.Duration) int { return 0 }))
+	got := h.Handle([]byte("*3\r\n$4\r\nWAIT\r\n$3\r\nabc\r\n$3\r\n100\r\n"))
+	if !strings.HasPrefix(got, "-ERR") {
+		t.Errorf("got %q, want ERR prefix", got)
+	}
+}
+
 func TestBecameReplicaSetOnlyAfterPsync(t *testing.T) {
 	h, _ := newPropHandler(t)
 	if h.BecameReplica() {
