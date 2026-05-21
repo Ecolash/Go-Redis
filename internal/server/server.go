@@ -64,7 +64,10 @@ func (s *Server) handleConn(conn net.Conn) {
 	propagate := func(parts []string) {
 		s.replicas.Broadcast([]byte(resp.Array(parts)))
 	}
-	h := handler.New(s.store, s.role, handler.WithPropagate(propagate))
+	h := handler.New(s.store, s.role,
+		handler.WithPropagate(propagate),
+		handler.WithReplicaCount(s.replicas.Count),
+	)
 
 	buf := make([]byte, 512)
 	for {

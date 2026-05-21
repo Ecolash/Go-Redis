@@ -49,6 +49,7 @@ type Handler struct {
 	queue   [][]string
 	watching map[string]uint64
 	onPropagate func(parts []string)
+	replicaCount func() int
 	replica bool
 	replyToMaster bool
 	trackOffset bool
@@ -62,6 +63,13 @@ type Option func(*Handler)
 
 func WithPropagate(fn func(parts []string)) Option {
 	return func(h *Handler) { h.onPropagate = fn }
+}
+
+// WithReplicaCount lets the handler report the number of currently-connected
+// replicas (used by WAIT). The callback is consulted at request time so the
+// count is always live.
+func WithReplicaCount(fn func() int) Option {
+	return func(h *Handler) { h.replicaCount = fn }
 }
 
 // WithOffsetTracking makes the handler accumulate the byte length of every

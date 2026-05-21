@@ -25,5 +25,13 @@ func (h *Handler) handlePsync(_ []string) string {
 }
 
 func (h *Handler) handleWait(_ []string) string {
-	return resp.Integer(0)
+	replicaCnt := h.getReplicaCount()
+	return resp.Integer(replicaCnt)
+}
+
+func (h *Handler) getReplicaCount() int {
+	if h.role != "master" || h.replicaCount == nil {
+		return 0
+	}
+	return h.replicaCount()
 }
