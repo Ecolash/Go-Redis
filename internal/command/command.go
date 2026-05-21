@@ -37,4 +37,5 @@ const (
 	// Replication Commands
 	REPLCONF Command = "REPLCONF"
 	PSYNC    Command = "PSYNC"
+	WAIT     Command = "WAIT"
 )

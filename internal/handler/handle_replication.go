@@ -23,3 +23,7 @@ func (h *Handler) handlePsync(_ []string) string {
 	h.replica = true
 	return header + string(resp.File(rdb.Empty()))
 }
+
+func (h *Handler) handleWait(_ []string) string {
+	return resp.Integer(0)
+}
