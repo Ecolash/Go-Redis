@@ -6,7 +6,7 @@ import (
 
 func (h *Handler) handlePing(_ []string) string {
 	if h.inSubscribe {
-		return resp.Array([]string{"PONG", ""})
+		return resp.Array([]string{"pong", ""})
 	}
 	return "+PONG\r\n"
 }
