@@ -24,6 +24,7 @@ type Server struct {
 	dir             string
 	dbfilename      string
 	configOverrides map[string]string
+	config          map[string]string
 }
 
 type ServerOption func(*Server)
@@ -60,6 +61,17 @@ func New(addr, role, masterAddr string, opts ...ServerOption) (*Server, error) {
 	if s.dir == "" {
 		if cwd, err := os.Getwd(); err == nil {
 			s.dir = cwd
+		}
+	}
+	s.config = aof.Defaults()
+	s.config["dir"] = s.dir
+	s.config["dbfilename"] = s.dbfilename
+	for k, v := range s.configOverrides {
+		s.config[k] = v
+	}
+	if s.config["appendonly"] == "yes" {
+		if err := aof.Setup(s.dir, s.config["appenddirname"], s.config["appendfilename"]); err != nil {
+			log.Printf("aof: failed to set up append-only directory: %v", err)
 		}
 	}
 	if s.dir != "" && s.dbfilename != "" {
@@ -124,13 +136,7 @@ func (s *Server) handleConn(conn net.Conn) {
 		handler.WithReplicaCount(s.replicas.Count),
 		handler.WithReplicaWaiter(s.replicas.Wait),
 	}
-	cfg := aof.Defaults()
-	cfg["dir"] = s.dir
-	cfg["dbfilename"] = s.dbfilename
-	for k, v := range s.configOverrides {
-		cfg[k] = v
-	}
-	for k, v := range cfg {
+	for k, v := range s.config {
 		opts = append(opts, handler.WithConfig(k, v))
 	}
 	h := handler.New(s.store, s.role, opts...)
