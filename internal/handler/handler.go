@@ -147,6 +147,7 @@ func New(s *store.Store, role string, opts ...Option) *Handler {
 		command.CONFIG:     h.handleConfig,
 		command.KEYS:       h.handleKeys,
 		command.SUBSCRIBE:  h.handleSubscribe,
+		command.PUBLISH:    h.handlePublish,
 	}
 	h.txCommands = map[command.Command]commandFunc{
 		command.MULTI:   h.handleMulti,
@@ -209,6 +210,19 @@ func (h *Handler) dispatch(parts []string) string {
 		}
 	}
 	return result
+}
+
+func (h *Handler) InSubscribeMode() bool {
+	return h.inSubscribe
+}
+
+// MessageChan returns the channel on which published messages are delivered
+// to this client. Returns nil if the client has not yet subscribed.
+func (h *Handler) MessageChan() <-chan string {
+	if h.pubsub == nil {
+		return nil
+	}
+	return h.pubsub.MessageChan(h.subscriberID)
 }
 
 func (h *Handler) BecameReplica() bool {

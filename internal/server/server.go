@@ -192,5 +192,46 @@ func (s *Server) handleConn(conn net.Conn) {
 			handedOff = true
 			return
 		}
+		if h.InSubscribeMode() {
+			s.handleSubscribedConn(conn, h)
+			return
+		}
+	}
+}
+
+func (s *Server) handleSubscribedConn(conn net.Conn, h *handler.Handler) {
+	defer conn.Close()
+
+	cmds := make(chan []byte, 1)
+	go func() {
+		buf := make([]byte, 512)
+		for {
+			n, err := conn.Read(buf)
+			if err != nil {
+				close(cmds)
+				return
+			}
+			tmp := make([]byte, n)
+			copy(tmp, buf[:n])
+			cmds <- tmp
+		}
+	}()
+
+	msgs := h.MessageChan()
+	for {
+		select {
+		case data, ok := <-cmds:
+			if !ok {
+				return
+			}
+			response := h.Handle(data)
+			if _, err := conn.Write([]byte(response)); err != nil {
+				return
+			}
+		case msg := <-msgs:
+			if _, err := conn.Write([]byte(msg)); err != nil {
+				return
+			}
+		}
 	}
 }

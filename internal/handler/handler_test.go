@@ -1755,6 +1755,38 @@ func TestHandleSubscribeDuplicateChannelIsIdempotent(t *testing.T) {
 	}
 }
 
+func TestHandlePublishReturnsSubscriberCount(t *testing.T) {
+	ps := pubsub.New()
+	publisher := handler.New(store.New(), "master", handler.WithPubSub(ps), handler.WithSubscriberID("pub"))
+	subscriber := handler.New(store.New(), "master", handler.WithPubSub(ps), handler.WithSubscriberID("sub"))
+
+	subscriber.Handle([]byte("*2\r\n$9\r\nSUBSCRIBE\r\n$4\r\nnews\r\n"))
+	got := publisher.Handle([]byte("*3\r\n$7\r\nPUBLISH\r\n$4\r\nnews\r\n$5\r\nhello\r\n"))
+	if got != ":1\r\n" {
+		t.Errorf("got %q, want \":1\\r\\n\"", got)
+	}
+}
+
+func TestHandlePublishDeliversRESPMessageToSubscriber(t *testing.T) {
+	ps := pubsub.New()
+	publisher := handler.New(store.New(), "master", handler.WithPubSub(ps), handler.WithSubscriberID("pub"))
+	subscriber := handler.New(store.New(), "master", handler.WithPubSub(ps), handler.WithSubscriberID("sub"))
+
+	subscriber.Handle([]byte("*2\r\n$9\r\nSUBSCRIBE\r\n$4\r\nnews\r\n"))
+	publisher.Handle([]byte("*3\r\n$7\r\nPUBLISH\r\n$4\r\nnews\r\n$5\r\nhello\r\n"))
+
+	ch := ps.MessageChan("sub")
+	select {
+	case msg := <-ch:
+		want := "*3\r\n$7\r\nmessage\r\n$4\r\nnews\r\n$5\r\nhello\r\n"
+		if msg != want {
+			t.Errorf("got %q, want %q", msg, want)
+		}
+	default:
+		t.Error("expected message on subscriber channel, got nothing")
+	}
+}
+
 func TestSubscribedModeRejectsDisallowedCommands(t *testing.T) {
 	disallowed := []struct {
 		name string

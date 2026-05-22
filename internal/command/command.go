@@ -44,8 +44,9 @@ const (
 	KEYS   Command = "KEYS"
 
 	// Pub/Sub Commands
-	SUBSCRIBE   Command = "SUBSCRIBE"
-	PSUBSCRIBE  Command = "PSUBSCRIBE"
-	UNSUBSCRIBE Command = "UNSUBSCRIBE"
+	SUBSCRIBE    Command = "SUBSCRIBE"
+	PSUBSCRIBE   Command = "PSUBSCRIBE"
+	UNSUBSCRIBE  Command = "UNSUBSCRIBE"
 	PUNSUBSCRIBE Command = "PUNSUBSCRIBE"
+	PUBLISH      Command = "PUBLISH"
 )

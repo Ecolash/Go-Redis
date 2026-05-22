@@ -2,9 +2,12 @@ package pubsub
 
 import "sync"
 
+const msgBufSize = 64
+
 type subscriber struct {
 	id       string
 	channels map[string]bool
+	msgs     chan string
 }
 
 type PubSub struct {
@@ -26,7 +29,11 @@ func (ps *PubSub) Subscribe(subscriberID, channel string) int {
 
 	sub, ok := ps.subscribers[subscriberID]
 	if !ok {
-		sub = &subscriber{id: subscriberID, channels: make(map[string]bool)}
+		sub = &subscriber{
+			id:       subscriberID,
+			channels: make(map[string]bool),
+			msgs:     make(chan string, msgBufSize),
+		}
 		ps.subscribers[subscriberID] = sub
 	}
 
@@ -39,6 +46,38 @@ func (ps *PubSub) Subscribe(subscriberID, channel string) int {
 	}
 
 	return len(sub.channels)
+}
+
+// MessageChan returns the receive-only message channel for the subscriber.
+// Returns nil if the subscriber does not exist.
+func (ps *PubSub) MessageChan(subscriberID string) <-chan string {
+	ps.mu.RLock()
+	defer ps.mu.RUnlock()
+	sub, ok := ps.subscribers[subscriberID]
+	if !ok {
+		return nil
+	}
+	return sub.msgs
+}
+
+// Publish sends encodedMsg to all subscribers of channel and returns the count.
+func (ps *PubSub) Publish(channel, encodedMsg string) int {
+	ps.mu.RLock()
+	subs := ps.channels[channel]
+	targets := make([]*subscriber, 0, len(subs))
+	for _, sub := range subs {
+		targets = append(targets, sub)
+	}
+	ps.mu.RUnlock()
+
+	for _, sub := range targets {
+		select {
+		case sub.msgs <- encodedMsg:
+		default:
+			// subscriber channel full — drop message rather than block publisher
+		}
+	}
+	return len(targets)
 }
 
 func (ps *PubSub) Unsubscribe(subscriberID, channel string) int {
