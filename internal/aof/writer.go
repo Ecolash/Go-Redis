@@ -11,18 +11,15 @@ import (
 	"sync"
 )
 
-// Writer appends RESP-encoded write commands to the active incremental AOF
-// file. It is safe for concurrent use across connections.
 type Writer struct {
 	mu sync.Mutex
 	f  *os.File
 }
 
-// NewWriter reads the manifest under dir/appendDirName to find the active
-// incremental file (the entry with type "i") and opens it for appending.
 func NewWriter(dir, appendDirName, appendFilename string) (*Writer, error) {
 	aofDir := filepath.Join(dir, appendDirName)
 	incrName, err := activeIncrFile(aofDir, appendFilename)
+
 	if err != nil {
 		return nil, err
 	}
@@ -33,7 +30,6 @@ func NewWriter(dir, appendDirName, appendFilename string) (*Writer, error) {
 	return &Writer{f: f}, nil
 }
 
-// Append writes the given RESP-encoded command bytes to the AOF file.
 func (w *Writer) Append(data string) error {
 	w.mu.Lock()
 	defer w.mu.Unlock()
@@ -47,8 +43,6 @@ func (w *Writer) Close() error {
 	return w.f.Close()
 }
 
-// Replay opens the active incremental AOF file and invokes apply for every
-// RESP-encoded command stored in it.
 func Replay(dir, appendDirName, appendFilename string, apply func([]byte) error) error {
 	aofDir := filepath.Join(dir, appendDirName)
 	incrName, err := activeIncrFile(aofDir, appendFilename)
@@ -77,8 +71,6 @@ func Replay(dir, appendDirName, appendFilename string, apply func([]byte) error)
 	}
 }
 
-// activeIncrFile parses the manifest and returns the file name of the entry
-// whose type is "i" (the active incremental file).
 func activeIncrFile(aofDir, appendFilename string) (string, error) {
 	data, err := os.ReadFile(filepath.Join(aofDir, appendFilename+".manifest"))
 	if err != nil {
