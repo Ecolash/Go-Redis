@@ -1818,6 +1818,21 @@ func TestSubscribedModeAllowsSubscribeAgain(t *testing.T) {
 	}
 }
 
+func TestUnsubscribeChannelRemovesSubscription(t *testing.T) {
+	h := newSubscribeHandler()
+	h.Handle([]byte("*2\r\n$9\r\nSUBSCRIBE\r\n$4\r\nnews\r\n"))
+	resp := h.Handle([]byte("*2\r\n$11\r\nUNSUBSCRIBE\r\n$4\r\nnews\r\n"))
+	want := "*3\r\n$11\r\nunsubscribe\r\n$4\r\nnews\r\n:0\r\n"
+	if resp != want {
+		t.Errorf("got %q, want %q", resp, want)
+	}
+
+	got := h.Handle([]byte("*3\r\n$7\r\nPUBLISH\r\n$4\r\nnews\r\n$5\r\nhello\r\n"))
+	if got != ":0\r\n" {
+		t.Errorf("got %q, want :0\\r\\n", got)
+	}
+}
+
 func TestSubscribedModePingReturnsArrayReply(t *testing.T) {
 	h := newSubscribeHandler()
 	h.Handle([]byte("*2\r\n$9\r\nSUBSCRIBE\r\n$4\r\nnews\r\n"))

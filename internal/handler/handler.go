@@ -147,6 +147,7 @@ func New(s *store.Store, role string, opts ...Option) *Handler {
 		command.CONFIG:     h.handleConfig,
 		command.KEYS:       h.handleKeys,
 		command.SUBSCRIBE:  h.handleSubscribe,
+		command.UNSUBSCRIBE: h.handleUnsubscribe,
 		command.PUBLISH:    h.handlePublish,
 	}
 	h.txCommands = map[command.Command]commandFunc{
