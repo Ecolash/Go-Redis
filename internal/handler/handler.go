@@ -126,6 +126,7 @@ func New(s *store.Store, role string, opts ...Option) *Handler {
 		command.PSYNC:    h.handlePsync,
 		command.WAIT:     h.handleWait,
 		command.CONFIG:   h.handleConfig,
+		command.KEYS:     h.handleKeys,
 	}
 	h.txCommands = map[command.Command]commandFunc{
 		command.MULTI:   h.handleMulti,

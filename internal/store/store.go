@@ -39,6 +39,22 @@ func (s *Store) bumpVersionLocked(key string) {
 	s.versions[key]++
 }
 
+func (s *Store) Keys(pattern string) []string {
+	s.mu.RLock()
+	defer s.mu.RUnlock()
+	now := time.Now()
+	out := make([]string, 0, len(s.data))
+	for k, e := range s.data {
+		if !e.expiresAt.IsZero() && now.After(e.expiresAt) {
+			continue
+		}
+		if pattern == "*" || pattern == k {
+			out = append(out, k)
+		}
+	}
+	return out
+}
+
 func (s *Store) Type(key string) string {
 	s.mu.RLock()
 	defer s.mu.RUnlock()

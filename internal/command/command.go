@@ -39,6 +39,7 @@ const (
 	PSYNC    Command = "PSYNC"
 	WAIT     Command = "WAIT"
 
-	// Config Commands
+	// RDB Commands
 	CONFIG Command = "CONFIG"
+	KEYS   Command = "KEYS"
 )

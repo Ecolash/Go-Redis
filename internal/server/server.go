@@ -4,8 +4,11 @@ import (
 	"io"
 	"log"
 	"net"
+	"path/filepath"
+	"time"
 
 	"github.com/codecrafters-io/redis-starter-go/internal/handler"
+	"github.com/codecrafters-io/redis-starter-go/internal/rdb"
 	"github.com/codecrafters-io/redis-starter-go/internal/resp"
 	"github.com/codecrafters-io/redis-starter-go/internal/store"
 )
@@ -45,7 +48,29 @@ func New(addr, role, masterAddr string, opts ...ServerOption) (*Server, error) {
 	for _, opt := range opts {
 		opt(s)
 	}
+	if s.dir != "" && s.dbfilename != "" {
+		s.loadRDB(filepath.Join(s.dir, s.dbfilename))
+	}
 	return s, nil
+}
+
+func (s *Server) loadRDB(path string) {
+	entries, err := rdb.Load(path)
+	if err != nil {
+		log.Printf("rdb: failed to load %s: %v", path, err)
+		return
+	}
+	now := time.Now()
+	for _, e := range entries {
+		var ttl time.Duration
+		if !e.ExpiresAt.IsZero() {
+			ttl = e.ExpiresAt.Sub(now)
+			if ttl <= 0 {
+				continue // already expired
+			}
+		}
+		s.store.Set(e.Key, e.Value, ttl)
+	}
 }
 
 func (s *Server) Addr() string {
