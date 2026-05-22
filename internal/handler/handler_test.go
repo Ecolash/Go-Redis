@@ -9,6 +9,7 @@ import (
 
 	"github.com/codecrafters-io/redis-starter-go/internal/errs"
 	"github.com/codecrafters-io/redis-starter-go/internal/handler"
+	"github.com/codecrafters-io/redis-starter-go/internal/pubsub"
 	"github.com/codecrafters-io/redis-starter-go/internal/resp"
 	"github.com/codecrafters-io/redis-starter-go/internal/store"
 )
@@ -1714,6 +1715,43 @@ func TestHandleWaitRejectsNonIntegerArgs(t *testing.T) {
 	got := h.Handle([]byte("*3\r\n$4\r\nWAIT\r\n$3\r\nabc\r\n$3\r\n100\r\n"))
 	if !strings.HasPrefix(got, "-ERR") {
 		t.Errorf("got %q, want ERR prefix", got)
+	}
+}
+
+func newSubscribeHandler() *handler.Handler {
+	ps := pubsub.New()
+	return handler.New(store.New(), "master",
+		handler.WithPubSub(ps),
+		handler.WithSubscriberID("test-client"),
+	)
+}
+
+func TestHandleSubscribeSingleChannel(t *testing.T) {
+	h := newSubscribeHandler()
+	got := h.Handle([]byte("*2\r\n$9\r\nSUBSCRIBE\r\n$4\r\nnews\r\n"))
+	want := "*3\r\n$9\r\nsubscribe\r\n$4\r\nnews\r\n:1\r\n"
+	if got != want {
+		t.Errorf("got %q, want %q", got, want)
+	}
+}
+
+func TestHandleSubscribeMultipleChannels(t *testing.T) {
+	h := newSubscribeHandler()
+	got := h.Handle([]byte("*3\r\n$9\r\nSUBSCRIBE\r\n$4\r\nnews\r\n$6\r\nsports\r\n"))
+	want := "*3\r\n$9\r\nsubscribe\r\n$4\r\nnews\r\n:1\r\n" +
+		"*3\r\n$9\r\nsubscribe\r\n$6\r\nsports\r\n:2\r\n"
+	if got != want {
+		t.Errorf("got %q, want %q", got, want)
+	}
+}
+
+func TestHandleSubscribeDuplicateChannelIsIdempotent(t *testing.T) {
+	h := newSubscribeHandler()
+	h.Handle([]byte("*2\r\n$9\r\nSUBSCRIBE\r\n$4\r\nnews\r\n"))
+	got := h.Handle([]byte("*2\r\n$9\r\nSUBSCRIBE\r\n$4\r\nnews\r\n"))
+	want := "*3\r\n$9\r\nsubscribe\r\n$4\r\nnews\r\n:1\r\n"
+	if got != want {
+		t.Errorf("got %q, want %q", got, want)
 	}
 }
 

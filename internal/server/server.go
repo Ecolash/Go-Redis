@@ -10,6 +10,7 @@ import (
 
 	"github.com/codecrafters-io/redis-starter-go/internal/aof"
 	"github.com/codecrafters-io/redis-starter-go/internal/handler"
+	"github.com/codecrafters-io/redis-starter-go/internal/pubsub"
 	"github.com/codecrafters-io/redis-starter-go/internal/rdb"
 	"github.com/codecrafters-io/redis-starter-go/internal/resp"
 	"github.com/codecrafters-io/redis-starter-go/internal/store"
@@ -21,6 +22,7 @@ type Server struct {
 	role            string
 	masterAddr      string
 	replicas        *Replicas
+	pubsub          *pubsub.PubSub
 	dir             string
 	dbfilename      string
 	configOverrides map[string]string
@@ -55,6 +57,7 @@ func New(addr, role, masterAddr string, opts ...ServerOption) (*Server, error) {
 		role:       role,
 		masterAddr: masterAddr,
 		replicas:   newReplicas(),
+		pubsub:     pubsub.New(),
 	}
 	for _, opt := range opts {
 		opt(s)
@@ -155,6 +158,8 @@ func (s *Server) handleConn(conn net.Conn) {
 		handler.WithPropagate(propagate),
 		handler.WithReplicaCount(s.replicas.Count),
 		handler.WithReplicaWaiter(s.replicas.Wait),
+		handler.WithPubSub(s.pubsub),
+		handler.WithSubscriberID(conn.RemoteAddr().String()),
 	}
 	for k, v := range s.config {
 		opts = append(opts, handler.WithConfig(k, v))

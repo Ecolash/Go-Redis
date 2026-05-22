@@ -6,6 +6,7 @@ import (
 
 	"github.com/codecrafters-io/redis-starter-go/internal/command"
 	"github.com/codecrafters-io/redis-starter-go/internal/errs"
+	"github.com/codecrafters-io/redis-starter-go/internal/pubsub"
 	"github.com/codecrafters-io/redis-starter-go/internal/resp"
 	"github.com/codecrafters-io/redis-starter-go/internal/store"
 )
@@ -58,6 +59,8 @@ type Handler struct {
 	trackOffset bool
 	offset int
 	config map[string]string
+	pubsub *pubsub.PubSub
+	subscriberID string
 
 	commands map[command.Command]commandFunc
 	txCommands map[command.Command]commandFunc
@@ -96,6 +99,14 @@ func WithOffsetTracking() Option {
 	return func(h *Handler) { h.trackOffset = true }
 }
 
+func WithPubSub(ps *pubsub.PubSub) Option {
+	return func(h *Handler) { h.pubsub = ps }
+}
+
+func WithSubscriberID(id string) Option {
+	return func(h *Handler) { h.subscriberID = id }
+}
+
 func WithConfig(key, value string) Option {
 	return func(h *Handler) {
 		if h.config == nil {
@@ -132,8 +143,9 @@ func New(s *store.Store, role string, opts ...Option) *Handler {
 		command.REPLCONF: h.handleReplConf,
 		command.PSYNC:    h.handlePsync,
 		command.WAIT:     h.handleWait,
-		command.CONFIG:   h.handleConfig,
-		command.KEYS:     h.handleKeys,
+		command.CONFIG:     h.handleConfig,
+		command.KEYS:       h.handleKeys,
+		command.SUBSCRIBE:  h.handleSubscribe,
 	}
 	h.txCommands = map[command.Command]commandFunc{
 		command.MULTI:   h.handleMulti,

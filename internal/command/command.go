@@ -42,4 +42,7 @@ const (
 	// RDB Commands
 	CONFIG Command = "CONFIG"
 	KEYS   Command = "KEYS"
+
+	// Pub/Sub Commands
+	SUBSCRIBE Command = "SUBSCRIBE"
 )
