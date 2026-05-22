@@ -56,6 +56,7 @@ type Handler struct {
 	replyToMaster bool
 	trackOffset bool
 	offset int
+	config map[string]string
 
 	commands map[command.Command]commandFunc
 	txCommands map[command.Command]commandFunc
@@ -88,6 +89,15 @@ func WithOffsetTracking() Option {
 	return func(h *Handler) { h.trackOffset = true }
 }
 
+func WithConfig(key, value string) Option {
+	return func(h *Handler) {
+		if h.config == nil {
+			h.config = make(map[string]string)
+		}
+		h.config[key] = value
+	}
+}
+
 func New(s *store.Store, role string, opts ...Option) *Handler {
 	h := &Handler{store: s, role: role}
 	for _, opt := range opts {
@@ -115,6 +125,7 @@ func New(s *store.Store, role string, opts ...Option) *Handler {
 		command.REPLCONF: h.handleReplConf,
 		command.PSYNC:    h.handlePsync,
 		command.WAIT:     h.handleWait,
+		command.CONFIG:   h.handleConfig,
 	}
 	h.txCommands = map[command.Command]commandFunc{
 		command.MULTI:   h.handleMulti,

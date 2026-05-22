@@ -38,4 +38,7 @@ const (
 	REPLCONF Command = "REPLCONF"
 	PSYNC    Command = "PSYNC"
 	WAIT     Command = "WAIT"
+
+	// Config Commands
+	CONFIG Command = "CONFIG"
 )

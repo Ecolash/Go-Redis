@@ -16,20 +16,36 @@ type Server struct {
 	role       string
 	masterAddr string
 	replicas   *Replicas
+	dir        string
+	dbfilename string
 }
 
-func New(addr, role, masterAddr string) (*Server, error) {
+type ServerOption func(*Server)
+
+func WithDir(dir string) ServerOption {
+	return func(s *Server) { s.dir = dir }
+}
+
+func WithDBFilename(name string) ServerOption {
+	return func(s *Server) { s.dbfilename = name }
+}
+
+func New(addr, role, masterAddr string, opts ...ServerOption) (*Server, error) {
 	l, err := net.Listen("tcp", addr)
 	if err != nil {
 		return nil, err
 	}
-	return &Server{
+	s := &Server{
 		listener:   l,
 		store:      store.New(),
 		role:       role,
 		masterAddr: masterAddr,
 		replicas:   newReplicas(),
-	}, nil
+	}
+	for _, opt := range opts {
+		opt(s)
+	}
+	return s, nil
 }
 
 func (s *Server) Addr() string {
@@ -68,6 +84,8 @@ func (s *Server) handleConn(conn net.Conn) {
 		handler.WithPropagate(propagate),
 		handler.WithReplicaCount(s.replicas.Count),
 		handler.WithReplicaWaiter(s.replicas.Wait),
+		handler.WithConfig("dir", s.dir),
+		handler.WithConfig("dbfilename", s.dbfilename),
 	)
 
 	buf := make([]byte, 512)
