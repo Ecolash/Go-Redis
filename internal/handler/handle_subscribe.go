@@ -10,6 +10,7 @@ func (h *Handler) handleSubscribe(parts []string) string {
 	if len(parts) < 2 {
 		return "-ERR wrong number of arguments for 'subscribe' command\r\n"
 	}
+	h.inSubscribe = true
 	var sb strings.Builder
 	for _, channel := range parts[1:] {
 		count := h.pubsub.Subscribe(h.subscriberID, channel)

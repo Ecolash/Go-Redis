@@ -61,6 +61,7 @@ type Handler struct {
 	config map[string]string
 	pubsub *pubsub.PubSub
 	subscriberID string
+	inSubscribe bool
 
 	commands map[command.Command]commandFunc
 	txCommands map[command.Command]commandFunc
@@ -157,6 +158,12 @@ func New(s *store.Store, role string, opts ...Option) *Handler {
 	return h
 }
 
+var subscribedModeAllowed = map[command.Command]bool{
+	command.SUBSCRIBE:   true,
+	command.UNSUBSCRIBE: true,
+	command.PING:        true,
+}
+
 func (h *Handler) Handle(data []byte) string {
 	if h.trackOffset {
 		// Increment AFTER dispatch so the current command's bytes aren't
@@ -168,6 +175,11 @@ func (h *Handler) Handle(data []byte) string {
 		return errs.UnknownCommand
 	}
 	cmd := command.Command(strings.ToUpper(parts[0]))
+
+	if h.inSubscribe && !subscribedModeAllowed[cmd] {
+		return resp.Error("ERR Can't execute '" + strings.ToLower(parts[0]) + "': only (P|S)SUBSCRIBE / (P|S)UNSUBSCRIBE / PING / QUIT / RESET are allowed in this context")
+	}
+
 	if fn, ok := h.txCommands[cmd]; ok {
 		return fn(parts)
 	}

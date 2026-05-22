@@ -1755,6 +1755,37 @@ func TestHandleSubscribeDuplicateChannelIsIdempotent(t *testing.T) {
 	}
 }
 
+func TestSubscribedModeRejectsDisallowedCommands(t *testing.T) {
+	disallowed := []struct {
+		name string
+		cmd  string
+	}{
+		{"SET", "*3\r\n$3\r\nSET\r\n$1\r\nk\r\n$1\r\nv\r\n"},
+		{"GET", "*2\r\n$3\r\nGET\r\n$1\r\nk\r\n"},
+		{"ECHO", "*2\r\n$4\r\nECHO\r\n$3\r\nhey\r\n"},
+	}
+	for _, tt := range disallowed {
+		t.Run(tt.name+" rejected after SUBSCRIBE", func(t *testing.T) {
+			h := newSubscribeHandler()
+			h.Handle([]byte("*2\r\n$9\r\nSUBSCRIBE\r\n$4\r\nnews\r\n"))
+			got := h.Handle([]byte(tt.cmd))
+			if !strings.HasPrefix(got, "-ERR Can't execute '") {
+				t.Errorf("got %q, want error starting with \"-ERR Can't execute '\"", got)
+			}
+		})
+	}
+}
+
+func TestSubscribedModeAllowsSubscribeAgain(t *testing.T) {
+	h := newSubscribeHandler()
+	h.Handle([]byte("*2\r\n$9\r\nSUBSCRIBE\r\n$4\r\nnews\r\n"))
+	got := h.Handle([]byte("*2\r\n$9\r\nSUBSCRIBE\r\n$6\r\nsports\r\n"))
+	want := "*3\r\n$9\r\nsubscribe\r\n$6\r\nsports\r\n:2\r\n"
+	if got != want {
+		t.Errorf("got %q, want %q", got, want)
+	}
+}
+
 func TestBecameReplicaSetOnlyAfterPsync(t *testing.T) {
 	h, _ := newPropHandler(t)
 	if h.BecameReplica() {
