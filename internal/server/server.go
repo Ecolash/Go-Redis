@@ -4,9 +4,11 @@ import (
 	"io"
 	"log"
 	"net"
+	"os"
 	"path/filepath"
 	"time"
 
+	"github.com/codecrafters-io/redis-starter-go/internal/aof"
 	"github.com/codecrafters-io/redis-starter-go/internal/handler"
 	"github.com/codecrafters-io/redis-starter-go/internal/rdb"
 	"github.com/codecrafters-io/redis-starter-go/internal/resp"
@@ -47,6 +49,11 @@ func New(addr, role, masterAddr string, opts ...ServerOption) (*Server, error) {
 	}
 	for _, opt := range opts {
 		opt(s)
+	}
+	if s.dir == "" {
+		if cwd, err := os.Getwd(); err == nil {
+			s.dir = cwd
+		}
 	}
 	if s.dir != "" && s.dbfilename != "" {
 		s.loadRDB(filepath.Join(s.dir, s.dbfilename))
@@ -105,13 +112,17 @@ func (s *Server) handleConn(conn net.Conn) {
 	propagate := func(parts []string) {
 		s.replicas.Broadcast([]byte(resp.Array(parts)))
 	}
-	h := handler.New(s.store, s.role,
+	opts := []handler.Option{
 		handler.WithPropagate(propagate),
 		handler.WithReplicaCount(s.replicas.Count),
 		handler.WithReplicaWaiter(s.replicas.Wait),
 		handler.WithConfig("dir", s.dir),
 		handler.WithConfig("dbfilename", s.dbfilename),
-	)
+	}
+	for k, v := range aof.Defaults() {
+		opts = append(opts, handler.WithConfig(k, v))
+	}
+	h := handler.New(s.store, s.role, opts...)
 
 	buf := make([]byte, 512)
 	for {
