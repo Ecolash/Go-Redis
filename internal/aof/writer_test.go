@@ -1,4 +1,4 @@
-package aof_test
+package aof
 
 import (
 	"bufio"
