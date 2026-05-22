@@ -1,6 +1,7 @@
 package aof
 
 import (
+	"fmt"
 	"os"
 	"path/filepath"
 )
@@ -24,18 +25,23 @@ func Defaults() map[string]string {
 	}
 }
 
-// Setup creates the append-only directory (dir/appendDirName) and an empty
-// first incremental AOF file (appendFilename.1.incr.aof) within it. Existing
-// directories and files are left intact.
+// Setup creates the append-only directory (dir/appendDirName) containing an
+// empty first incremental AOF file (appendFilename.1.incr.aof) and a manifest
+// file (appendFilename.manifest) describing it. Existing directories and files
+// are left intact, but the manifest is always (re)written.
 func Setup(dir, appendDirName, appendFilename string) error {
 	aofDir := filepath.Join(dir, appendDirName)
 	if err := os.MkdirAll(aofDir, 0o755); err != nil {
 		return err
 	}
-	incrPath := filepath.Join(aofDir, appendFilename+".1.incr.aof")
-	f, err := os.OpenFile(incrPath, os.O_CREATE|os.O_WRONLY, 0o644)
+	incrName := appendFilename + ".1.incr.aof"
+	f, err := os.OpenFile(filepath.Join(aofDir, incrName), os.O_CREATE|os.O_WRONLY, 0o644)
 	if err != nil {
 		return err
 	}
-	return f.Close()
+	if err := f.Close(); err != nil {
+		return err
+	}
+	manifest := fmt.Sprintf("file %s seq 1 type i\n", incrName)
+	return os.WriteFile(filepath.Join(aofDir, appendFilename+".manifest"), []byte(manifest), 0o644)
 }
