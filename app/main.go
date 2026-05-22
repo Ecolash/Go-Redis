@@ -11,11 +11,12 @@ import (
 )
 
 type serverConfig struct {
-	port       int
-	role       string
-	masterAddr string
-	dir        string
-	dbfilename  string
+	port         int
+	role         string
+	masterAddr   string
+	dir          string
+	dbfilename   string
+	aofOverrides map[string]string
 }
 
 func parseConfig(args []string) (serverConfig, error) {
@@ -24,24 +25,39 @@ func parseConfig(args []string) (serverConfig, error) {
 
 	port := fs.Int("port", 6379, "port to listen on")
 	repl := fs.String("replicaof", "", "master host and port")
-	dir  := fs.String("dir", "", "directory for persistence")
-	file  := fs.String("dbfilename", "", "RDB filename")
+	dir := fs.String("dir", "", "directory for persistence")
+	file := fs.String("dbfilename", "", "RDB filename")
+	appendonly := fs.String("appendonly", "", "enable AOF persistence")
+	appenddirname := fs.String("appenddirname", "", "AOF subdirectory under dir")
+	appendfilename := fs.String("appendfilename", "", "AOF filename")
+	appendfsync := fs.String("appendfsync", "", "AOF fsync policy")
 
 	if err := fs.Parse(args); err != nil {
 		return serverConfig{}, err
 	}
 
 	cfg := serverConfig{
-		port: *port,
-		role: "master",
-		dir: *dir,
+		port:       *port,
+		role:       "master",
+		dir:        *dir,
 		dbfilename: *file,
+		aofOverrides: map[string]string{},
+	}
+	for key, val := range map[string]string{
+		"appendonly":     *appendonly,
+		"appenddirname":  *appenddirname,
+		"appendfilename": *appendfilename,
+		"appendfsync":    *appendfsync,
+	} {
+		if val != "" {
+			cfg.aofOverrides[key] = val
+		}
 	}
 
 	if *repl != "" {
 		host, mport, ok := strings.Cut(*repl, " ")
 		if !ok {
-			return serverConfig{}, 
+			return serverConfig{},
 			fmt.Errorf("invalid --replicaof value %q: expected \"<host> <port>\"", *repl)
 		}
 		cfg.role = "slave"
@@ -59,11 +75,12 @@ func main() {
 
 	addr := fmt.Sprintf("0.0.0.0:%d", cfg.port)
 	redisServer, err := server.New(
-		addr, 
-		cfg.role, 
-		cfg.masterAddr, 
-		server.WithDir(cfg.dir), 
+		addr,
+		cfg.role,
+		cfg.masterAddr,
+		server.WithDir(cfg.dir),
 		server.WithDBFilename(cfg.dbfilename),
+		server.WithConfigOverrides(cfg.aofOverrides),
 	)
 	if err != nil {
 		log.Fatalf("failed to bind to port %d: %v", cfg.port, err)

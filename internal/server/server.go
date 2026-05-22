@@ -16,13 +16,14 @@ import (
 )
 
 type Server struct {
-	listener   net.Listener
-	store      *store.Store
-	role       string
-	masterAddr string
-	replicas   *Replicas
-	dir        string
-	dbfilename string
+	listener        net.Listener
+	store           *store.Store
+	role            string
+	masterAddr      string
+	replicas        *Replicas
+	dir             string
+	dbfilename      string
+	configOverrides map[string]string
 }
 
 type ServerOption func(*Server)
@@ -33,6 +34,12 @@ func WithDir(dir string) ServerOption {
 
 func WithDBFilename(name string) ServerOption {
 	return func(s *Server) { s.dbfilename = name }
+}
+
+// WithConfigOverrides sets config values that take precedence over defaults
+// (e.g. AOF options supplied via command-line flags).
+func WithConfigOverrides(overrides map[string]string) ServerOption {
+	return func(s *Server) { s.configOverrides = overrides }
 }
 
 func New(addr, role, masterAddr string, opts ...ServerOption) (*Server, error) {
@@ -116,10 +123,14 @@ func (s *Server) handleConn(conn net.Conn) {
 		handler.WithPropagate(propagate),
 		handler.WithReplicaCount(s.replicas.Count),
 		handler.WithReplicaWaiter(s.replicas.Wait),
-		handler.WithConfig("dir", s.dir),
-		handler.WithConfig("dbfilename", s.dbfilename),
 	}
-	for k, v := range aof.Defaults() {
+	cfg := aof.Defaults()
+	cfg["dir"] = s.dir
+	cfg["dbfilename"] = s.dbfilename
+	for k, v := range s.configOverrides {
+		cfg[k] = v
+	}
+	for k, v := range cfg {
 		opts = append(opts, handler.WithConfig(k, v))
 	}
 	h := handler.New(s.store, s.role, opts...)
