@@ -1786,6 +1786,16 @@ func TestSubscribedModeAllowsSubscribeAgain(t *testing.T) {
 	}
 }
 
+func TestSubscribedModePingReturnsArrayReply(t *testing.T) {
+	h := newSubscribeHandler()
+	h.Handle([]byte("*2\r\n$9\r\nSUBSCRIBE\r\n$4\r\nnews\r\n"))
+	got := h.Handle([]byte("*1\r\n$4\r\nPING\r\n"))
+	want := "*2\r\n$4\r\nPONG\r\n$0\r\n\r\n"
+	if got != want {
+		t.Errorf("got %q, want %q", got, want)
+	}
+}
+
 func TestBecameReplicaSetOnlyAfterPsync(t *testing.T) {
 	h, _ := newPropHandler(t)
 	if h.BecameReplica() {
