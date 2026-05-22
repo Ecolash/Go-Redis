@@ -82,6 +82,21 @@ func New(addr, role, masterAddr string, opts ...ServerOption) (*Server, error) {
 	if s.dir != "" && s.dbfilename != "" {
 		s.loadRDB(filepath.Join(s.dir, s.dbfilename))
 	}
+	if s.config["appendonly"] == "yes" {
+		if err := aof.Replay(s.dir, s.config["appenddirname"], s.config["appendfilename"], func(cmd []byte) error {
+			h := handler.New(s.store, s.role,
+				handler.WithPropagate(func(parts []string) {}),
+				handler.WithReplicaCount(func() int { return 0 }),
+				handler.WithReplicaWaiter(func(numReplicas int, timeout time.Duration) int { return 0 }),
+				handler.WithConfig("dir", s.dir),
+				handler.WithConfig("dbfilename", s.dbfilename),
+			)
+			h.Handle(cmd)
+			return nil
+		}); err != nil {
+			log.Printf("aof: failed to replay append-only file: %v", err)
+		}
+	}
 	return s, nil
 }
 
