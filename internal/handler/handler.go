@@ -50,6 +50,7 @@ type Handler struct {
 	queue   [][]string
 	watching map[string]uint64
 	onPropagate func(parts []string)
+	onAOFAppend func(parts []string)
 	replicaCount func() int
 	replicaWaiter func(numReplicas int, timeout time.Duration) int
 	replica bool
@@ -66,6 +67,12 @@ type Option func(*Handler)
 
 func WithPropagate(fn func(parts []string)) Option {
 	return func(h *Handler) { h.onPropagate = fn }
+}
+
+// WithAOFAppend wires a callback invoked with each successful write command's
+// parts so it can be appended to the append-only file.
+func WithAOFAppend(fn func(parts []string)) Option {
+	return func(h *Handler) { h.onAOFAppend = fn }
 }
 
 // WithReplicaCount lets the handler report the number of currently-connected
@@ -167,8 +174,13 @@ func (h *Handler) dispatch(parts []string) string {
 		return errs.UnknownCommand
 	}
 	result := fn(parts)
-	if h.onPropagate != nil && writeCommands[cmd] && !strings.HasPrefix(result, "-") {
-		h.onPropagate(parts)
+	if writeCommands[cmd] && !strings.HasPrefix(result, "-") {
+		if h.onPropagate != nil {
+			h.onPropagate(parts)
+		}
+		if h.onAOFAppend != nil {
+			h.onAOFAppend(parts)
+		}
 	}
 	return result
 }
