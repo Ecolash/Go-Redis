@@ -159,9 +159,11 @@ func New(s *store.Store, role string, opts ...Option) *Handler {
 }
 
 var subscribedModeAllowed = map[command.Command]bool{
-	command.SUBSCRIBE:   true,
-	command.UNSUBSCRIBE: true,
-	command.PING:        true,
+	command.SUBSCRIBE:    true,
+	command.UNSUBSCRIBE:  true,
+	command.PSUBSCRIBE:   true,
+	command.PUNSUBSCRIBE: true,
+	command.PING:         true,
 }
 
 func (h *Handler) Handle(data []byte) string {

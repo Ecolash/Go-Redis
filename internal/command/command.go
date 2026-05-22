@@ -45,5 +45,7 @@ const (
 
 	// Pub/Sub Commands
 	SUBSCRIBE   Command = "SUBSCRIBE"
+	PSUBSCRIBE  Command = "PSUBSCRIBE"
 	UNSUBSCRIBE Command = "UNSUBSCRIBE"
+	PUNSUBSCRIBE Command = "PUNSUBSCRIBE"
 )
