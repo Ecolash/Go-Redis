@@ -99,6 +99,16 @@ func TestParseWithMetadataAndDBSections(t *testing.T) {
 	}
 }
 
+func TestParseEmptySnapshotHasNoEntries(t *testing.T) {
+	entries, err := parse(Empty())
+	if err != nil {
+		t.Fatalf("parse(Empty()): %v", err)
+	}
+	if len(entries) != 0 {
+		t.Fatalf("expected no entries from empty RDB, got %+v", entries)
+	}
+}
+
 func TestLoadMissingFileReturnsNil(t *testing.T) {
 	entries, err := Load("/nonexistent/path/dump.rdb")
 	if err != nil {
