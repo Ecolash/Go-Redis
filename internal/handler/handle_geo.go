@@ -64,19 +64,18 @@ func (h *Handler) handleGeoSearch(parts []string) string {
 	if err != nil {
 		return resp.Error("ERR value is not a valid float")
 	}
-	var radiusMeters float64
-	switch strings.ToLower(parts[7]) {
-	case "m":
-		radiusMeters = radius
-	case "km":
-		radiusMeters = radius * 1000
-	case "mi":
-		radiusMeters = radius * 1609.344
-	case "ft":
-		radiusMeters = radius * 0.3048
-	default:
+	
+	unitFactors := map[string]float64{
+		"m":  1,
+		"km": 1000,
+		"mi": 1609.344,
+		"ft": 0.3048,
+	}
+	factor, ok := unitFactors[strings.ToLower(parts[7])]
+	if !ok {
 		return resp.Error("ERR unsupported unit")
 	}
+	radiusMeters := radius * factor
 	members := h.store.GeoSearch(parts[1], lon, lat, radiusMeters)
 	var sb strings.Builder
 	fmt.Fprintf(&sb, "*%d\r\n", len(members))
