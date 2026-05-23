@@ -2048,6 +2048,60 @@ func TestHandleZScore(t *testing.T) {
 	}
 }
 
+func TestHandleGeoPos(t *testing.T) {
+	// Pre-load locations via ZADD with known geo scores (as per the spec).
+	zaddFoo := "*4\r\n$4\r\nZADD\r\n$12\r\nlocation_key\r\n$16\r\n3663832614298053\r\n$3\r\nFoo\r\n"
+	zaddBar := "*4\r\n$4\r\nZADD\r\n$12\r\nlocation_key\r\n$16\r\n3876464048901851\r\n$3\r\nBar\r\n"
+
+	tests := []struct {
+		name  string
+		setup []string
+		input string
+		want  string
+	}{
+		{
+			name:  "existing member returns lon and lat as bulk strings",
+			setup: []string{zaddFoo},
+			input: "*3\r\n$6\r\nGEOPOS\r\n$12\r\nlocation_key\r\n$3\r\nFoo\r\n",
+			want:  "*1\r\n*2\r\n$17\r\n2.294468879699707\r\n$18\r\n48.858461283040839\r\n",
+		},
+		{
+			name:  "missing key returns null array entry",
+			input: "*3\r\n$6\r\nGEOPOS\r\n$12\r\nlocation_key\r\n$3\r\nFoo\r\n",
+			want:  "*1\r\n*-1\r\n",
+		},
+		{
+			name:  "missing member returns null array entry",
+			setup: []string{zaddFoo},
+			input: "*3\r\n$6\r\nGEOPOS\r\n$12\r\nlocation_key\r\n$7\r\nMissing\r\n",
+			want:  "*1\r\n*-1\r\n",
+		},
+		{
+			name:  "multiple members some found some not",
+			setup: []string{zaddFoo, zaddBar},
+			input: "*5\r\n$6\r\nGEOPOS\r\n$12\r\nlocation_key\r\n$3\r\nFoo\r\n$7\r\nMissing\r\n$3\r\nBar\r\n",
+			want: "*3\r\n" +
+				"*2\r\n$17\r\n2.294468879699707\r\n$18\r\n48.858461283040839\r\n" +
+				"*-1\r\n" +
+				"*2\r\n$18\r\n49.124996066093445\r\n$18\r\n72.990999010778893\r\n",
+		},
+		{
+			name:  "wrong number of arguments",
+			input: "*2\r\n$6\r\nGEOPOS\r\n$12\r\nlocation_key\r\n",
+			want:  errs.WrongArgs,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			h := newHandler()
+			runCommands(h, tt.setup)
+			if got := h.Handle([]byte(tt.input)); got != tt.want {
+				t.Errorf("got %q, want %q", got, tt.want)
+			}
+		})
+	}
+}
+
 func TestHandleGeoAdd(t *testing.T) {
 	tests := []struct {
 		name  string

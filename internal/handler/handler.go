@@ -156,6 +156,7 @@ func New(s *store.Store, role string, opts ...Option) *Handler {
 		command.ZCARD:  h.handleZCard,
 		command.ZREM:   h.handleZRem,
 		command.GEOADD: h.handleGeoAdd,
+		command.GEOPOS: h.handleGeoPos,
 	}
 	h.txCommands = map[command.Command]commandFunc{
 		command.MULTI:   h.handleMulti,

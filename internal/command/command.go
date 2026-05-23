@@ -60,4 +60,5 @@ const (
 
 	// Geo Commands
 	GEOADD Command = "GEOADD"
+	GEOPOS Command = "GEOPOS"
 )

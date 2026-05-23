@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"math"
 	"strconv"
+	"strings"
 
 	"github.com/codecrafters-io/redis-starter-go/internal/errs"
 	"github.com/codecrafters-io/redis-starter-go/internal/resp"
@@ -16,6 +17,29 @@ const (
 	minLat = -85.05112878
 	maxLat = 85.05112878
 )
+
+func (h *Handler) handleGeoPos(parts []string) string {
+	// GEOPOS key member [member ...]
+	if len(parts) < 3 {
+		return errs.WrongArgs
+	}
+	members := parts[2:]
+	results := h.store.GeoPos(parts[1], members)
+	var sb strings.Builder
+	fmt.Fprintf(&sb, "*%d\r\n", len(results))
+	for _, r := range results {
+		if r == nil {
+			sb.WriteString(nullArray)
+		} else {
+			lonStr := strconv.FormatFloat(r.Lon, 'g', 17, 64)
+			latStr := strconv.FormatFloat(r.Lat, 'g', 17, 64)
+			sb.WriteString("*2\r\n")
+			sb.WriteString(resp.BulkString(lonStr))
+			sb.WriteString(resp.BulkString(latStr))
+		}
+	}
+	return sb.String()
+}
 
 func (h *Handler) handleGeoAdd(parts []string) string {
 	// GEOADD key longitude latitude member [longitude latitude member ...]

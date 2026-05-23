@@ -451,6 +451,65 @@ func TestGeoAdd(t *testing.T) {
 	}
 }
 
+func TestGeoPos(t *testing.T) {
+	t.Run("missing key returns all nils", func(t *testing.T) {
+		s := store.New()
+		got := s.GeoPos("places", []string{"London"})
+		if len(got) != 1 || got[0] != nil {
+			t.Errorf("expected [nil], got %v", got)
+		}
+	})
+
+	t.Run("missing member returns nil for that position", func(t *testing.T) {
+		s := store.New()
+		s.GeoAdd("places", []store.GeoMember{{Lon: -0.0884948, Lat: 51.506479, Member: "London"}})
+		got := s.GeoPos("places", []string{"London", "Missing"})
+		if len(got) != 2 {
+			t.Fatalf("expected 2 results, got %d", len(got))
+		}
+		if got[0] == nil {
+			t.Error("expected non-nil for existing member London")
+		}
+		if got[1] != nil {
+			t.Error("expected nil for missing member")
+		}
+	})
+
+	t.Run("round-trip GeoAdd then GeoPos returns approximate coordinates", func(t *testing.T) {
+		s := store.New()
+		wantLon, wantLat := -0.0884948, 51.506479
+		s.GeoAdd("places", []store.GeoMember{{Lon: wantLon, Lat: wantLat, Member: "London"}})
+		got := s.GeoPos("places", []string{"London"})
+		if len(got) != 1 || got[0] == nil {
+			t.Fatalf("expected non-nil result, got %v", got)
+		}
+		const tolerance = 0.001
+		if diff := got[0].Lon - wantLon; diff > tolerance || diff < -tolerance {
+			t.Errorf("lon = %v, want ~%v", got[0].Lon, wantLon)
+		}
+		if diff := got[0].Lat - wantLat; diff > tolerance || diff < -tolerance {
+			t.Errorf("lat = %v, want ~%v", got[0].Lat, wantLat)
+		}
+	})
+
+	t.Run("decodes raw geo score from ZAdd", func(t *testing.T) {
+		s := store.New()
+		// Score 3663832614298053 → lon 2.294471561908722, lat 48.85846255040141
+		s.ZAdd("places", []store.ZSetMember{{Score: 3663832614298053, Member: "Foo"}})
+		got := s.GeoPos("places", []string{"Foo"})
+		if len(got) != 1 || got[0] == nil {
+			t.Fatalf("expected non-nil result, got %v", got)
+		}
+		const tolerance = 0.0001
+		if diff := got[0].Lon - 2.294471561908722; diff > tolerance || diff < -tolerance {
+			t.Errorf("lon = %.17g, want ~2.294471561908722", got[0].Lon)
+		}
+		if diff := got[0].Lat - 48.85846255040141; diff > tolerance || diff < -tolerance {
+			t.Errorf("lat = %.17g, want ~48.85846255040141", got[0].Lat)
+		}
+	})
+}
+
 func TestGeoAddCreatesZSetType(t *testing.T) {
 	s := store.New()
 	s.GeoAdd("places", []store.GeoMember{{Lon: -0.0884948, Lat: 51.506479, Member: "London"}})
