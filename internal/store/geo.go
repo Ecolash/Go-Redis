@@ -37,8 +37,7 @@ func geoScore(lon, lat float64) uint64 {
 func (s *Store) GeoAdd(key string, members []GeoMember) int {
 	zms := make([]ZSetMember, len(members))
 	for i, m := range members {
-		score := geoScore(m.Lon, m.Lat)
-		zms[i] = ZSetMember{Score: score, Member: m.Member}
+		zms[i] = ZSetMember{Score: float64(geoScore(m.Lon, m.Lat)), Member: m.Member}
 	}
 	return s.ZAdd(key, zms)
 }
