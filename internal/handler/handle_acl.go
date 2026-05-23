@@ -25,6 +25,8 @@ func (h *Handler) handleACL(parts []string) string {
 		return resp.RawArray([]string{
 			resp.BulkString("flags"),
 			resp.Array([]string{"nopass"}),
+			resp.BulkString("passwords"),
+			"*0\r\n",
 		})
 	default:
 		return resp.Error("ERR unknown subcommand '" + parts[1] + "' for 'acl' command")
