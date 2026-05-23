@@ -22,10 +22,9 @@ func (h *Handler) handleACL(parts []string) string {
 		if strings.ToLower(parts[2]) != "default" {
 			return nullBulk
 		}
-		// Return: ["flags", []]
 		return resp.RawArray([]string{
 			resp.BulkString("flags"),
-			"*0\r\n",
+			resp.Array([]string{"nopass"}),
 		})
 	default:
 		return resp.Error("ERR unknown subcommand '" + parts[1] + "' for 'acl' command")
