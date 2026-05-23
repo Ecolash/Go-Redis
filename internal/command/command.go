@@ -49,4 +49,10 @@ const (
 	UNSUBSCRIBE  Command = "UNSUBSCRIBE"
 	PUNSUBSCRIBE Command = "PUNSUBSCRIBE"
 	PUBLISH      Command = "PUBLISH"
+
+	// Sorted Set Commands
+	ZADD   Command = "ZADD"
+	ZRANGE Command = "ZRANGE"
+	ZRANK  Command = "ZRANK"
+	ZSCORE Command = "ZSCORE"
 )

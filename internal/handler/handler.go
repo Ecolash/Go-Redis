@@ -149,6 +149,10 @@ func New(s *store.Store, role string, opts ...Option) *Handler {
 		command.SUBSCRIBE:  h.handleSubscribe,
 		command.UNSUBSCRIBE: h.handleUnsubscribe,
 		command.PUBLISH:    h.handlePublish,
+		command.ZADD:   h.handleZAdd,
+		command.ZRANGE: h.handleZRange,
+		command.ZRANK:  h.handleZRank,
+		command.ZSCORE: h.handleZScore,
 	}
 	h.txCommands = map[command.Command]commandFunc{
 		command.MULTI:   h.handleMulti,
@@ -252,4 +256,5 @@ var writeCommands = map[command.Command]bool{
 	command.RPOP:  true,
 	command.BLPOP: true,
 	command.XADD:  true,
+	command.ZADD:  true,
 }

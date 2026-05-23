@@ -1860,3 +1860,199 @@ func TestBecameReplicaSetOnlyAfterPsync(t *testing.T) {
 		t.Fatal("BecameReplica should reset after read")
 	}
 }
+
+func TestHandleZAdd(t *testing.T) {
+	tests := []struct {
+		name  string
+		setup []string
+		input string
+		want  string
+	}{
+		{
+			name:  "creates sorted set and returns 1",
+			input: "*4\r\n$4\r\nZADD\r\n$2\r\nzk\r\n$1\r\n1\r\n$1\r\na\r\n",
+			want:  ":1\r\n",
+		},
+		{
+			name:  "adding two members returns 2",
+			input: "*6\r\n$4\r\nZADD\r\n$2\r\nzk\r\n$1\r\n1\r\n$1\r\na\r\n$1\r\n2\r\n$1\r\nb\r\n",
+			want:  ":2\r\n",
+		},
+		{
+			name:  "updating existing member returns 0 (not new)",
+			setup: []string{"*4\r\n$4\r\nZADD\r\n$2\r\nzk\r\n$1\r\n1\r\n$1\r\na\r\n"},
+			input: "*4\r\n$4\r\nZADD\r\n$2\r\nzk\r\n$1\r\n5\r\n$1\r\na\r\n",
+			want:  ":0\r\n",
+		},
+		{
+			name:  "wrong number of arguments returns error",
+			input: "*3\r\n$4\r\nZADD\r\n$2\r\nzk\r\n$1\r\n1\r\n",
+			want:  errs.WrongArgs,
+		},
+		{
+			name:  "odd score/member count returns error",
+			input: "*5\r\n$4\r\nZADD\r\n$2\r\nzk\r\n$1\r\n1\r\n$1\r\na\r\n$1\r\n2\r\n",
+			want:  errs.WrongArgs,
+		},
+		{
+			name:  "invalid score returns error",
+			input: "*4\r\n$4\r\nZADD\r\n$2\r\nzk\r\n$3\r\nnan\r\n$1\r\na\r\n",
+			want:  resp.Error("ERR value is not a valid float"),
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			h := newHandler()
+			runCommands(h, tt.setup)
+			if got := h.Handle([]byte(tt.input)); got != tt.want {
+				t.Errorf("got %q, want %q", got, tt.want)
+			}
+		})
+	}
+}
+
+func TestHandleZRange(t *testing.T) {
+	zadd3 := []string{"*8\r\n$4\r\nZADD\r\n$2\r\nzk\r\n$1\r\n1\r\n$1\r\na\r\n$1\r\n2\r\n$1\r\nb\r\n$1\r\n3\r\n$1\r\nc\r\n"}
+	tests := []struct {
+		name  string
+		setup []string
+		input string
+		want  string
+	}{
+		{
+			name:  "missing key returns empty array",
+			input: "*4\r\n$6\r\nZRANGE\r\n$2\r\nzk\r\n$1\r\n0\r\n$2\r\n-1\r\n",
+			want:  "*0\r\n",
+		},
+		{
+			name:  "full range returns all members in score order",
+			setup: zadd3,
+			input: "*4\r\n$6\r\nZRANGE\r\n$2\r\nzk\r\n$1\r\n0\r\n$2\r\n-1\r\n",
+			want:  "*3\r\n$1\r\na\r\n$1\r\nb\r\n$1\r\nc\r\n",
+		},
+		{
+			name:  "partial range 1 to 2",
+			setup: zadd3,
+			input: "*4\r\n$6\r\nZRANGE\r\n$2\r\nzk\r\n$1\r\n1\r\n$1\r\n2\r\n",
+			want:  "*2\r\n$1\r\nb\r\n$1\r\nc\r\n",
+		},
+		{
+			name:  "wrong number of arguments",
+			input: "*3\r\n$6\r\nZRANGE\r\n$2\r\nzk\r\n$1\r\n0\r\n",
+			want:  errs.WrongArgs,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			h := newHandler()
+			runCommands(h, tt.setup)
+			if got := h.Handle([]byte(tt.input)); got != tt.want {
+				t.Errorf("got %q, want %q", got, tt.want)
+			}
+		})
+	}
+}
+
+func TestHandleZRank(t *testing.T) {
+	zadd3 := []string{"*8\r\n$4\r\nZADD\r\n$2\r\nzk\r\n$1\r\n1\r\n$1\r\na\r\n$1\r\n2\r\n$1\r\nb\r\n$1\r\n3\r\n$1\r\nc\r\n"}
+	tests := []struct {
+		name  string
+		setup []string
+		input string
+		want  string
+	}{
+		{
+			name:  "missing key returns null bulk",
+			input: "*3\r\n$5\r\nZRANK\r\n$2\r\nzk\r\n$1\r\na\r\n",
+			want:  "$-1\r\n",
+		},
+		{
+			name:  "lowest score member has rank 0",
+			setup: zadd3,
+			input: "*3\r\n$5\r\nZRANK\r\n$2\r\nzk\r\n$1\r\na\r\n",
+			want:  ":0\r\n",
+		},
+		{
+			name:  "middle member has rank 1",
+			setup: zadd3,
+			input: "*3\r\n$5\r\nZRANK\r\n$2\r\nzk\r\n$1\r\nb\r\n",
+			want:  ":1\r\n",
+		},
+		{
+			name:  "non-existent member returns null bulk",
+			setup: zadd3,
+			input: "*3\r\n$5\r\nZRANK\r\n$2\r\nzk\r\n$1\r\nz\r\n",
+			want:  "$-1\r\n",
+		},
+		{
+			name:  "wrong number of arguments",
+			input: "*2\r\n$5\r\nZRANK\r\n$2\r\nzk\r\n",
+			want:  errs.WrongArgs,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			h := newHandler()
+			runCommands(h, tt.setup)
+			if got := h.Handle([]byte(tt.input)); got != tt.want {
+				t.Errorf("got %q, want %q", got, tt.want)
+			}
+		})
+	}
+}
+
+func TestHandleZScore(t *testing.T) {
+	tests := []struct {
+		name  string
+		setup []string
+		input string
+		want  string
+	}{
+		{
+			name:  "missing key returns null bulk",
+			input: "*3\r\n$6\r\nZSCORE\r\n$2\r\nzk\r\n$1\r\na\r\n",
+			want:  "$-1\r\n",
+		},
+		{
+			name:  "existing member returns its score as bulk string",
+			setup: []string{"*4\r\n$4\r\nZADD\r\n$2\r\nzk\r\n$1\r\n1\r\n$1\r\na\r\n"},
+			input: "*3\r\n$6\r\nZSCORE\r\n$2\r\nzk\r\n$1\r\na\r\n",
+			want:  "$1\r\n1\r\n",
+		},
+		{
+			name:  "float score returned as decimal string",
+			setup: []string{"*4\r\n$4\r\nZADD\r\n$2\r\nzk\r\n$4\r\n3.14\r\n$2\r\npi\r\n"},
+			input: "*3\r\n$6\r\nZSCORE\r\n$2\r\nzk\r\n$2\r\npi\r\n",
+			want:  "$4\r\n3.14\r\n",
+		},
+		{
+			name:  "non-existent member returns null bulk",
+			setup: []string{"*4\r\n$4\r\nZADD\r\n$2\r\nzk\r\n$1\r\n1\r\n$1\r\na\r\n"},
+			input: "*3\r\n$6\r\nZSCORE\r\n$2\r\nzk\r\n$1\r\nz\r\n",
+			want:  "$-1\r\n",
+		},
+		{
+			name:  "wrong number of arguments",
+			input: "*2\r\n$6\r\nZSCORE\r\n$2\r\nzk\r\n",
+			want:  errs.WrongArgs,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			h := newHandler()
+			runCommands(h, tt.setup)
+			if got := h.Handle([]byte(tt.input)); got != tt.want {
+				t.Errorf("got %q, want %q", got, tt.want)
+			}
+		})
+	}
+}
+
+func TestHandleTypeForZSet(t *testing.T) {
+	h := newHandler()
+	h.Handle([]byte("*4\r\n$4\r\nZADD\r\n$2\r\nzk\r\n$1\r\n1\r\n$1\r\na\r\n"))
+	got := h.Handle([]byte("*2\r\n$4\r\nTYPE\r\n$2\r\nzk\r\n"))
+	if got != "+zset\r\n" {
+		t.Errorf("got %q, want \"+zset\\r\\n\"", got)
+	}
+}
