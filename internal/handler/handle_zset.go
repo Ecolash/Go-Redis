@@ -77,3 +77,12 @@ func (h *Handler) handleZCard(parts []string) string {
 	card := h.store.ZCard(parts[1])
 	return resp.Integer(card)
 }
+
+func (h *Handler) handleZRem(parts []string) string {
+	// ZREM key member [member ...]
+	if len(parts) < 3 {
+		return errs.WrongArgs
+	}
+	n := h.store.ZRem(parts[1], parts[2:])
+	return resp.Integer(n)
+}

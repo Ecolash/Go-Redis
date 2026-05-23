@@ -2048,6 +2048,54 @@ func TestHandleZScore(t *testing.T) {
 	}
 }
 
+func TestHandleZRem(t *testing.T) {
+	zadd2 := []string{"*8\r\n$4\r\nZADD\r\n$2\r\nzk\r\n$1\r\n1\r\n$1\r\na\r\n$1\r\n2\r\n$1\r\nb\r\n$1\r\n3\r\n$1\r\nc\r\n"}
+	tests := []struct {
+		name  string
+		setup []string
+		input string
+		want  string
+	}{
+		{
+			name:  "removes existing member returns 1",
+			setup: zadd2,
+			input: "*3\r\n$4\r\nZREM\r\n$2\r\nzk\r\n$1\r\na\r\n",
+			want:  ":1\r\n",
+		},
+		{
+			name:  "removes multiple members returns count",
+			setup: zadd2,
+			input: "*4\r\n$4\r\nZREM\r\n$2\r\nzk\r\n$1\r\na\r\n$1\r\nc\r\n",
+			want:  ":2\r\n",
+		},
+		{
+			name:  "non-existent member returns 0",
+			setup: zadd2,
+			input: "*3\r\n$4\r\nZREM\r\n$2\r\nzk\r\n$1\r\nz\r\n",
+			want:  ":0\r\n",
+		},
+		{
+			name:  "missing key returns 0",
+			input: "*3\r\n$4\r\nZREM\r\n$2\r\nzk\r\n$1\r\na\r\n",
+			want:  ":0\r\n",
+		},
+		{
+			name:  "wrong number of arguments",
+			input: "*2\r\n$4\r\nZREM\r\n$2\r\nzk\r\n",
+			want:  errs.WrongArgs,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			h := newHandler()
+			runCommands(h, tt.setup)
+			if got := h.Handle([]byte(tt.input)); got != tt.want {
+				t.Errorf("got %q, want %q", got, tt.want)
+			}
+		})
+	}
+}
+
 func TestHandleTypeForZSet(t *testing.T) {
 	h := newHandler()
 	h.Handle([]byte("*4\r\n$4\r\nZADD\r\n$2\r\nzk\r\n$1\r\n1\r\n$1\r\na\r\n"))

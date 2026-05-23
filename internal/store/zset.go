@@ -79,6 +79,31 @@ func (s *Store) ZScore(key string, member string) (float64, bool) {
 	return e.zsetVal.score(member)
 }
 
+// ZRem removes members from the sorted set at key.
+// Returns the number of members actually removed.
+func (s *Store) ZRem(key string, members []string) int {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	e, ok := s.data[key]
+	if !ok || e.kind != kindZSet {
+		return 0
+	}
+	removed := 0
+	for _, m := range members {
+		score, exists := e.zsetVal.scores[m]
+		if !exists {
+			continue
+		}
+		if e.zsetVal.remove(score, m) {
+			removed++
+		}
+	}
+	if removed > 0 {
+		s.bumpVersionLocked(key)
+	}
+	return removed
+}
+
 func (s *Store) ZCard(key string) int {
 	s.mu.RLock()
 	defer s.mu.RUnlock()

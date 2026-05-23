@@ -392,6 +392,77 @@ func TestZScore(t *testing.T) {
 	}
 }
 
+func TestZRem(t *testing.T) {
+	tests := []struct {
+		name    string
+		setup   []store.ZSetMember
+		members []string
+		want    int
+	}{
+		{
+			name:    "missing key returns 0",
+			members: []string{"a"},
+			want:    0,
+		},
+		{
+			name:    "existing member is removed and returns 1",
+			setup:   []store.ZSetMember{{Score: 1, Member: "a"}},
+			members: []string{"a"},
+			want:    1,
+		},
+		{
+			name:    "non-existent member returns 0",
+			setup:   []store.ZSetMember{{Score: 1, Member: "a"}},
+			members: []string{"z"},
+			want:    0,
+		},
+		{
+			name:    "removes multiple members returns count of removed",
+			setup:   []store.ZSetMember{{Score: 1, Member: "a"}, {Score: 2, Member: "b"}, {Score: 3, Member: "c"}},
+			members: []string{"a", "c"},
+			want:    2,
+		},
+		{
+			name:    "mix of existing and missing members counts only removed",
+			setup:   []store.ZSetMember{{Score: 1, Member: "a"}, {Score: 2, Member: "b"}},
+			members: []string{"a", "z"},
+			want:    1,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			s := store.New()
+			if tt.setup != nil {
+				s.ZAdd("zk", tt.setup)
+			}
+			got := s.ZRem("zk", tt.members)
+			if got != tt.want {
+				t.Errorf("ZRem returned %d, want %d", got, tt.want)
+			}
+		})
+	}
+}
+
+func TestZRemMemberActuallyRemoved(t *testing.T) {
+	s := store.New()
+	s.ZAdd("zk", []store.ZSetMember{{Score: 1, Member: "a"}, {Score: 2, Member: "b"}, {Score: 3, Member: "c"}})
+	s.ZRem("zk", []string{"b"})
+	members := s.ZRange("zk", 0, -1)
+	names := make([]string, len(members))
+	for i, m := range members {
+		names[i] = m.Member
+	}
+	want := []string{"a", "c"}
+	if len(names) != len(want) {
+		t.Fatalf("after ZRem, ZRange returned %v, want %v", names, want)
+	}
+	for i, w := range want {
+		if names[i] != w {
+			t.Errorf("index %d: got %q, want %q", i, names[i], w)
+		}
+	}
+}
+
 func TestIncr(t *testing.T) {
 	tests := []struct {
 		name    string

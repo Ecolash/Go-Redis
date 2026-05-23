@@ -154,6 +154,7 @@ func New(s *store.Store, role string, opts ...Option) *Handler {
 		command.ZRANK:  h.handleZRank,
 		command.ZSCORE: h.handleZScore,
 		command.ZCARD:  h.handleZCard,
+		command.ZREM:   h.handleZRem,
 	}
 	h.txCommands = map[command.Command]commandFunc{
 		command.MULTI:   h.handleMulti,
