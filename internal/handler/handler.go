@@ -159,6 +159,7 @@ func New(s *store.Store, role string, opts ...Option) *Handler {
 		command.GEOPOS:    h.handleGeoPos,
 		command.GEODIST:   h.handleGeoDist,
 		command.GEOSEARCH: h.handleGeoSearch,
+		command.ACL:       h.handleACL,
 	}
 	h.txCommands = map[command.Command]commandFunc{
 		command.MULTI:   h.handleMulti,

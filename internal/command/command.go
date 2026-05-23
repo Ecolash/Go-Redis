@@ -63,4 +63,7 @@ const (
 	GEOPOS    Command = "GEOPOS"
 	GEODIST   Command = "GEODIST"
 	GEOSEARCH Command = "GEOSEARCH"
+
+	// ACL Commands
+	ACL Command = "ACL"
 )
