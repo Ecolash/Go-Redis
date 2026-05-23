@@ -1,0 +1,2146 @@
+remote: ⚡ This is a turbo test run. https://codecrafters.io/turbo
+remote:
+remote: Running tests on your code. Logs should appear shortly...
+remote:
+remote: [compile] Moved ./.codecrafters/run.sh → ./your_program.sh
+remote: [compile] Compilation successful.
+remote:
+remote: [tester::#WS7] Running tests for Stage #WS7 (Authentication - Authenticate using AUTH)
+remote: [tester::#WS7] $ ./your_program.sh
+remote: [your_program] 2026/05/23 13:22:27 Redis server listening on :6379 (role := master)
+remote: [tester::#WS7] [client-1] $ redis-cli ACL SETUSER default >apple-164
+remote: [tester::#WS7] [client-1] ✔︎ Received "OK"
+remote: [tester::#WS7] [client-1] > ACL WHOAMI
+remote: [tester::#WS7] [client-1] ✔︎ Received "default"
+remote: [tester::#WS7] [client-2] $ redis-cli ACL WHOAMI
+remote: [tester::#WS7] [client-2] ✔︎ Received "NOAUTH Authentication required."
+remote: [tester::#WS7] [client-2] > AUTH default apple-164
+remote: [tester::#WS7] [client-2] ✔︎ Received "OK"
+remote: [tester::#WS7] [client-2] > ACL WHOAMI
+remote: [tester::#WS7] [client-2] ✔︎ Received "default"
+remote: [tester::#WS7] [client-2] > ECHO blueberry
+remote: [tester::#WS7] [client-2] ✔︎ Received "blueberry"
+remote: [tester::#WS7] [client-2] > SET key-901 value-867
+remote: [tester::#WS7] [client-2] ✔︎ Received "OK"
+remote: [tester::#WS7] Test passed.
+remote:
+remote: [tester::#NM2] Running tests for Stage #NM2 (Authentication - Enforce authentication)
+remote: [tester::#NM2] $ ./your_program.sh
+remote: [your_program] 2026/05/23 13:22:27 Redis server listening on :6379 (role := master)
+remote: [tester::#NM2] [client-1] $ redis-cli ACL SETUSER default >apple-329
+remote: [tester::#NM2] [client-1] ✔︎ Received "OK"
+remote: [tester::#NM2] [client-1] > ACL WHOAMI
+remote: [tester::#NM2] [client-1] ✔︎ Received "default"
+remote: [tester::#NM2] [client-2] $ redis-cli ACL WHOAMI
+remote: [tester::#NM2] [client-2] ✔︎ Received "NOAUTH Authentication required."
+remote: [tester::#NM2] Test passed.
+remote:
+remote: [tester::#HZ3] Running tests for Stage #HZ3 (Authentication - The AUTH command)
+remote: [tester::#HZ3] $ ./your_program.sh
+remote: [your_program] 2026/05/23 13:22:27 Redis server listening on :6379 (role := master)
+remote: [tester::#HZ3] [client] $ redis-cli ACL SETUSER default >orange-512
+remote: [tester::#HZ3] [client] ✔︎ Received "OK"
+remote: [tester::#HZ3] [client] > AUTH default wrongpassword-6539
+remote: [tester::#HZ3] [client] ✔︎ Received "WRONGPASS invalid username-password pair or user is disabled."
+remote: [tester::#HZ3] [client] > AUTH default orange-512
+remote: [tester::#HZ3] [client] ✔︎ Received "OK"
+remote: [tester::#HZ3] Test passed.
+remote:
+remote: [tester::#UV9] Running tests for Stage #UV9 (Authentication - Setting default user password)
+remote: [tester::#UV9] $ ./your_program.sh
+remote: [your_program] 2026/05/23 13:22:27 Redis server listening on :6379 (role := master)
+remote: [tester::#UV9] [client] $ redis-cli ACL GETUSER default
+remote: [tester::#UV9] [client] Checking if the first element is the bulk string "flags"
+remote: [tester::#UV9] [client] ✔ First element is the bulk string "flags"
+remote: [tester::#UV9] [client] Checking if the second element is an array
+remote: [tester::#UV9] [client] ✔ Second element is an array
+remote: [tester::#UV9] [client] Checking if flag 'nopass' is present in the flags array
+remote: [tester::#UV9] [client] ✔ Flag 'nopass' is present in the flags array
+remote: [tester::#UV9] [client] Checking if the third element of the array is the bulk string "passwords"
+remote: [tester::#UV9] [client] ✔ Third element is the bulk string "passwords"
+remote: [tester::#UV9] [client] Checking passwords array to be empty
+remote: [tester::#UV9] [client] ✔ Passwords array is an empty array
+remote: [tester::#UV9] [client] ✔︎ Received [
+remote: [tester::#UV9] [client]   "flags",
+remote: [tester::#UV9] [client]   ["nopass"],
+remote: [tester::#UV9] [client]   "passwords",
+remote: [tester::#UV9] [client]   []
+remote: [tester::#UV9] [client] ]
+remote: [tester::#UV9] [client] > ACL SETUSER default >pineapple-650
+remote: [tester::#UV9] [client] ✔︎ Received "OK"
+remote: [tester::#UV9] [client] > ACL GETUSER default
+remote: [tester::#UV9] [client] Checking if the first element is the bulk string "flags"
+remote: [tester::#UV9] [client] ✔ First element is the bulk string "flags"
+remote: [tester::#UV9] [client] Checking if the second element is an array
+remote: [tester::#UV9] [client] ✔ Second element is an array
+remote: [tester::#UV9] [client] Checking if flag 'nopass' is absent from the flags array
+remote: [tester::#UV9] [client] ✔ Flag 'nopass' is absent in the flags array
+remote: [tester::#UV9] [client] Checking if the third element of the array is the bulk string "passwords"
+remote: [tester::#UV9] [client] ✔ Third element is the bulk string "passwords"
+remote: [tester::#UV9] [client] Checking expected password hashes to be present in the passwords array
+remote: [tester::#UV9] [client] ✔ Expected password hashes are present in the passwords array
+remote: [tester::#UV9] [client] ✔︎ Received [
+remote: [tester::#UV9] [client]   "flags",
+remote: [tester::#UV9] [client]   [],
+remote: [tester::#UV9] [client]   "passwords",
+remote: [tester::#UV9] [client]   [
+remote: [tester::#UV9] [client]     "c6fa3b5f83a9dab4975a448ff27d191adce25a8ce1a61663bd26a8f0ac076dd1"
+remote: [tester::#UV9] [client]   ]
+remote: [tester::#UV9] [client] ]
+remote: [tester::#UV9] Test passed.
+remote:
+remote: [tester::#PL7] Running tests for Stage #PL7 (Authentication - The passwords property)
+remote: [tester::#PL7] $ ./your_program.sh
+remote: [your_program] 2026/05/23 13:22:27 Redis server listening on :6379 (role := master)
+remote: [tester::#PL7] [client] $ redis-cli ACL GETUSER default
+remote: [tester::#PL7] [client] Checking if the first element is the bulk string "flags"
+remote: [tester::#PL7] [client] ✔ First element is the bulk string "flags"
+remote: [tester::#PL7] [client] Checking if the second element is an array
+remote: [tester::#PL7] [client] ✔ Second element is an array
+remote: [tester::#PL7] [client] Checking if flag 'nopass' is present in the flags array
+remote: [tester::#PL7] [client] ✔ Flag 'nopass' is present in the flags array
+remote: [tester::#PL7] [client] Checking if the third element of the array is the bulk string "passwords"
+remote: [tester::#PL7] [client] ✔ Third element is the bulk string "passwords"
+remote: [tester::#PL7] [client] Checking passwords array to be empty
+remote: [tester::#PL7] [client] ✔ Passwords array is an empty array
+remote: [tester::#PL7] [client] ✔︎ Received [
+remote: [tester::#PL7] [client]   "flags",
+remote: [tester::#PL7] [client]   ["nopass"],
+remote: [tester::#PL7] [client]   "passwords",
+remote: [tester::#PL7] [client]   []
+remote: [tester::#PL7] [client] ]
+remote: [tester::#PL7] Test passed.
+remote:
+remote: [tester::#QL6] Running tests for Stage #QL6 (Authentication - The nopass flag)
+remote: [tester::#QL6] $ ./your_program.sh
+remote: [your_program] 2026/05/23 13:22:27 Redis server listening on :6379 (role := master)
+remote: [tester::#QL6] [client] $ redis-cli ACL GETUSER default
+remote: [tester::#QL6] [client] Checking if the first element is the bulk string "flags"
+remote: [tester::#QL6] [client] ✔ First element is the bulk string "flags"
+remote: [tester::#QL6] [client] Checking if the second element is an array
+remote: [tester::#QL6] [client] ✔ Second element is an array
+remote: [tester::#QL6] [client] Checking if flag 'nopass' is present in the flags array
+remote: [tester::#QL6] [client] ✔ Flag 'nopass' is present in the flags array
+remote: [tester::#QL6] [client] ✔︎ Received [
+remote: [tester::#QL6] [client]   "flags",
+remote: [tester::#QL6] [client]   ["nopass"],
+remote: [tester::#QL6] [client]   "passwords",
+remote: [tester::#QL6] [client]   []
+remote: [tester::#QL6] [client] ]
+remote: [tester::#QL6] Test passed.
+remote:
+remote: [tester::#GX8] Running tests for Stage #GX8 (Authentication - Respond to ACL GETUSER)
+remote: [tester::#GX8] $ ./your_program.sh
+remote: [your_program] 2026/05/23 13:22:27 Redis server listening on :6379 (role := master)
+remote: [tester::#GX8] [client] $ redis-cli ACL GETUSER default
+remote: [tester::#GX8] [client] Checking if the first element is the bulk string "flags"
+remote: [tester::#GX8] [client] ✔ First element is the bulk string "flags"
+remote: [tester::#GX8] [client] Checking if the second element is an array
+remote: [tester::#GX8] [client] ✔ Second element is an array
+remote: [tester::#GX8] [client] ✔︎ Received [
+remote: [tester::#GX8] [client]   "flags",
+remote: [tester::#GX8] [client]   ["nopass"],
+remote: [tester::#GX8] [client]   "passwords",
+remote: [tester::#GX8] [client]   []
+remote: [tester::#GX8] [client] ]
+remote: [tester::#GX8] Test passed.
+remote:
+remote: [tester::#JN4] Running tests for Stage #JN4 (Authentication - Respond to ACL WHOAMI)
+remote: [tester::#JN4] $ ./your_program.sh
+remote: [your_program] 2026/05/23 13:22:27 Redis server listening on :6379 (role := master)
+remote: [tester::#JN4] [client] $ redis-cli ACL WHOAMI
+remote: [tester::#JN4] [client] ✔︎ Received "default"
+remote: [tester::#JN4] Test passed.
+remote:
+remote: [tester::#RM9] Running tests for Stage #RM9 (Geospatial Commands - Search within radius)
+remote: [tester::#RM9] $ ./your_program.sh
+remote: [your_program] 2026/05/23 13:22:27 Redis server listening on :6379 (role := master)
+remote: [tester::#RM9] [client] $ redis-cli GEOADD blueberry -147.36512232480598 -0.19980962848229328 orange
+remote: [tester::#RM9] [client] ✔︎ Received 1
+remote: [tester::#RM9] [client] > GEOADD blueberry -61.65696546142669 5.682366940406888 apple
+remote: [tester::#RM9] [client] ✔︎ Received 1
+remote: [tester::#RM9] [client] > GEOADD blueberry 60.891427842563644 -56.02136957736989 pear
+remote: [tester::#RM9] [client] ✔︎ Received 1
+remote: [tester::#RM9] [client] > GEOADD blueberry 36.83791572992988 -46.019561223114415 banana
+remote: [tester::#RM9] [client] ✔︎ Received 1
+remote: [tester::#RM9] [client] > GEOSEARCH blueberry FROMLONLAT -27.82318605343479 -24.139593372139927 BYRADIUS 3708432.788620402 m
+remote: [tester::#RM9] [client] ✔︎ Received []
+remote: [tester::#RM9] [client] > GEOSEARCH blueberry FROMLONLAT -27.82318605343479 -24.139593372139927 BYRADIUS 16217962.61955303 m
+remote: [tester::#RM9] [client] ✔︎ Received [
+remote: [tester::#RM9] [client]   "banana",
+remote: [tester::#RM9] [client]   "orange",
+remote: [tester::#RM9] [client]   "apple",
+remote: [tester::#RM9] [client]   "pear"
+remote: [tester::#RM9] [client] ]
+remote: [tester::#RM9] [client] > GEOSEARCH blueberry FROMLONLAT -27.82318605343479 -24.139593372139927 BYRADIUS 8959473.573568147 m
+remote: [tester::#RM9] [client] ✔︎ Received ["banana", "apple", "pear"]
+remote: [tester::#RM9] Test passed.
+remote:
+remote: [tester::#EK6] Running tests for Stage #EK6 (Geospatial Commands - Calculate distance)
+remote: [tester::#EK6] $ ./your_program.sh
+remote: [your_program] 2026/05/23 13:22:28 Redis server listening on :6379 (role := master)
+remote: [tester::#EK6] [client] $ redis-cli GEOADD apple -173.15277998828677 -36.60238641175891 apple
+remote: [tester::#EK6] [client] ✔︎ Received 1
+remote: [tester::#EK6] [client] > GEOADD apple -94.04286139263573 -20.13979974479918 banana
+remote: [tester::#EK6] [client] ✔︎ Received 1
+remote: [tester::#EK6] [client] > GEOADD apple -67.67403743457012 -80.99297195237446 blueberry
+remote: [tester::#EK6] [client] ✔︎ Received 1
+remote: [tester::#EK6] [client] > GEODIST apple apple banana
+remote: [tester::#EK6] [client] ✔︎ Received "7747325.5171"
+remote: [tester::#EK6] [client] > GEODIST apple apple blueberry
+remote: [tester::#EK6] [client] ✔︎ Received "6258060.6831"
+remote: [tester::#EK6] [client] > GEODIST apple banana blueberry
+remote: [tester::#EK6] [client] ✔︎ Received "6879528.9172"
+remote: [tester::#EK6] [client] > GEODIST apple apple apple
+remote: [tester::#EK6] [client] ✔︎ Received "0.0000"
+remote: [tester::#EK6] Test passed.
+remote:
+remote: [tester::#HB5] Running tests for Stage #HB5 (Geospatial Commands - Decode coordinates)
+remote: [tester::#HB5] $ ./your_program.sh
+remote: [your_program] 2026/05/23 13:22:28 Redis server listening on :6379 (role := master)
+remote: [tester::#HB5] [client] $ redis-cli ZADD pineapple 2792163559119473 strawberry
+remote: [tester::#HB5] [client] ✔︎ Received 1
+remote: [tester::#HB5] [client] > ZADD pineapple 2221143938935169 grape
+remote: [tester::#HB5] [client] ✔︎ Received 1
+remote: [tester::#HB5] [client] > ZADD pineapple 2850292268561998 apple
+remote: [tester::#HB5] [client] ✔︎ Received 1
+remote: [tester::#HB5] [client] > GEOPOS pineapple apple strawberry grape
+remote: [tester::#HB5] [client] ✔︎ Received [
+remote: [tester::#HB5] [client]   [
+remote: [tester::#HB5] [client]     "112.97011345624924",
+remote: [tester::#HB5] [client]     "-82.806677551025643"
+remote: [tester::#HB5] [client]   ],
+remote: [tester::#HB5] [client]   [
+remote: [tester::#HB5] [client]     "85.916800796985626",
+remote: [tester::#HB5] [client]     "-16.03773461171086"
+remote: [tester::#HB5] [client]   ],
+remote: [tester::#HB5] [client]   [
+remote: [tester::#HB5] [client]     "-21.369907557964325",
+remote: [tester::#HB5] [client]     "70.264948226808968"
+remote: [tester::#HB5] [client]   ]
+remote: [tester::#HB5] [client] ]
+remote: [tester::#HB5] Test passed.
+remote:
+remote: [tester::#XG4] Running tests for Stage #XG4 (Geospatial Commands - Respond to GEOPOS)
+remote: [tester::#XG4] $ ./your_program.sh
+remote: [your_program] 2026/05/23 13:22:28 Redis server listening on :6379 (role := master)
+remote: [tester::#XG4] [client] $ redis-cli GEOADD pineapple 59.056661249169096 44.73833064210214 blueberry
+remote: [tester::#XG4] [client] ✔︎ Received 1
+remote: [tester::#XG4] [client] > GEOADD pineapple -75.97383542071867 58.74084324022137 pineapple
+remote: [tester::#XG4] [client] ✔︎ Received 1
+remote: [tester::#XG4] [client] > GEOPOS pineapple missing_location_27 blueberry pineapple missing_location_72
+remote: [tester::#XG4] [client] ✔︎ Received [
+remote: [tester::#XG4] [client]   "*-1\r\n",
+remote: [tester::#XG4] [client]   [
+remote: [tester::#XG4] [client]     "59.056660830974579",
+remote: [tester::#XG4] [client]     "44.738331604482624"
+remote: [tester::#XG4] [client]   ],
+remote: [tester::#XG4] [client]   [
+remote: [tester::#XG4] [client]     "-75.97383588552475",
+remote: [tester::#XG4] [client]     "58.74084354531675"
+remote: [tester::#XG4] [client]   ],
+remote: [tester::#XG4] [client]   "*-1\r\n"
+remote: [tester::#XG4] [client] ]
+remote: [tester::#XG4] [client] > GEOPOS missing_key_60 missing_location_72 missing_location_27
+remote: [tester::#XG4] [client] ✔︎ Received ["*-1\r\n", "*-1\r\n"]
+remote: [tester::#XG4] Test passed.
+remote:
+remote: [tester::#CR3] Running tests for Stage #CR3 (Geospatial Commands - Calculate location score)
+remote: [tester::#CR3] $ ./your_program.sh
+remote: [your_program] 2026/05/23 13:22:28 Redis server listening on :6379 (role := master)
+remote: [tester::#CR3] [client] $ redis-cli GEOADD banana -91.7296260148619 -22.52854755723208 banana
+remote: [tester::#CR3] [client] ✔︎ Received 1
+remote: [tester::#CR3] [client] > GEOADD banana -175.51134662771136 -73.02831191933254 pineapple
+remote: [tester::#CR3] [client] ✔︎ Received 1
+remote: [tester::#CR3] [client] > GEOADD banana -64.89043493608122 62.074190300890486 apple
+remote: [tester::#CR3] [client] ✔︎ Received 1
+remote: [tester::#CR3] Checking the scores of added locations
+remote: [tester::#CR3] [client] > ZSCORE banana banana
+remote: [tester::#CR3] [client] ✔︎ Received "492349652308281"
+remote: [tester::#CR3] [client] > ZSCORE banana pineapple
+remote: [tester::#CR3] [client] ✔︎ Received "18557280752006"
+remote: [tester::#CR3] [client] > ZSCORE banana apple
+remote: [tester::#CR3] [client] ✔︎ Received "2028854184254345"
+remote: [tester::#CR3] Test passed.
+remote:
+remote: [tester::#TN5] Running tests for Stage #TN5 (Geospatial Commands - Store a location)
+remote: [tester::#TN5] $ ./your_program.sh
+remote: [your_program] 2026/05/23 13:22:28 Redis server listening on :6379 (role := master)
+remote: [tester::#TN5] [client] $ redis-cli GEOADD strawberry 163.29246750645817 60.97775035497266 blueberry
+remote: [tester::#TN5] [client] ✔︎ Received 1
+remote: [tester::#TN5] [client] > GEOADD strawberry 90.27632694527841 81.32797043540914 mango
+remote: [tester::#TN5] [client] ✔︎ Received 1
+remote: [tester::#TN5] [client] > GEOADD strawberry -31.95484579510248 -17.148697357146755 pear
+remote: [tester::#TN5] [client] ✔︎ Received 1
+remote: [tester::#TN5] Checking if "strawberry" is stored as a sorted set
+remote: [tester::#TN5] [client] > ZRANGE strawberry 0 -1
+remote: [tester::#TN5] [client] ✔︎ Received ["pear", "mango", "blueberry"]
+remote: [tester::#TN5] Test passed.
+remote:
+remote: [tester::#CK3] Running tests for Stage #CK3 (Geospatial Commands - Validate coordinates)
+remote: [tester::#CK3] $ ./your_program.sh
+remote: [your_program] 2026/05/23 13:22:28 Redis server listening on :6379 (role := master)
+remote: [tester::#CK3] [client] $ redis-cli GEOADD banana 18.56934048085074 352.76633952800404 mango
+remote: [tester::#CK3] [client] ✔︎ Received "ERR invalid longitude,latitude pair 18.56934048085074,352.76633952800404"
+remote: [tester::#CK3] [client] > GEOADD banana 18.56934048085074 -426.89319298334647 banana
+remote: [tester::#CK3] [client] ✔︎ Received "ERR invalid longitude,latitude pair 18.56934048085074,-426.89319298334647"
+remote: [tester::#CK3] [client] > GEOADD banana 281.2279989675137 59.536192538095264 strawberry
+remote: [tester::#CK3] [client] ✔︎ Received "ERR invalid longitude,latitude pair 281.2279989675137,59.536192538095264"
+remote: [tester::#CK3] [client] > GEOADD banana -435.1706696541297 59.536192538095264 pineapple
+remote: [tester::#CK3] [client] ✔︎ Received "ERR invalid longitude,latitude pair -435.1706696541297,59.536192538095264"
+remote: [tester::#CK3] Test passed.
+remote:
+remote: [tester::#ZT4] Running tests for Stage #ZT4 (Geospatial Commands - Respond to GEOADD)
+remote: [tester::#ZT4] $ ./your_program.sh
+remote: [your_program] 2026/05/23 13:22:28 Redis server listening on :6379 (role := master)
+remote: [tester::#ZT4] [client] $ redis-cli GEOADD apple -168.26001416590861 54.42763043246594 blueberry
+remote: [tester::#ZT4] [client] ✔︎ Received 1
+remote: [tester::#ZT4] Test passed.
+remote:
+remote: [tester::#SQ7] Running tests for Stage #SQ7 (Sorted Sets - Remove a member)
+remote: [tester::#SQ7] $ ./your_program.sh
+remote: [your_program] 2026/05/23 13:22:28 Redis server listening on :6379 (role := master)
+remote: [tester::#SQ7] [client] $ redis-cli ZADD pineapple 70.5934857185988 pineapple
+remote: [tester::#SQ7] [client] ✔︎ Received 1
+remote: [tester::#SQ7] [client] > ZADD pineapple 70.03626386051963 mango
+remote: [tester::#SQ7] [client] ✔︎ Received 1
+remote: [tester::#SQ7] [client] > ZADD pineapple 74.92449105877807 grape
+remote: [tester::#SQ7] [client] ✔︎ Received 1
+remote: [tester::#SQ7] [client] > ZREM pineapple mango
+remote: [tester::#SQ7] [client] ✔︎ Received 1
+remote: [tester::#SQ7] [client] > ZRANGE pineapple 0 -1
+remote: [tester::#SQ7] [client] ✔︎ Received ["pineapple", "grape"]
+remote: [tester::#SQ7] [client] > ZREM pineapple missing_member_71
+remote: [tester::#SQ7] [client] ✔︎ Received 0
+remote: [tester::#SQ7] [client] > ZRANGE pineapple 0 -1
+remote: [tester::#SQ7] [client] ✔︎ Received ["pineapple", "grape"]
+remote: [tester::#SQ7] Test passed.
+remote:
+remote: [tester::#GD7] Running tests for Stage #GD7 (Sorted Sets - Retrieve member score)
+remote: [tester::#GD7] $ ./your_program.sh
+remote: [your_program] 2026/05/23 13:22:28 Redis server listening on :6379 (role := master)
+remote: [tester::#GD7] [client] $ redis-cli ZADD orange 6.732128026739135 orange
+remote: [tester::#GD7] [client] ✔︎ Received 1
+remote: [tester::#GD7] [client] > ZADD orange 63.749233196232055 banana
+remote: [tester::#GD7] [client] ✔︎ Received 1
+remote: [tester::#GD7] [client] > ZADD orange 63.749233196232055 strawberry
+remote: [tester::#GD7] [client] ✔︎ Received 1
+remote: [tester::#GD7] [client] > ZADD orange 40.05850821586187 grape
+remote: [tester::#GD7] [client] ✔︎ Received 1
+remote: [tester::#GD7] [client] > ZSCORE orange strawberry
+remote: [tester::#GD7] [client] ✔︎ Received "63.749233196232055"
+remote: [tester::#GD7] [client] > ZADD orange 56.417327078935244 strawberry
+remote: [tester::#GD7] [client] ✔︎ Received 0
+remote: [tester::#GD7] [client] > ZSCORE orange strawberry
+remote: [tester::#GD7] [client] ✔︎ Received "56.417327078935244"
+remote: [tester::#GD7] Test passed.
+remote:
+remote: [tester::#KN4] Running tests for Stage #KN4 (Sorted Sets - Count sorted set members)
+remote: [tester::#KN4] $ ./your_program.sh
+remote: [your_program] 2026/05/23 13:22:29 Redis server listening on :6379 (role := master)
+remote: [tester::#KN4] [client] $ redis-cli ZADD strawberry 83.0088612592626 pear
+remote: [tester::#KN4] [client] ✔︎ Received 1
+remote: [tester::#KN4] [client] > ZCARD strawberry
+remote: [tester::#KN4] [client] ✔︎ Received 1
+remote: [tester::#KN4] [client] > ZADD strawberry 32.338837893112306 grape
+remote: [tester::#KN4] [client] ✔︎ Received 1
+remote: [tester::#KN4] [client] > ZCARD strawberry
+remote: [tester::#KN4] [client] ✔︎ Received 2
+remote: [tester::#KN4] [client] > ZADD strawberry 30.361645552496455 pineapple
+remote: [tester::#KN4] [client] ✔︎ Received 1
+remote: [tester::#KN4] [client] > ZCARD strawberry
+remote: [tester::#KN4] [client] ✔︎ Received 3
+remote: [tester::#KN4] [client] > ZADD strawberry 30.361645552496455 raspberry
+remote: [tester::#KN4] [client] ✔︎ Received 1
+remote: [tester::#KN4] [client] > ZCARD strawberry
+remote: [tester::#KN4] [client] ✔︎ Received 4
+remote: [tester::#KN4] [client] > ZADD strawberry 95.95529037092288 grape
+remote: [tester::#KN4] [client] ✔︎ Received 0
+remote: [tester::#KN4] [client] > ZCARD strawberry
+remote: [tester::#KN4] [client] ✔︎ Received 4
+remote: [tester::#KN4] [client] > ZCARD missing_key_36
+remote: [tester::#KN4] [client] ✔︎ Received 0
+remote: [tester::#KN4] Test passed.
+remote:
+remote: [tester::#BJ4] Running tests for Stage #BJ4 (Sorted Sets - ZRANGE with negative indexes)
+remote: [tester::#BJ4] $ ./your_program.sh
+remote: [your_program] 2026/05/23 13:22:29 Redis server listening on :6379 (role := master)
+remote: [tester::#BJ4] [client] $ redis-cli ZADD apple 37.522487817282666 raspberry
+remote: [tester::#BJ4] [client] ✔︎ Received 1
+remote: [tester::#BJ4] [client] > ZADD apple 18.562926933175646 orange
+remote: [tester::#BJ4] [client] ✔︎ Received 1
+remote: [tester::#BJ4] [client] > ZADD apple 93.53335043978142 pineapple
+remote: [tester::#BJ4] [client] ✔︎ Received 1
+remote: [tester::#BJ4] [client] > ZADD apple 37.522487817282666 grape
+remote: [tester::#BJ4] [client] ✔︎ Received 1
+remote: [tester::#BJ4] [client] > ZRANGE apple 0 -3
+remote: [tester::#BJ4] [client] ✔︎ Received ["orange", "grape"]
+remote: [tester::#BJ4] [client] > ZRANGE apple -3 -1
+remote: [tester::#BJ4] [client] ✔︎ Received [
+remote: [tester::#BJ4] [client]   "grape",
+remote: [tester::#BJ4] [client]   "raspberry",
+remote: [tester::#BJ4] [client]   "pineapple"
+remote: [tester::#BJ4] [client] ]
+remote: [tester::#BJ4] [client] > ZRANGE apple 0 -1
+remote: [tester::#BJ4] [client] ✔︎ Received [
+remote: [tester::#BJ4] [client]   "orange",
+remote: [tester::#BJ4] [client]   "grape",
+remote: [tester::#BJ4] [client]   "raspberry",
+remote: [tester::#BJ4] [client]   "pineapple"
+remote: [tester::#BJ4] [client] ]
+remote: [tester::#BJ4] [client] > ZRANGE apple -1 -2
+remote: [tester::#BJ4] [client] ✔︎ Received []
+remote: [tester::#BJ4] [client] > ZRANGE apple -5 -1
+remote: [tester::#BJ4] [client] ✔︎ Received [
+remote: [tester::#BJ4] [client]   "orange",
+remote: [tester::#BJ4] [client]   "grape",
+remote: [tester::#BJ4] [client]   "raspberry",
+remote: [tester::#BJ4] [client]   "pineapple"
+remote: [tester::#BJ4] [client] ]
+remote: [tester::#BJ4] Test passed.
+remote:
+remote: [tester::#IC1] Running tests for Stage #IC1 (Sorted Sets - List sorted set members)
+remote: [tester::#IC1] $ ./your_program.sh
+remote: [your_program] 2026/05/23 13:22:29 Redis server listening on :6379 (role := master)
+remote: [tester::#IC1] [client] $ redis-cli ZADD blueberry 93.21067331851432 banana
+remote: [tester::#IC1] [client] ✔︎ Received 1
+remote: [tester::#IC1] [client] > ZADD blueberry 44.880202650369895 apple
+remote: [tester::#IC1] [client] ✔︎ Received 1
+remote: [tester::#IC1] [client] > ZADD blueberry 88.29387329914955 raspberry
+remote: [tester::#IC1] [client] ✔︎ Received 1
+remote: [tester::#IC1] [client] > ZADD blueberry 93.21067331851432 orange
+remote: [tester::#IC1] [client] ✔︎ Received 1
+remote: [tester::#IC1] [client] > ZRANGE blueberry 0 1
+remote: [tester::#IC1] [client] ✔︎ Received ["apple", "raspberry"]
+remote: [tester::#IC1] [client] > ZRANGE blueberry 1 3
+remote: [tester::#IC1] [client] ✔︎ Received [
+remote: [tester::#IC1] [client]   "raspberry",
+remote: [tester::#IC1] [client]   "banana",
+remote: [tester::#IC1] [client]   "orange"
+remote: [tester::#IC1] [client] ]
+remote: [tester::#IC1] [client] > ZRANGE blueberry 0 3
+remote: [tester::#IC1] [client] ✔︎ Received [
+remote: [tester::#IC1] [client]   "apple",
+remote: [tester::#IC1] [client]   "raspberry",
+remote: [tester::#IC1] [client]   "banana",
+remote: [tester::#IC1] [client]   "orange"
+remote: [tester::#IC1] [client] ]
+remote: [tester::#IC1] [client] > ZRANGE blueberry 1 0
+remote: [tester::#IC1] [client] ✔︎ Received []
+remote: [tester::#IC1] [client] > ZRANGE blueberry 0 8
+remote: [tester::#IC1] [client] ✔︎ Received [
+remote: [tester::#IC1] [client]   "apple",
+remote: [tester::#IC1] [client]   "raspberry",
+remote: [tester::#IC1] [client]   "banana",
+remote: [tester::#IC1] [client]   "orange"
+remote: [tester::#IC1] [client] ]
+remote: [tester::#IC1] [client] > ZRANGE missing_key_70 0 1
+remote: [tester::#IC1] [client] ✔︎ Received []
+remote: [tester::#IC1] Test passed.
+remote:
+remote: [tester::#LG6] Running tests for Stage #LG6 (Sorted Sets - Retrieve member rank)
+remote: [tester::#LG6] $ ./your_program.sh
+remote: [your_program] 2026/05/23 13:22:29 Redis server listening on :6379 (role := master)
+remote: [tester::#LG6] [client] $ redis-cli ZADD banana 12.1478925619307 mango
+remote: [tester::#LG6] [client] ✔︎ Received 1
+remote: [tester::#LG6] [client] > ZADD banana 78.25710118736639 pineapple
+remote: [tester::#LG6] [client] ✔︎ Received 1
+remote: [tester::#LG6] [client] > ZADD banana 12.1478925619307 strawberry
+remote: [tester::#LG6] [client] ✔︎ Received 1
+remote: [tester::#LG6] [client] > ZRANK banana mango
+remote: [tester::#LG6] [client] ✔︎ Received 0
+remote: [tester::#LG6] [client] > ZRANK banana pineapple
+remote: [tester::#LG6] [client] ✔︎ Received 2
+remote: [tester::#LG6] [client] > ZRANK banana missing_member_43
+remote: [tester::#LG6] [client] ✔︎ Received "$-1\r\n"
+remote: [tester::#LG6] [client] > ZRANK missing_key_84 mango
+remote: [tester::#LG6] [client] ✔︎ Received "$-1\r\n"
+remote: [tester::#LG6] Test passed.
+remote:
+remote: [tester::#HF1] Running tests for Stage #HF1 (Sorted Sets - Add members)
+remote: [tester::#HF1] $ ./your_program.sh
+remote: [your_program] 2026/05/23 13:22:29 Redis server listening on :6379 (role := master)
+remote: [tester::#HF1] [client] $ redis-cli ZADD grape 43.97601607282451 apple
+remote: [tester::#HF1] [client] ✔︎ Received 1
+remote: [tester::#HF1] [client] > ZADD grape 84.96085217732855 raspberry
+remote: [tester::#HF1] [client] ✔︎ Received 1
+remote: [tester::#HF1] [client] > ZADD grape 4.362469445100421 raspberry
+remote: [tester::#HF1] [client] ✔︎ Received 0
+remote: [tester::#HF1] Test passed.
+remote:
+remote: [tester::#CT1] Running tests for Stage #CT1 (Sorted Sets - Create a sorted set)
+remote: [tester::#CT1] $ ./your_program.sh
+remote: [your_program] 2026/05/23 13:22:29 Redis server listening on :6379 (role := master)
+remote: [tester::#CT1] [client] $ redis-cli ZADD grape 91.75130518118623 orange
+remote: [tester::#CT1] [client] ✔︎ Received 1
+remote: [tester::#CT1] Test passed.
+remote:
+remote: [tester::#ZE9] Running tests for Stage #ZE9 (Pub/Sub - Unsubscribe)
+remote: [tester::#ZE9] $ ./your_program.sh
+remote: [your_program] 2026/05/23 13:22:29 Redis server listening on :6379 (role := master)
+remote: [tester::#ZE9] [client-1] $ redis-cli SUBSCRIBE orange
+remote: [tester::#ZE9] [client-1] ✔︎ Received ["subscribe", "orange", 1]
+remote: [tester::#ZE9] [client-1] > SUBSCRIBE banana
+remote: [tester::#ZE9] [client-1] ✔︎ Received ["subscribe", "banana", 2]
+remote: [tester::#ZE9] [client-2] $ redis-cli SUBSCRIBE banana
+remote: [tester::#ZE9] [client-2] ✔︎ Received ["subscribe", "banana", 1]
+remote: [tester::#ZE9] [client-2] > SUBSCRIBE raspberry
+remote: [tester::#ZE9] [client-2] ✔︎ Received ["subscribe", "raspberry", 2]
+remote: [tester::#ZE9] [client-3] $ redis-cli PUBLISH banana mango
+remote: [tester::#ZE9] [client-3] ✔︎ Received 2
+remote: [tester::#ZE9] [client-1] Expecting published message: "mango"
+remote: [tester::#ZE9] [client-1] ✔︎ Received ["message", "banana", "mango"]
+remote: [tester::#ZE9] [client-2] Expecting published message: "mango"
+remote: [tester::#ZE9] [client-2] ✔︎ Received ["message", "banana", "mango"]
+remote: [tester::#ZE9] [client-1] > UNSUBSCRIBE banana
+remote: [tester::#ZE9] [client-1] ✔︎ Received ["unsubscribe", "banana", 1]
+remote: [tester::#ZE9] [client-3] > PUBLISH banana orange
+remote: [tester::#ZE9] [client-3] ✔︎ Received 1
+remote: [tester::#ZE9] [client-1] Expecting no response
+remote: [tester::#ZE9] [client-1] ✔︎ No response received yet
+remote: [tester::#ZE9] [client-2] Expecting published message: "orange"
+remote: [tester::#ZE9] [client-2] ✔︎ Received ["message", "banana", "orange"]
+remote: [tester::#ZE9] Test passed.
+remote:
+remote: [tester::#DN4] Running tests for Stage #DN4 (Pub/Sub - Deliver messages)
+remote: [tester::#DN4] $ ./your_program.sh
+remote: [your_program] 2026/05/23 13:22:29 Redis server listening on :6379 (role := master)
+remote: [tester::#DN4] [client-1] $ redis-cli SUBSCRIBE mango
+remote: [tester::#DN4] [client-1] ✔︎ Received ["subscribe", "mango", 1]
+remote: [tester::#DN4] [client-2] $ redis-cli SUBSCRIBE mango
+remote: [tester::#DN4] [client-2] ✔︎ Received ["subscribe", "mango", 1]
+remote: [tester::#DN4] [client-3] $ redis-cli SUBSCRIBE strawberry
+remote: [tester::#DN4] [client-3] ✔︎ Received ["subscribe", "strawberry", 1]
+remote: [tester::#DN4] [client-4] $ redis-cli PUBLISH mango banana
+remote: [tester::#DN4] [client-4] ✔︎ Received 2
+remote: [tester::#DN4] [client-1] Expecting published message: "banana"
+remote: [tester::#DN4] [client-1] ✔︎ Received ["message", "mango", "banana"]
+remote: [tester::#DN4] [client-2] Expecting published message: "banana"
+remote: [tester::#DN4] [client-2] ✔︎ Received ["message", "mango", "banana"]
+remote: [tester::#DN4] [client-3] Expecting no response
+remote: [tester::#DN4] [client-3] ✔︎ No response received yet
+remote: [tester::#DN4] [client-4] > PUBLISH strawberry pineapple
+remote: [tester::#DN4] [client-4] ✔︎ Received 1
+remote: [tester::#DN4] [client-1] Expecting no response
+remote: [tester::#DN4] [client-1] ✔︎ No response received yet
+remote: [tester::#DN4] [client-2] Expecting no response
+remote: [tester::#DN4] [client-2] ✔︎ No response received yet
+remote: [tester::#DN4] [client-3] Expecting published message: "pineapple"
+remote: [tester::#DN4] [client-3] ✔︎ Received [
+remote: [tester::#DN4] [client-3]   "message",
+remote: [tester::#DN4] [client-3]   "strawberry",
+remote: [tester::#DN4] [client-3]   "pineapple"
+remote: [tester::#DN4] [client-3] ]
+remote: [tester::#DN4] Test passed.
+remote:
+remote: [tester::#HF2] Running tests for Stage #HF2 (Pub/Sub - Publish a message)
+remote: [tester::#HF2] $ ./your_program.sh
+remote: [your_program] 2026/05/23 13:22:29 Redis server listening on :6379 (role := master)
+remote: [tester::#HF2] [client-1] $ redis-cli SUBSCRIBE banana
+remote: [tester::#HF2] [client-1] ✔︎ Received ["subscribe", "banana", 1]
+remote: [tester::#HF2] [client-2] $ redis-cli SUBSCRIBE pineapple
+remote: [tester::#HF2] [client-2] ✔︎ Received ["subscribe", "pineapple", 1]
+remote: [tester::#HF2] [client-3] $ redis-cli SUBSCRIBE pineapple
+remote: [tester::#HF2] [client-3] ✔︎ Received ["subscribe", "pineapple", 1]
+remote: [tester::#HF2] [client-4] $ redis-cli PUBLISH banana orange
+remote: [tester::#HF2] [client-4] ✔︎ Received 1
+remote: [tester::#HF2] [client-4] > PUBLISH pineapple banana
+remote: [tester::#HF2] [client-4] ✔︎ Received 2
+remote: [tester::#HF2] Test passed.
+remote:
+remote: [tester::#LF1] Running tests for Stage #LF1 (Pub/Sub - PING in subscribed mode)
+remote: [tester::#LF1] $ ./your_program.sh
+remote: [your_program] 2026/05/23 13:22:30 Redis server listening on :6379 (role := master)
+remote: [tester::#LF1] [client-1] $ redis-cli SUBSCRIBE pineapple
+remote: [tester::#LF1] [client-1] ✔︎ Received ["subscribe", "pineapple", 1]
+remote: [tester::#LF1] [client-1] > PING
+remote: [tester::#LF1] [client-1] ✔︎ Received ["pong", ""]
+remote: [tester::#LF1] [client-2] $ redis-cli PING
+remote: [tester::#LF1] [client-2] ✔︎ Received "PONG"
+remote: [tester::#LF1] Test passed.
+remote:
+remote: [tester::#AW8] Running tests for Stage #AW8 (Pub/Sub - Enter subscribed mode)
+remote: [tester::#AW8] $ ./your_program.sh
+remote: [your_program] 2026/05/23 13:22:30 Redis server listening on :6379 (role := master)
+remote: [tester::#AW8] [client] $ redis-cli SUBSCRIBE orange
+remote: [tester::#AW8] [client] ✔︎ Received ["subscribe", "orange", 1]
+remote: [tester::#AW8] [client] > SET strawberry banana
+remote: [tester::#AW8] [client] ✔︎ Received "ERR Can't execute 'set': only (P|S)SUBSCRIBE / (P|S)UNSUBSCRIBE / PING / QUIT / RESET are allowed in this context"
+remote: [tester::#AW8] [client] > GET banana
+remote: [tester::#AW8] [client] ✔︎ Received "ERR Can't execute 'get': only (P|S)SUBSCRIBE / (P|S)UNSUBSCRIBE / PING / QUIT / RESET are allowed in this context"
+remote: [tester::#AW8] [client] > ECHO banana
+remote: [tester::#AW8] [client] ✔︎ Received "ERR Can't execute 'echo': only (P|S)SUBSCRIBE / (P|S)UNSUBSCRIBE / PING / QUIT / RESET are allowed in this context"
+remote: [tester::#AW8] [client] > SUBSCRIBE mango
+remote: [tester::#AW8] [client] ✔︎ Received ["subscribe", "mango", 2]
+remote: [tester::#AW8] Test passed.
+remote:
+remote: [tester::#ZC8] Running tests for Stage #ZC8 (Pub/Sub - Subscribe to multiple channels)
+remote: [tester::#ZC8] $ ./your_program.sh
+remote: [your_program] 2026/05/23 13:22:30 Redis server listening on :6379 (role := master)
+remote: [tester::#ZC8] [client-1] $ redis-cli SUBSCRIBE blueberry
+remote: [tester::#ZC8] [client-1] ✔︎ Received ["subscribe", "blueberry", 1]
+remote: [tester::#ZC8] [client-1] > SUBSCRIBE pineapple
+remote: [tester::#ZC8] [client-1] ✔︎ Received ["subscribe", "pineapple", 2]
+remote: [tester::#ZC8] [client-1] > SUBSCRIBE strawberry
+remote: [tester::#ZC8] [client-1] ✔︎ Received ["subscribe", "strawberry", 3]
+remote: [tester::#ZC8] [client-2] $ redis-cli SUBSCRIBE blueberry
+remote: [tester::#ZC8] [client-2] ✔︎ Received ["subscribe", "blueberry", 1]
+remote: [tester::#ZC8] [client-2] > SUBSCRIBE pineapple
+remote: [tester::#ZC8] [client-2] ✔︎ Received ["subscribe", "pineapple", 2]
+remote: [tester::#ZC8] [client-2] > SUBSCRIBE strawberry
+remote: [tester::#ZC8] [client-2] ✔︎ Received ["subscribe", "strawberry", 3]
+remote: [tester::#ZC8] Test passed.
+remote:
+remote: [tester::#MX3] Running tests for Stage #MX3 (Pub/Sub - Subscribe to a channel)
+remote: [tester::#MX3] $ ./your_program.sh
+remote: [your_program] 2026/05/23 13:22:30 Redis server listening on :6379 (role := master)
+remote: [tester::#MX3] [client] $ redis-cli SUBSCRIBE banana
+remote: [tester::#MX3] [client] ✔︎ Received ["subscribe", "banana", 1]
+remote: [tester::#MX3] Test passed.
+remote:
+remote: [tester::#KN2] Running tests for Stage #KN2 (AOF Persistence - Replay multiple commands)
+remote: [tester::#KN2] Creating append-only directory "apple":
+remote: [tester::#KN2] [apple]   - raspberry.aof.manifest
+remote: [tester::#KN2] [apple]   - blueberry.aof.1.incr.aof
+remote: [tester::#KN2] Writing 3 commands to append-only file "blueberry.aof.1.incr.aof"
+remote: [tester::#KN2] [blueberry.aof.1.incr.aof] *3\r\n$3\r\nSET\r\n$9\r\npineapple\r\n$3\r\n141\r\n
+remote: [tester::#KN2] [blueberry.aof.1.incr.aof] *3\r\n$3\r\nSET\r\n$6\r\norange\r\n$3\r\n474\r\n
+remote: [tester::#KN2] [blueberry.aof.1.incr.aof] *3\r\n$3\r\nSET\r\n$9\r\npineapple\r\n$3\r\n387\r\n
+remote: [tester::#KN2] Creating manifest file "raspberry.aof.manifest"
+remote: [tester::#KN2] [raspberry.aof.manifest] file blueberry.aof.1.incr.aof seq 1 type i
+remote: [tester::#KN2] $ ./your_program.sh --dir /tmp/aof-9581 --appendonly yes --appenddirname apple --appendfilename raspberry.aof --appendfsync always
+remote: [your_program] 2026/05/23 13:22:30 Redis server listening on :6379 (role := master)
+remote: [tester::#KN2] Checking if commands in append-only file were replayed
+remote: [tester::#KN2] [client] $ redis-cli GET pineapple
+remote: [tester::#KN2] [client] ✔︎ Received "387"
+remote: [tester::#KN2] [client] > GET orange
+remote: [tester::#KN2] [client] ✔︎ Received "474"
+remote: [tester::#KN2] Test passed.
+remote:
+remote: [tester::#XZ2] Running tests for Stage #XZ2 (AOF Persistence - Replay a single command)
+remote: [tester::#XZ2] Creating append-only directory "apple":
+remote: [tester::#XZ2] [apple]   - strawberry.aof.manifest
+remote: [tester::#XZ2] [apple]   - blueberry.aof.1.incr.aof
+remote: [tester::#XZ2] Writing 1 command to append-only file "blueberry.aof.1.incr.aof"
+remote: [tester::#XZ2] [blueberry.aof.1.incr.aof] *3\r\n$3\r\nSET\r\n$6\r\norange\r\n$3\r\n417\r\n
+remote: [tester::#XZ2] Creating manifest file "strawberry.aof.manifest"
+remote: [tester::#XZ2] [strawberry.aof.manifest] file blueberry.aof.1.incr.aof seq 1 type i
+remote: [tester::#XZ2] $ ./your_program.sh --dir /tmp/aof-1504 --appendonly yes --appenddirname apple --appendfilename strawberry.aof --appendfsync always
+remote: [your_program] 2026/05/23 13:22:30 Redis server listening on :6379 (role := master)
+remote: [tester::#XZ2] Checking if the command in append-only file was replayed
+remote: [tester::#XZ2] [client] $ redis-cli GET orange
+remote: [tester::#XZ2] [client] ✔︎ Received "417"
+remote: [tester::#XZ2] Test passed.
+remote:
+remote: [tester::#EP6] Running tests for Stage #EP6 (AOF Persistence - Filter write commands)
+remote: [tester::#EP6] $ ./your_program.sh --dir /tmp/aof-2031 --appendonly yes --appenddirname mango --appendfilename blueberry.aof --appendfsync always
+remote: [your_program] 2026/05/23 13:22:30 Redis server listening on :6379 (role := master)
+remote: [tester::#EP6] [client] $ redis-cli SET pineapple banana
+remote: [tester::#EP6] [client] ✔︎ Received "OK"
+remote: [tester::#EP6] [client] > GET pineapple
+remote: [tester::#EP6] [client] ✔︎ Received "banana"
+remote: [tester::#EP6] [client] > ECHO grape
+remote: [tester::#EP6] [client] ✔︎ Received "grape"
+remote: [tester::#EP6] [client] > SET pear strawberry
+remote: [tester::#EP6] [client] ✔︎ Received "OK"
+remote: [tester::#EP6] ✔ Append-only file /tmp/aof-2031/mango/blueberry.aof.1.incr.aof exists
+remote: [tester::#EP6] Reading commands from append-only file /tmp/aof-2031/mango/blueberry.aof.1.incr.aof
+remote: [tester::#EP6] ✔ Found command: "SET pineapple banana"
+remote: [tester::#EP6] ✔ Found command: "SET pear strawberry"
+remote: [tester::#EP6] Test passed.
+remote:
+remote: [tester::#FI1] Running tests for Stage #FI1 (AOF Persistence - Write multiple commands)
+remote: [tester::#FI1] $ ./your_program.sh --dir /tmp/aof-6868 --appendonly yes --appenddirname grape --appendfilename orange.aof --appendfsync always
+remote: [your_program] 2026/05/23 13:22:30 Redis server listening on :6379 (role := master)
+remote: [tester::#FI1] [client] $ redis-cli SET banana 372
+remote: [tester::#FI1] [client] ✔︎ Received "OK"
+remote: [tester::#FI1] [client] > SET raspberry 148
+remote: [tester::#FI1] [client] ✔︎ Received "OK"
+remote: [tester::#FI1] ✔ Append-only file /tmp/aof-6868/grape/orange.aof.1.incr.aof exists
+remote: [tester::#FI1] Reading commands from append-only file /tmp/aof-6868/grape/orange.aof.1.incr.aof
+remote: [tester::#FI1] ✔ Found command: "SET banana 372"
+remote: [tester::#FI1] ✔ Found command: "SET raspberry 148"
+remote: [tester::#FI1] Test passed.
+remote:
+remote: [tester::#DC8] Running tests for Stage #DC8 (AOF Persistence - Write a single command)
+remote: [tester::#DC8] $ ./your_program.sh --dir /tmp/aof-5953 --appendonly yes --appenddirname grape --appendfilename mango.aof --appendfsync always
+remote: [your_program] 2026/05/23 13:22:30 Redis server listening on :6379 (role := master)
+remote: [tester::#DC8] [client] $ redis-cli SET blueberry 165
+remote: [tester::#DC8] [client] ✔︎ Received "OK"
+remote: [tester::#DC8] ✔ Append-only file /tmp/aof-5953/grape/mango.aof.1.incr.aof exists
+remote: [tester::#DC8] Reading commands from append-only file /tmp/aof-5953/grape/mango.aof.1.incr.aof
+remote: [tester::#DC8] ✔ Found command: "SET blueberry 165"
+remote: [tester::#DC8] Test passed.
+remote:
+remote: [tester::#PB9] Running tests for Stage #PB9 (AOF Persistence - Create manifest file)
+remote: [tester::#PB9] $ ./your_program.sh --dir /tmp/aof-7997 --appendonly yes --appenddirname apple --appendfilename mango.aof --appendfsync always
+remote: [your_program] 2026/05/23 13:22:30 Redis server listening on :6379 (role := master)
+remote: [tester::#PB9] ✔ Directory /tmp/aof-7997/apple exists
+remote: [tester::#PB9] ✔ Append-only file /tmp/aof-7997/apple/mango.aof.1.incr.aof exists
+remote: [tester::#PB9] ✔ Append-only file is empty
+remote: [tester::#PB9] ✔ Manifest file contains 'file mango.aof.1.incr.aof seq 1 type i'
+remote: [tester::#PB9] Test passed.
+remote:
+remote: [tester::#DW4] Running tests for Stage #DW4 (AOF Persistence - Create append-only file)
+remote: [tester::#DW4] $ ./your_program.sh --dir /tmp/aof-2112 --appendonly yes --appenddirname mango --appendfilename pear.aof --appendfsync always
+remote: [your_program] 2026/05/23 13:22:30 Redis server listening on :6379 (role := master)
+remote: [tester::#DW4] ✔ Directory /tmp/aof-2112/mango exists
+remote: [tester::#DW4] ✔ Append-only file /tmp/aof-2112/mango/pear.aof.1.incr.aof exists
+remote: [tester::#DW4] ✔ Append-only file is empty
+remote: [tester::#DW4] Test passed.
+remote:
+remote: [tester::#FM0] Running tests for Stage #FM0 (AOF Persistence - Create append-only directory)
+remote: [tester::#FM0] $ ./your_program.sh --dir /tmp/aof-1-2451 --appendonly yes --appenddirname raspberry --appendfilename banana.aof --appendfsync always
+remote: [your_program] 2026/05/23 13:22:30 Redis server listening on :6379 (role := master)
+remote: [tester::#FM0] ✔ Directory /tmp/aof-1-2451/raspberry exists
+remote: [tester::#FM0] $ ./your_program.sh --dir /tmp/aof-2-1536
+remote: [your_program] 2026/05/23 13:22:30 Redis server listening on :6379 (role := master)
+remote: [tester::#FM0] ✔ Directory /tmp/aof-2-1536/appendonlydir does not exist
+remote: [tester::#FM0] Test passed.
+remote:
+remote: [tester::#VD9] Running tests for Stage #VD9 (AOF Persistence - AOF options from flags)
+remote: [tester::#VD9] $ ./your_program.sh --dir /tmp/aof-2842 --appendonly yes --appenddirname blueberry --appendfilename banana.aof --appendfsync always
+remote: [your_program] 2026/05/23 13:22:31 Redis server listening on :6379 (role := master)
+remote: [tester::#VD9] [client] $ redis-cli CONFIG GET dir
+remote: [tester::#VD9] [client] ✔︎ Received ["dir", "/tmp/aof-2842"]
+remote: [tester::#VD9] [client] > CONFIG GET appendonly
+remote: [tester::#VD9] [client] ✔︎ Received ["appendonly", "yes"]
+remote: [tester::#VD9] [client] > CONFIG GET appenddirname
+remote: [tester::#VD9] [client] ✔︎ Received ["appenddirname", "blueberry"]
+remote: [tester::#VD9] [client] > CONFIG GET appendfilename
+remote: [tester::#VD9] [client] ✔︎ Received ["appendfilename", "banana.aof"]
+remote: [tester::#VD9] [client] > CONFIG GET appendfsync
+remote: [tester::#VD9] [client] ✔︎ Received ["appendfsync", "always"]
+remote: [tester::#VD9] Test passed.
+remote:
+remote: [tester::#UJ3] Running tests for Stage #UJ3 (AOF Persistence - Default AOF options)
+remote: [tester::#UJ3] $ ./your_program.sh
+remote: [your_program] 2026/05/23 13:22:31 Redis server listening on :6379 (role := master)
+remote: [tester::#UJ3] [client] $ redis-cli CONFIG GET dir
+remote: [tester::#UJ3] [client] ✔︎ Received ["dir", "/app"]
+remote: [tester::#UJ3] [client] > CONFIG GET appendonly
+remote: [tester::#UJ3] [client] ✔︎ Received ["appendonly", "no"]
+remote: [tester::#UJ3] [client] > CONFIG GET appenddirname
+remote: [tester::#UJ3] [client] ✔︎ Received [
+remote: [tester::#UJ3] [client]   "appenddirname",
+remote: [tester::#UJ3] [client]   "appendonlydir"
+remote: [tester::#UJ3] [client] ]
+remote: [tester::#UJ3] [client] > CONFIG GET appendfilename
+remote: [tester::#UJ3] [client] ✔︎ Received [
+remote: [tester::#UJ3] [client]   "appendfilename",
+remote: [tester::#UJ3] [client]   "appendonly.aof"
+remote: [tester::#UJ3] [client] ]
+remote: [tester::#UJ3] [client] > CONFIG GET appendfsync
+remote: [tester::#UJ3] [client] ✔︎ Received ["appendfsync", "everysec"]
+remote: [tester::#UJ3] Test passed.
+remote:
+remote: [tester::#SM4] Running tests for Stage #SM4 (RDB Persistence - Read value with expiry)
+remote: [tester::#SM4] Created RDB file with 3 key-value pairs: {"pear": "orange", "orange": "pear", "strawberry": "raspberry"}
+remote: [tester::#SM4] $ ./your_program.sh --dir /tmp/rdb-526 --dbfilename pineapple.rdb
+remote: [your_program] 2026/05/23 13:22:31 Redis server listening on :6379 (role := master)
+remote: [tester::#SM4] [client] $ redis-cli GET pear
+remote: [tester::#SM4] [client] ✔︎ Received "$-1\r\n"
+remote: [tester::#SM4] [client] > GET orange
+remote: [tester::#SM4] [client] ✔︎ Received "pear"
+remote: [tester::#SM4] [client] > GET strawberry
+remote: [tester::#SM4] [client] ✔︎ Received "raspberry"
+remote: [tester::#SM4] Test passed.
+remote:
+remote: [tester::#DQ3] Running tests for Stage #DQ3 (RDB Persistence - Read multiple string values)
+remote: [tester::#DQ3] Created RDB file with 4 key-value pairs: {"pear": "orange", "apple": "pineapple", "pineapple": "apple", "orange": "mango"}
+remote: [tester::#DQ3] $ ./your_program.sh --dir /tmp/rdb-5771 --dbfilename blueberry.rdb
+remote: [your_program] 2026/05/23 13:22:31 Redis server listening on :6379 (role := master)
+remote: [tester::#DQ3] [client] $ redis-cli GET pear
+remote: [tester::#DQ3] [client] ✔︎ Received "orange"
+remote: [tester::#DQ3] [client] > GET apple
+remote: [tester::#DQ3] [client] ✔︎ Received "pineapple"
+remote: [tester::#DQ3] [client] > GET pineapple
+remote: [tester::#DQ3] [client] ✔︎ Received "apple"
+remote: [tester::#DQ3] [client] > GET orange
+remote: [tester::#DQ3] [client] ✔︎ Received "mango"
+remote: [tester::#DQ3] Test passed.
+remote:
+remote: [tester::#JW4] Running tests for Stage #JW4 (RDB Persistence - Read multiple keys)
+remote: [tester::#JW4] Created RDB file with 5 keys: ["pineapple", "orange", "pear", "grape", "raspberry"]
+remote: [tester::#JW4] $ ./your_program.sh --dir /tmp/rdb-6954 --dbfilename strawberry.rdb
+remote: [your_program] 2026/05/23 13:22:31 Redis server listening on :6379 (role := master)
+remote: [tester::#JW4] [client] $ redis-cli KEYS *
+remote: [tester::#JW4] [client] ✔︎ Received [
+remote: [tester::#JW4] [client]   "pineapple",
+remote: [tester::#JW4] [client]   "orange",
+remote: [tester::#JW4] [client]   "pear",
+remote: [tester::#JW4] [client]   "grape",
+remote: [tester::#JW4] [client]   "raspberry"
+remote: [tester::#JW4] [client] ]
+remote: [tester::#JW4] Test passed.
+remote:
+remote: [tester::#GC6] Running tests for Stage #GC6 (RDB Persistence - Read a string value)
+remote: [tester::#GC6] Created RDB file with a single key-value pair: {"apple": "pear"}
+remote: [tester::#GC6] $ ./your_program.sh --dir /tmp/rdb-7204 --dbfilename blueberry.rdb
+remote: [your_program] 2026/05/23 13:22:31 Redis server listening on :6379 (role := master)
+remote: [tester::#GC6] [client] $ redis-cli GET apple
+remote: [tester::#GC6] [client] ✔︎ Received "pear"
+remote: [tester::#GC6] Test passed.
+remote:
+remote: [tester::#JZ6] Running tests for Stage #JZ6 (RDB Persistence - Read a key)
+remote: [tester::#JZ6] Created RDB file with a single key: ["raspberry"]
+remote: [tester::#JZ6] $ ./your_program.sh --dir /tmp/rdb-917 --dbfilename grape.rdb
+remote: [your_program] 2026/05/23 13:22:31 Redis server listening on :6379 (role := master)
+remote: [tester::#JZ6] [client] $ redis-cli KEYS *
+remote: [tester::#JZ6] [client] ✔︎ Received ["raspberry"]
+remote: [tester::#JZ6] Test passed.
+remote:
+remote: [tester::#ZG5] Running tests for Stage #ZG5 (RDB Persistence - RDB file config)
+remote: [tester::#ZG5] $ ./your_program.sh --dir /tmp/rdb-532 --dbfilename grape.rdb
+remote: [your_program] 2026/05/23 13:22:31 Redis server listening on :6379 (role := master)
+remote: [tester::#ZG5] [client] $ redis-cli CONFIG GET dir
+remote: [tester::#ZG5] [client] ✔︎ Received ["dir", "/tmp/rdb-532"]
+remote: [tester::#ZG5] Test passed.
+remote:
+remote: [tester::#NA2] Running tests for Stage #NA2 (Replication - WAIT with multiple commands)
+remote: [tester::#NA2] $ ./your_program.sh --port 6379
+remote: [tester::#NA2] Proceeding to create 4 replicas.
+remote: [tester::#NA2] [setup] Creating 4 replicas:
+remote: [tester::#NA2] [setup] 1. replica@6380 (Listening port = 6380)
+remote: [tester::#NA2] [setup] 2. replica@6381 (Listening port = 6381)
+remote: [tester::#NA2] [setup] 3. replica@6382 (Listening port = 6382)
+remote: [tester::#NA2] [setup] 4. replica@6383 (Listening port = 6383)
+remote: [your_program] 2026/05/23 13:22:31 Redis server listening on :6379 (role := master)
+remote: [tester::#NA2] [handshake] [replica@6380] $ redis-cli PING
+remote: [tester::#NA2] [handshake] [replica@6380] ✔︎ Received "PONG"
+remote: [tester::#NA2] [handshake] [replica@6380] > REPLCONF listening-port 6380
+remote: [tester::#NA2] [handshake] [replica@6380] ✔︎ Received "OK"
+remote: [tester::#NA2] [handshake] [replica@6380] > REPLCONF capa psync2
+remote: [tester::#NA2] [handshake] [replica@6380] ✔︎ Received "OK"
+remote: [tester::#NA2] [handshake] [replica@6380] > PSYNC ? -1
+remote: [tester::#NA2] [handshake] [replica@6380] ✔︎ Received "FULLRESYNC 8371b4fb1155b71f4a04d3e1bc3e18c4a990aeeb 0"
+remote: [tester::#NA2] [handshake] [replica@6380] Received RDB file
+remote: [tester::#NA2] [handshake] [replica@6381] $ redis-cli PING
+remote: [tester::#NA2] [handshake] [replica@6381] ✔︎ Received "PONG"
+remote: [tester::#NA2] [handshake] [replica@6381] > REPLCONF listening-port 6381
+remote: [tester::#NA2] [handshake] [replica@6381] ✔︎ Received "OK"
+remote: [tester::#NA2] [handshake] [replica@6381] > REPLCONF capa psync2
+remote: [tester::#NA2] [handshake] [replica@6381] ✔︎ Received "OK"
+remote: [tester::#NA2] [handshake] [replica@6381] > PSYNC ? -1
+remote: [tester::#NA2] [handshake] [replica@6381] ✔︎ Received "FULLRESYNC 8371b4fb1155b71f4a04d3e1bc3e18c4a990aeeb 0"
+remote: [tester::#NA2] [handshake] [replica@6381] Received RDB file
+remote: [tester::#NA2] [handshake] [replica@6382] $ redis-cli PING
+remote: [tester::#NA2] [handshake] [replica@6382] ✔︎ Received "PONG"
+remote: [tester::#NA2] [handshake] [replica@6382] > REPLCONF listening-port 6382
+remote: [tester::#NA2] [handshake] [replica@6382] ✔︎ Received "OK"
+remote: [tester::#NA2] [handshake] [replica@6382] > REPLCONF capa psync2
+remote: [tester::#NA2] [handshake] [replica@6382] ✔︎ Received "OK"
+remote: [tester::#NA2] [handshake] [replica@6382] > PSYNC ? -1
+remote: [tester::#NA2] [handshake] [replica@6382] ✔︎ Received "FULLRESYNC 8371b4fb1155b71f4a04d3e1bc3e18c4a990aeeb 0"
+remote: [tester::#NA2] [handshake] [replica@6382] Received RDB file
+remote: [tester::#NA2] [handshake] [replica@6383] $ redis-cli PING
+remote: [tester::#NA2] [handshake] [replica@6383] ✔︎ Received "PONG"
+remote: [tester::#NA2] [handshake] [replica@6383] > REPLCONF listening-port 6383
+remote: [tester::#NA2] [handshake] [replica@6383] ✔︎ Received "OK"
+remote: [tester::#NA2] [handshake] [replica@6383] > REPLCONF capa psync2
+remote: [tester::#NA2] [handshake] [replica@6383] ✔︎ Received "OK"
+remote: [tester::#NA2] [handshake] [replica@6383] > PSYNC ? -1
+remote: [tester::#NA2] [handshake] [replica@6383] ✔︎ Received "FULLRESYNC 8371b4fb1155b71f4a04d3e1bc3e18c4a990aeeb 0"
+remote: [tester::#NA2] [handshake] [replica@6383] Received RDB file
+remote: [tester::#NA2] [test] [client] $ redis-cli SET foo 123
+remote: [tester::#NA2] [test] [client] ✔︎ Received "OK"
+remote: [tester::#NA2] [test] [client] > WAIT 1 500
+remote: [tester::#NA2] [test] Testing Replica: replica@6380
+remote: [tester::#NA2] [test] [replica@6380] Expecting "SET foo 123" to be propagated
+remote: [tester::#NA2] [test] [replica@6380] ✔︎ Received ["SET", "foo", "123"]
+remote: [tester::#NA2] [test] [replica@6380] Expecting "REPLCONF GETACK *" from Master
+remote: [tester::#NA2] [test] [replica@6380] ✔︎ Received ["REPLCONF", "GETACK", "*"]
+remote: [tester::#NA2] [test] [replica@6380] > REPLCONF ACK 31
+remote: [tester::#NA2] [test] Testing Replica: replica@6381
+remote: [tester::#NA2] [test] [replica@6381] Expecting "SET foo 123" to be propagated
+remote: [tester::#NA2] [test] [replica@6381] ✔︎ Received ["SET", "foo", "123"]
+remote: [tester::#NA2] [test] [replica@6381] Expecting "REPLCONF GETACK *" from Master
+remote: [tester::#NA2] [test] [replica@6381] ✔︎ Received ["REPLCONF", "GETACK", "*"]
+remote: [tester::#NA2] [test] Testing Replica: replica@6382
+remote: [tester::#NA2] [test] [replica@6382] Expecting "SET foo 123" to be propagated
+remote: [tester::#NA2] [test] [replica@6382] ✔︎ Received ["SET", "foo", "123"]
+remote: [tester::#NA2] [test] [replica@6382] Expecting "REPLCONF GETACK *" from Master
+remote: [tester::#NA2] [test] [replica@6382] ✔︎ Received ["REPLCONF", "GETACK", "*"]
+remote: [tester::#NA2] [test] Testing Replica: replica@6383
+remote: [tester::#NA2] [test] [replica@6383] Expecting "SET foo 123" to be propagated
+remote: [tester::#NA2] [test] [replica@6383] ✔︎ Received ["SET", "foo", "123"]
+remote: [tester::#NA2] [test] [replica@6383] Expecting "REPLCONF GETACK *" from Master
+remote: [tester::#NA2] [test] [replica@6383] ✔︎ Received ["REPLCONF", "GETACK", "*"]
+remote: [tester::#NA2] [test] Passed first WAIT test.
+remote: [tester::#NA2] [test] [client] > SET baz 789
+remote: [tester::#NA2] [test] [client] ✔︎ Received "OK"
+remote: [tester::#NA2] [test] [client] > WAIT 4 2000
+remote: [tester::#NA2] [test] Testing Replica: replica@6380
+remote: [tester::#NA2] [test] [replica@6380] Expecting "SET baz 789" to be propagated
+remote: [tester::#NA2] [test] [replica@6380] ✔︎ Received ["SET", "baz", "789"]
+remote: [tester::#NA2] [test] [replica@6380] Expecting "REPLCONF GETACK *" from Master
+remote: [tester::#NA2] [test] [replica@6380] ✔︎ Received ["REPLCONF", "GETACK", "*"]
+remote: [tester::#NA2] [test] [replica@6380] > REPLCONF ACK 99
+remote: [tester::#NA2] [test] Testing Replica: replica@6381
+remote: [tester::#NA2] [test] [replica@6381] Expecting "SET baz 789" to be propagated
+remote: [tester::#NA2] [test] [replica@6381] ✔︎ Received ["SET", "baz", "789"]
+remote: [tester::#NA2] [test] [replica@6381] Expecting "REPLCONF GETACK *" from Master
+remote: [tester::#NA2] [test] [replica@6381] ✔︎ Received ["REPLCONF", "GETACK", "*"]
+remote: [tester::#NA2] [test] [replica@6381] > REPLCONF ACK 99
+remote: [tester::#NA2] [test] Testing Replica: replica@6382
+remote: [tester::#NA2] [test] [replica@6382] Expecting "SET baz 789" to be propagated
+remote: [tester::#NA2] [test] [replica@6382] ✔︎ Received ["SET", "baz", "789"]
+remote: [tester::#NA2] [test] [replica@6382] Expecting "REPLCONF GETACK *" from Master
+remote: [tester::#NA2] [test] [replica@6382] ✔︎ Received ["REPLCONF", "GETACK", "*"]
+remote: [tester::#NA2] [test] [replica@6382] > REPLCONF ACK 99
+remote: [tester::#NA2] [test] Testing Replica: replica@6383
+remote: [tester::#NA2] [test] [replica@6383] Expecting "SET baz 789" to be propagated
+remote: [tester::#NA2] [test] [replica@6383] ✔︎ Received ["SET", "baz", "789"]
+remote: [tester::#NA2] [test] [replica@6383] Expecting "REPLCONF GETACK *" from Master
+remote: [tester::#NA2] [test] [replica@6383] ✔︎ Received ["REPLCONF", "GETACK", "*"]
+remote: [tester::#NA2] [test] WAIT command returned after 2009 ms
+remote: [tester::#NA2] Test passed.
+remote:
+remote: [tester::#TU8] Running tests for Stage #TU8 (Replication - WAIT with no commands)
+remote: [tester::#TU8] $ ./your_program.sh --port 6379
+remote: [tester::#TU8] Proceeding to create 8 replicas.
+remote: [tester::#TU8] [setup] Creating 8 replicas:
+remote: [tester::#TU8] [setup] 1. replica@6380 (Listening port = 6380)
+remote: [tester::#TU8] [setup] 2. replica@6381 (Listening port = 6381)
+remote: [tester::#TU8] [setup] 3. replica@6382 (Listening port = 6382)
+remote: [tester::#TU8] [setup] 4. replica@6383 (Listening port = 6383)
+remote: [tester::#TU8] [setup] 5. replica@6384 (Listening port = 6384)
+remote: [tester::#TU8] [setup] 6. replica@6385 (Listening port = 6385)
+remote: [tester::#TU8] [setup] 7. replica@6386 (Listening port = 6386)
+remote: [tester::#TU8] [setup] 8. replica@6387 (Listening port = 6387)
+remote: [your_program] 2026/05/23 13:22:34 Redis server listening on :6379 (role := master)
+remote: [tester::#TU8] [handshake] [replica@6380] $ redis-cli PING
+remote: [tester::#TU8] [handshake] [replica@6380] ✔︎ Received "PONG"
+remote: [tester::#TU8] [handshake] [replica@6380] > REPLCONF listening-port 6380
+remote: [tester::#TU8] [handshake] [replica@6380] ✔︎ Received "OK"
+remote: [tester::#TU8] [handshake] [replica@6380] > REPLCONF capa psync2
+remote: [tester::#TU8] [handshake] [replica@6380] ✔︎ Received "OK"
+remote: [tester::#TU8] [handshake] [replica@6380] > PSYNC ? -1
+remote: [tester::#TU8] [handshake] [replica@6380] ✔︎ Received "FULLRESYNC 8371b4fb1155b71f4a04d3e1bc3e18c4a990aeeb 0"
+remote: [tester::#TU8] [handshake] [replica@6380] Received RDB file
+remote: [tester::#TU8] [handshake] [replica@6381] $ redis-cli PING
+remote: [tester::#TU8] [handshake] [replica@6381] ✔︎ Received "PONG"
+remote: [tester::#TU8] [handshake] [replica@6381] > REPLCONF listening-port 6381
+remote: [tester::#TU8] [handshake] [replica@6381] ✔︎ Received "OK"
+remote: [tester::#TU8] [handshake] [replica@6381] > REPLCONF capa psync2
+remote: [tester::#TU8] [handshake] [replica@6381] ✔︎ Received "OK"
+remote: [tester::#TU8] [handshake] [replica@6381] > PSYNC ? -1
+remote: [tester::#TU8] [handshake] [replica@6381] ✔︎ Received "FULLRESYNC 8371b4fb1155b71f4a04d3e1bc3e18c4a990aeeb 0"
+remote: [tester::#TU8] [handshake] [replica@6381] Received RDB file
+remote: [tester::#TU8] [handshake] [replica@6382] $ redis-cli PING
+remote: [tester::#TU8] [handshake] [replica@6382] ✔︎ Received "PONG"
+remote: [tester::#TU8] [handshake] [replica@6382] > REPLCONF listening-port 6382
+remote: [tester::#TU8] [handshake] [replica@6382] ✔︎ Received "OK"
+remote: [tester::#TU8] [handshake] [replica@6382] > REPLCONF capa psync2
+remote: [tester::#TU8] [handshake] [replica@6382] ✔︎ Received "OK"
+remote: [tester::#TU8] [handshake] [replica@6382] > PSYNC ? -1
+remote: [tester::#TU8] [handshake] [replica@6382] ✔︎ Received "FULLRESYNC 8371b4fb1155b71f4a04d3e1bc3e18c4a990aeeb 0"
+remote: [tester::#TU8] [handshake] [replica@6382] Received RDB file
+remote: [tester::#TU8] [handshake] [replica@6383] $ redis-cli PING
+remote: [tester::#TU8] [handshake] [replica@6383] ✔︎ Received "PONG"
+remote: [tester::#TU8] [handshake] [replica@6383] > REPLCONF listening-port 6383
+remote: [tester::#TU8] [handshake] [replica@6383] ✔︎ Received "OK"
+remote: [tester::#TU8] [handshake] [replica@6383] > REPLCONF capa psync2
+remote: [tester::#TU8] [handshake] [replica@6383] ✔︎ Received "OK"
+remote: [tester::#TU8] [handshake] [replica@6383] > PSYNC ? -1
+remote: [tester::#TU8] [handshake] [replica@6383] ✔︎ Received "FULLRESYNC 8371b4fb1155b71f4a04d3e1bc3e18c4a990aeeb 0"
+remote: [tester::#TU8] [handshake] [replica@6383] Received RDB file
+remote: [tester::#TU8] [handshake] [replica@6384] $ redis-cli PING
+remote: [tester::#TU8] [handshake] [replica@6384] ✔︎ Received "PONG"
+remote: [tester::#TU8] [handshake] [replica@6384] > REPLCONF listening-port 6384
+remote: [tester::#TU8] [handshake] [replica@6384] ✔︎ Received "OK"
+remote: [tester::#TU8] [handshake] [replica@6384] > REPLCONF capa psync2
+remote: [tester::#TU8] [handshake] [replica@6384] ✔︎ Received "OK"
+remote: [tester::#TU8] [handshake] [replica@6384] > PSYNC ? -1
+remote: [tester::#TU8] [handshake] [replica@6384] ✔︎ Received "FULLRESYNC 8371b4fb1155b71f4a04d3e1bc3e18c4a990aeeb 0"
+remote: [tester::#TU8] [handshake] [replica@6384] Received RDB file
+remote: [tester::#TU8] [handshake] [replica@6385] $ redis-cli PING
+remote: [tester::#TU8] [handshake] [replica@6385] ✔︎ Received "PONG"
+remote: [tester::#TU8] [handshake] [replica@6385] > REPLCONF listening-port 6385
+remote: [tester::#TU8] [handshake] [replica@6385] ✔︎ Received "OK"
+remote: [tester::#TU8] [handshake] [replica@6385] > REPLCONF capa psync2
+remote: [tester::#TU8] [handshake] [replica@6385] ✔︎ Received "OK"
+remote: [tester::#TU8] [handshake] [replica@6385] > PSYNC ? -1
+remote: [tester::#TU8] [handshake] [replica@6385] ✔︎ Received "FULLRESYNC 8371b4fb1155b71f4a04d3e1bc3e18c4a990aeeb 0"
+remote: [tester::#TU8] [handshake] [replica@6385] Received RDB file
+remote: [tester::#TU8] [handshake] [replica@6386] $ redis-cli PING
+remote: [tester::#TU8] [handshake] [replica@6386] ✔︎ Received "PONG"
+remote: [tester::#TU8] [handshake] [replica@6386] > REPLCONF listening-port 6386
+remote: [tester::#TU8] [handshake] [replica@6386] ✔︎ Received "OK"
+remote: [tester::#TU8] [handshake] [replica@6386] > REPLCONF capa psync2
+remote: [tester::#TU8] [handshake] [replica@6386] ✔︎ Received "OK"
+remote: [tester::#TU8] [handshake] [replica@6386] > PSYNC ? -1
+remote: [tester::#TU8] [handshake] [replica@6386] ✔︎ Received "FULLRESYNC 8371b4fb1155b71f4a04d3e1bc3e18c4a990aeeb 0"
+remote: [tester::#TU8] [handshake] [replica@6386] Received RDB file
+remote: [tester::#TU8] [handshake] [replica@6387] $ redis-cli PING
+remote: [tester::#TU8] [handshake] [replica@6387] ✔︎ Received "PONG"
+remote: [tester::#TU8] [handshake] [replica@6387] > REPLCONF listening-port 6387
+remote: [tester::#TU8] [handshake] [replica@6387] ✔︎ Received "OK"
+remote: [tester::#TU8] [handshake] [replica@6387] > REPLCONF capa psync2
+remote: [tester::#TU8] [handshake] [replica@6387] ✔︎ Received "OK"
+remote: [tester::#TU8] [handshake] [replica@6387] > PSYNC ? -1
+remote: [tester::#TU8] [handshake] [replica@6387] ✔︎ Received "FULLRESYNC 8371b4fb1155b71f4a04d3e1bc3e18c4a990aeeb 0"
+remote: [tester::#TU8] [handshake] [replica@6387] Received RDB file
+remote: [tester::#TU8] [test] [client] $ redis-cli WAIT 3 500
+remote: [tester::#TU8] [test] [client] ✔︎ Received 8
+remote: [tester::#TU8] [test] [client] > WAIT 5 500
+remote: [tester::#TU8] [test] [client] ✔︎ Received 8
+remote: [tester::#TU8] [test] [client] > WAIT 7 500
+remote: [tester::#TU8] [test] [client] ✔︎ Received 8
+remote: [tester::#TU8] [test] [client] > WAIT 9 500
+remote: [tester::#TU8] [test] [client] ✔︎ Received 8
+remote: [tester::#TU8] Test passed.
+remote:
+remote: [tester::#MY8] Running tests for Stage #MY8 (Replication - WAIT with no replicas)
+remote: [tester::#MY8] $ ./your_program.sh --port 6379
+remote: [your_program] 2026/05/23 13:22:34 Redis server listening on :6379 (role := master)
+remote: [tester::#MY8] [client] $ redis-cli WAIT 0 60000
+remote: [tester::#MY8] [client] ✔︎ Received 0
+remote: [tester::#MY8] Test passed.
+remote:
+remote: [tester::#YD3] Running tests for Stage #YD3 (Replication - ACKs with commands)
+remote: [tester::#YD3] Master is running on port 6379
+remote: [tester::#YD3] $ ./your_program.sh --port 6380 --replicaof "localhost 6379"
+remote: [your_program] 2026/05/23 13:22:34 Redis server listening on :6380 (role := slave)
+remote: [tester::#YD3] [handshake] [master] Waiting for replica to initiate handshake with "PING" command
+remote: [tester::#YD3] [handshake] [master] ✔︎ Received ["PING"]
+remote: [tester::#YD3] [handshake] [master] Sent "PONG"
+remote: [tester::#YD3] [handshake] [master] Waiting for replica to send "REPLCONF listening-port 6380" command
+remote: [tester::#YD3] [handshake] [master] ✔︎ Received [
+remote: [tester::#YD3] [handshake] [master]   "REPLCONF",
+remote: [tester::#YD3] [handshake] [master]   "listening-port",
+remote: [tester::#YD3] [handshake] [master]   "6380"
+remote: [tester::#YD3] [handshake] [master] ]
+remote: [tester::#YD3] [handshake] [master] Sent "OK"
+remote: [tester::#YD3] [handshake] [master] Waiting for replica to send "REPLCONF capa" command
+remote: [tester::#YD3] [handshake] [master] ✔︎ Received ["REPLCONF", "capa", "psync2"]
+remote: [tester::#YD3] [handshake] [master] Sent "OK"
+remote: [tester::#YD3] [handshake] [master] Waiting for replica to send "PSYNC" command
+remote: [tester::#YD3] [handshake] [master] ✔︎ Received ["PSYNC", "?", "-1"]
+remote: [tester::#YD3] [handshake] [master] Sent "FULLRESYNC 75cd7bc10c49047e0d163660f3b90625b1af31dc 0"
+remote: [tester::#YD3] [handshake] [master] Sent RDB file.
+remote: [tester::#YD3] [test] [master] > REPLCONF GETACK *
+remote: [tester::#YD3] [test] [master] ✔︎ Received ["REPLCONF", "ACK", "0"]
+remote: [tester::#YD3] [propagation] [master] > PING
+remote: [tester::#YD3] [test] [master] > REPLCONF GETACK *
+remote: [tester::#YD3] [test] [master] ✔︎ Received ["REPLCONF", "ACK", "51"]
+remote: [tester::#YD3] [propagation] [master] > SET raspberry pineapple
+remote: [tester::#YD3] [propagation] [master] > SET raspberry orange
+remote: [tester::#YD3] [test] [master] > REPLCONF GETACK *
+remote: [tester::#YD3] [test] [master] ✔︎ Received ["REPLCONF", "ACK", "171"]
+remote: [tester::#YD3] Test passed.
+remote:
+remote: [tester::#XV6] Running tests for Stage #XV6 (Replication - ACKs with no commands)
+remote: [tester::#XV6] Master is running on port 6379
+remote: [tester::#XV6] $ ./your_program.sh --port 6380 --replicaof "localhost 6379"
+remote: [your_program] 2026/05/23 13:22:34 Redis server listening on :6380 (role := slave)
+remote: [tester::#XV6] [handshake] [master] Waiting for replica to initiate handshake with "PING" command
+remote: [tester::#XV6] [handshake] [master] ✔︎ Received ["PING"]
+remote: [tester::#XV6] [handshake] [master] Sent "PONG"
+remote: [tester::#XV6] [handshake] [master] Waiting for replica to send "REPLCONF listening-port 6380" command
+remote: [tester::#XV6] [handshake] [master] ✔︎ Received [
+remote: [tester::#XV6] [handshake] [master]   "REPLCONF",
+remote: [tester::#XV6] [handshake] [master]   "listening-port",
+remote: [tester::#XV6] [handshake] [master]   "6380"
+remote: [tester::#XV6] [handshake] [master] ]
+remote: [tester::#XV6] [handshake] [master] Sent "OK"
+remote: [tester::#XV6] [handshake] [master] Waiting for replica to send "REPLCONF capa" command
+remote: [tester::#XV6] [handshake] [master] ✔︎ Received ["REPLCONF", "capa", "psync2"]
+remote: [tester::#XV6] [handshake] [master] Sent "OK"
+remote: [tester::#XV6] [handshake] [master] Waiting for replica to send "PSYNC" command
+remote: [tester::#XV6] [handshake] [master] ✔︎ Received ["PSYNC", "?", "-1"]
+remote: [tester::#XV6] [handshake] [master] Sent "FULLRESYNC 75cd7bc10c49047e0d163660f3b90625b1af31dc 0"
+remote: [tester::#XV6] [handshake] [master] Sent RDB file.
+remote: [tester::#XV6] [test] [master] > REPLCONF GETACK *
+remote: [tester::#XV6] [test] [master] ✔︎ Received ["REPLCONF", "ACK", "0"]
+remote: [tester::#XV6] Test passed.
+remote:
+remote: [tester::#YG4] Running tests for Stage #YG4 (Replication - Command processing)
+remote: [tester::#YG4] Master is running on port 6379
+remote: [tester::#YG4] $ ./your_program.sh --port 6380 --replicaof "localhost 6379"
+remote: [your_program] 2026/05/23 13:22:34 Redis server listening on :6380 (role := slave)
+remote: [tester::#YG4] [handshake] [master] Waiting for replica to initiate handshake with "PING" command
+remote: [tester::#YG4] [handshake] [master] ✔︎ Received ["PING"]
+remote: [tester::#YG4] [handshake] [master] Sent "PONG"
+remote: [tester::#YG4] [handshake] [master] Waiting for replica to send "REPLCONF listening-port 6380" command
+remote: [tester::#YG4] [handshake] [master] ✔︎ Received [
+remote: [tester::#YG4] [handshake] [master]   "REPLCONF",
+remote: [tester::#YG4] [handshake] [master]   "listening-port",
+remote: [tester::#YG4] [handshake] [master]   "6380"
+remote: [tester::#YG4] [handshake] [master] ]
+remote: [tester::#YG4] [handshake] [master] Sent "OK"
+remote: [tester::#YG4] [handshake] [master] Waiting for replica to send "REPLCONF capa" command
+remote: [tester::#YG4] [handshake] [master] ✔︎ Received ["REPLCONF", "capa", "psync2"]
+remote: [tester::#YG4] [handshake] [master] Sent "OK"
+remote: [tester::#YG4] [handshake] [master] Waiting for replica to send "PSYNC" command
+remote: [tester::#YG4] [handshake] [master] ✔︎ Received ["PSYNC", "?", "-1"]
+remote: [tester::#YG4] [handshake] [master] Sent "FULLRESYNC 75cd7bc10c49047e0d163660f3b90625b1af31dc 0"
+remote: [tester::#YG4] [handshake] [master] Sent RDB file.
+remote: [tester::#YG4] [propagation] [master] > SET foo 123
+remote: [tester::#YG4] [propagation] [master] > SET bar 456
+remote: [tester::#YG4] [propagation] [master] > SET baz 789
+remote: [tester::#YG4] [test] Getting key foo
+remote: [tester::#YG4] [test] [client] $ redis-cli -p 6380 GET foo
+remote: [tester::#YG4] [test] [client] ✔︎ Received "123"
+remote: [tester::#YG4] [test] Getting key bar
+remote: [tester::#YG4] [test] [client] > GET bar
+remote: [tester::#YG4] [test] [client] ✔︎ Received "456"
+remote: [tester::#YG4] [test] Getting key baz
+remote: [tester::#YG4] [test] [client] > GET baz
+remote: [tester::#YG4] [test] [client] ✔︎ Received "789"
+remote: [tester::#YG4] Test passed.
+remote:
+remote: [tester::#HD5] Running tests for Stage #HD5 (Replication - Multi-replica propagation)
+remote: [tester::#HD5] $ ./your_program.sh --port 6379
+remote: [your_program] 2026/05/23 13:22:34 Redis server listening on :6379 (role := master)
+remote: [tester::#HD5] [setup] Creating 3 replicas:
+remote: [tester::#HD5] [setup] 1. replica@6380 (Listening port = 6380)
+remote: [tester::#HD5] [setup] 2. replica@6381 (Listening port = 6381)
+remote: [tester::#HD5] [setup] 3. replica@6382 (Listening port = 6382)
+remote: [tester::#HD5] [handshake] [replica@6380] $ redis-cli PING
+remote: [tester::#HD5] [handshake] [replica@6380] ✔︎ Received "PONG"
+remote: [tester::#HD5] [handshake] [replica@6380] > REPLCONF listening-port 6380
+remote: [tester::#HD5] [handshake] [replica@6380] ✔︎ Received "OK"
+remote: [tester::#HD5] [handshake] [replica@6380] > REPLCONF capa psync2
+remote: [tester::#HD5] [handshake] [replica@6380] ✔︎ Received "OK"
+remote: [tester::#HD5] [handshake] [replica@6380] > PSYNC ? -1
+remote: [tester::#HD5] [handshake] [replica@6380] ✔︎ Received "FULLRESYNC 8371b4fb1155b71f4a04d3e1bc3e18c4a990aeeb 0"
+remote: [tester::#HD5] [handshake] [replica@6380] Received RDB file
+remote: [tester::#HD5] [handshake] [replica@6381] $ redis-cli PING
+remote: [tester::#HD5] [handshake] [replica@6381] ✔︎ Received "PONG"
+remote: [tester::#HD5] [handshake] [replica@6381] > REPLCONF listening-port 6381
+remote: [tester::#HD5] [handshake] [replica@6381] ✔︎ Received "OK"
+remote: [tester::#HD5] [handshake] [replica@6381] > REPLCONF capa psync2
+remote: [tester::#HD5] [handshake] [replica@6381] ✔︎ Received "OK"
+remote: [tester::#HD5] [handshake] [replica@6381] > PSYNC ? -1
+remote: [tester::#HD5] [handshake] [replica@6381] ✔︎ Received "FULLRESYNC 8371b4fb1155b71f4a04d3e1bc3e18c4a990aeeb 0"
+remote: [tester::#HD5] [handshake] [replica@6381] Received RDB file
+remote: [tester::#HD5] [handshake] [replica@6382] $ redis-cli PING
+remote: [tester::#HD5] [handshake] [replica@6382] ✔︎ Received "PONG"
+remote: [tester::#HD5] [handshake] [replica@6382] > REPLCONF listening-port 6382
+remote: [tester::#HD5] [handshake] [replica@6382] ✔︎ Received "OK"
+remote: [tester::#HD5] [handshake] [replica@6382] > REPLCONF capa psync2
+remote: [tester::#HD5] [handshake] [replica@6382] ✔︎ Received "OK"
+remote: [tester::#HD5] [handshake] [replica@6382] > PSYNC ? -1
+remote: [tester::#HD5] [handshake] [replica@6382] ✔︎ Received "FULLRESYNC 8371b4fb1155b71f4a04d3e1bc3e18c4a990aeeb 0"
+remote: [tester::#HD5] [handshake] [replica@6382] Received RDB file
+remote: [tester::#HD5] [test] [client] $ redis-cli SET foo 123
+remote: [tester::#HD5] [test] [client] ✔︎ Received "OK"
+remote: [tester::#HD5] [test] [client] > SET bar 456
+remote: [tester::#HD5] [test] [client] ✔︎ Received "OK"
+remote: [tester::#HD5] [test] [client] > SET baz 789
+remote: [tester::#HD5] [test] [client] ✔︎ Received "OK"
+remote: [tester::#HD5] [test] Testing Replica 1/3: replica@6380
+remote: [tester::#HD5] [test] [replica@6380] Expecting "SET foo 123" to be propagated
+remote: [tester::#HD5] [test] [replica@6380] ✔︎ Received ["SET", "foo", "123"]
+remote: [tester::#HD5] [test] [replica@6380] Expecting "SET bar 456" to be propagated
+remote: [tester::#HD5] [test] [replica@6380] ✔︎ Received ["SET", "bar", "456"]
+remote: [tester::#HD5] [test] [replica@6380] Expecting "SET baz 789" to be propagated
+remote: [tester::#HD5] [test] [replica@6380] ✔︎ Received ["SET", "baz", "789"]
+remote: [tester::#HD5] [test] Testing Replica 2/3: replica@6381
+remote: [tester::#HD5] [test] [replica@6381] Expecting "SET foo 123" to be propagated
+remote: [tester::#HD5] [test] [replica@6381] ✔︎ Received ["SET", "foo", "123"]
+remote: [tester::#HD5] [test] [replica@6381] Expecting "SET bar 456" to be propagated
+remote: [tester::#HD5] [test] [replica@6381] ✔︎ Received ["SET", "bar", "456"]
+remote: [tester::#HD5] [test] [replica@6381] Expecting "SET baz 789" to be propagated
+remote: [tester::#HD5] [test] [replica@6381] ✔︎ Received ["SET", "baz", "789"]
+remote: [tester::#HD5] [test] Testing Replica 3/3: replica@6382
+remote: [tester::#HD5] [test] [replica@6382] Expecting "SET foo 123" to be propagated
+remote: [tester::#HD5] [test] [replica@6382] ✔︎ Received ["SET", "foo", "123"]
+remote: [tester::#HD5] [test] [replica@6382] Expecting "SET bar 456" to be propagated
+remote: [tester::#HD5] [test] [replica@6382] ✔︎ Received ["SET", "bar", "456"]
+remote: [tester::#HD5] [test] [replica@6382] Expecting "SET baz 789" to be propagated
+remote: [tester::#HD5] [test] [replica@6382] ✔︎ Received ["SET", "baz", "789"]
+remote: [tester::#HD5] Test passed.
+remote:
+remote: [tester::#ZN8] Running tests for Stage #ZN8 (Replication - Single-replica propagation)
+remote: [tester::#ZN8] $ ./your_program.sh --port 6379
+remote: [your_program] 2026/05/23 13:22:34 Redis server listening on :6379 (role := master)
+remote: [tester::#ZN8] [handshake] [replica] $ redis-cli PING
+remote: [tester::#ZN8] [handshake] [replica] ✔︎ Received "PONG"
+remote: [tester::#ZN8] [handshake] [replica] > REPLCONF listening-port 6380
+remote: [tester::#ZN8] [handshake] [replica] ✔︎ Received "OK"
+remote: [tester::#ZN8] [handshake] [replica] > REPLCONF capa psync2
+remote: [tester::#ZN8] [handshake] [replica] ✔︎ Received "OK"
+remote: [tester::#ZN8] [handshake] [replica] > PSYNC ? -1
+remote: [tester::#ZN8] [handshake] [replica] ✔︎ Received "FULLRESYNC 8371b4fb1155b71f4a04d3e1bc3e18c4a990aeeb 0"
+remote: [tester::#ZN8] [handshake] [replica] Received RDB file
+remote: [tester::#ZN8] [test] [client] $ redis-cli SET foo 123
+remote: [tester::#ZN8] [test] [client] ✔︎ Received "OK"
+remote: [tester::#ZN8] [test] [client] > SET bar 456
+remote: [tester::#ZN8] [test] [client] ✔︎ Received "OK"
+remote: [tester::#ZN8] [test] [client] > SET baz 789
+remote: [tester::#ZN8] [test] [client] ✔︎ Received "OK"
+remote: [tester::#ZN8] [test] Sent 3 SET commands to master successfully.
+remote: [tester::#ZN8] [test] [replica] Expecting "SET foo 123" to be propagated
+remote: [tester::#ZN8] [test] [replica] ✔︎ Received ["SET", "foo", "123"]
+remote: [tester::#ZN8] [test] [replica] Expecting "SET bar 456" to be propagated
+remote: [tester::#ZN8] [test] [replica] ✔︎ Received ["SET", "bar", "456"]
+remote: [tester::#ZN8] [test] [replica] Expecting "SET baz 789" to be propagated
+remote: [tester::#ZN8] [test] [replica] ✔︎ Received ["SET", "baz", "789"]
+remote: [tester::#ZN8] Test passed.
+remote:
+remote: [tester::#CF8] Running tests for Stage #CF8 (Replication - Empty RDB transfer)
+remote: [tester::#CF8] $ ./your_program.sh --port 6379
+remote: [your_program] 2026/05/23 13:22:34 Redis server listening on :6379 (role := master)
+remote: [tester::#CF8] [client] $ redis-cli PING
+remote: [tester::#CF8] [client] ✔︎ Received "PONG"
+remote: [tester::#CF8] [client] > REPLCONF listening-port 6380
+remote: [tester::#CF8] [client] ✔︎ Received "OK"
+remote: [tester::#CF8] [client] > REPLCONF capa psync2
+remote: [tester::#CF8] [client] ✔︎ Received "OK"
+remote: [tester::#CF8] [client] > PSYNC ? -1
+remote: [tester::#CF8] [client] ✔︎ Received "FULLRESYNC 8371b4fb1155b71f4a04d3e1bc3e18c4a990aeeb 0"
+remote: [tester::#CF8] [client] Received RDB file
+remote: [tester::#CF8] Test passed.
+remote:
+remote: [tester::#VM3] Running tests for Stage #VM3 (Replication - Receive handshake (2/2))
+remote: [tester::#VM3] $ ./your_program.sh --port 6379
+remote: [your_program] 2026/05/23 13:22:34 Redis server listening on :6379 (role := master)
+remote: [tester::#VM3] [client] $ redis-cli PING
+remote: [tester::#VM3] [client] ✔︎ Received "PONG"
+remote: [tester::#VM3] [client] > REPLCONF listening-port 6380
+remote: [tester::#VM3] [client] ✔︎ Received "OK"
+remote: [tester::#VM3] [client] > REPLCONF capa psync2
+remote: [tester::#VM3] [client] ✔︎ Received "OK"
+remote: [tester::#VM3] [client] > PSYNC ? -1
+remote: [tester::#VM3] [client] ✔︎ Received "FULLRESYNC 8371b4fb1155b71f4a04d3e1bc3e18c4a990aeeb 0"
+remote: [tester::#VM3] Test passed.
+remote:
+remote: [tester::#FJ0] Running tests for Stage #FJ0 (Replication - Receive handshake (1/2))
+remote: [tester::#FJ0] $ ./your_program.sh --port 6379
+remote: [your_program] 2026/05/23 13:22:34 Redis server listening on :6379 (role := master)
+remote: [tester::#FJ0] [client] $ redis-cli PING
+remote: [tester::#FJ0] [client] ✔︎ Received "PONG"
+remote: [tester::#FJ0] [client] > REPLCONF listening-port 6380
+remote: [tester::#FJ0] [client] ✔︎ Received "OK"
+remote: [tester::#FJ0] [client] > REPLCONF capa psync2
+remote: [tester::#FJ0] [client] ✔︎ Received "OK"
+remote: [tester::#FJ0] Test passed.
+remote:
+remote: [tester::#JU6] Running tests for Stage #JU6 (Replication - Send handshake (3/3))
+remote: [tester::#JU6] Master is running on port 6379
+remote: [tester::#JU6] $ ./your_program.sh --port 6380 --replicaof "localhost 6379"
+remote: [tester::#JU6] [master] Waiting for replica to initiate handshake with "PING" command
+remote: [your_program] 2026/05/23 13:22:34 Redis server listening on :6380 (role := slave)
+remote: [tester::#JU6] [master] ✔︎ Received ["PING"]
+remote: [tester::#JU6] [master] Sent "PONG"
+remote: [tester::#JU6] [master] Waiting for replica to send "REPLCONF listening-port 6380" command
+remote: [tester::#JU6] [master] ✔︎ Received [
+remote: [tester::#JU6] [master]   "REPLCONF",
+remote: [tester::#JU6] [master]   "listening-port",
+remote: [tester::#JU6] [master]   "6380"
+remote: [tester::#JU6] [master] ]
+remote: [tester::#JU6] [master] Sent "OK"
+remote: [tester::#JU6] [master] Waiting for replica to send "REPLCONF capa" command
+remote: [tester::#JU6] [master] ✔︎ Received ["REPLCONF", "capa", "psync2"]
+remote: [tester::#JU6] [master] Sent "OK"
+remote: [tester::#JU6] [master] Waiting for replica to send "PSYNC" command
+remote: [tester::#JU6] [master] ✔︎ Received ["PSYNC", "?", "-1"]
+remote: [tester::#JU6] [master] Sent "FULLRESYNC 75cd7bc10c49047e0d163660f3b90625b1af31dc 0"
+remote: [tester::#JU6] Test passed.
+remote: [your_program] 2026/05/23 13:22:34 replication: PSYNC failed: read RDB header: EOF
+remote:
+remote: [tester::#EH4] Running tests for Stage #EH4 (Replication - Send handshake (2/3))
+remote: [tester::#EH4] Master is running on port 6379
+remote: [tester::#EH4] $ ./your_program.sh --port 6380 --replicaof "localhost 6379"
+remote: [your_program] 2026/05/23 13:22:34 Redis server listening on :6380 (role := slave)
+remote: [tester::#EH4] [master] Waiting for replica to initiate handshake with "PING" command
+remote: [tester::#EH4] [master] ✔︎ Received ["PING"]
+remote: [tester::#EH4] [master] Sent "PONG"
+remote: [tester::#EH4] [master] Waiting for replica to send "REPLCONF listening-port 6380" command
+remote: [tester::#EH4] [master] ✔︎ Received [
+remote: [tester::#EH4] [master]   "REPLCONF",
+remote: [tester::#EH4] [master]   "listening-port",
+remote: [tester::#EH4] [master]   "6380"
+remote: [tester::#EH4] [master] ]
+remote: [tester::#EH4] [master] Sent "OK"
+remote: [tester::#EH4] [master] Waiting for replica to send "REPLCONF capa" command
+remote: [tester::#EH4] [master] ✔︎ Received ["REPLCONF", "capa", "psync2"]
+remote: [tester::#EH4] [master] Sent "OK"
+remote: [your_program] 2026/05/23 13:22:34 replication: PSYNC failed: read FULLRESYNC: read tcp 127.0.0.1:50130->127.0.0.1:6379: read: connection reset by peer
+remote: [tester::#EH4] Test passed.
+remote:
+remote: [tester::#GL7] Running tests for Stage #GL7 (Replication - Send handshake (1/3))
+remote: [tester::#GL7] Master is running on port 6379.
+remote: [tester::#GL7] $ ./your_program.sh --port 6380 --replicaof "localhost 6379"
+remote: [your_program] 2026/05/23 13:22:34 Redis server listening on :6380 (role := slave)
+remote: [tester::#GL7] [master] Waiting for replica to initiate handshake with "PING" command
+remote: [tester::#GL7] [master] ✔︎ Received ["PING"]
+remote: [tester::#GL7] [master] Sent "PONG"
+remote: [tester::#GL7] Test passed.
+remote: [your_program] 2026/05/23 13:22:34 replication: REPLCONF failed: read reply: EOF
+remote:
+remote: [tester::#XC1] Running tests for Stage #XC1 (Replication - Initial replication ID and offset)
+remote: [tester::#XC1] $ ./your_program.sh
+remote: [your_program] 2026/05/23 13:22:34 Redis server listening on :6379 (role := master)
+remote: [tester::#XC1] [client] $ redis-cli INFO replication
+remote: [tester::#XC1] [client] ✔︎ Received "# Replication\r\nrole:master\r\nmaster_replid:8371b4fb1155b71f4a04d3e1bc3e18c4a990aeeb\r\nmaster_repl_offset:0\r\n"
+remote: [tester::#XC1] Found master_replid:xxx in response.
+remote: [tester::#XC1] Found master_reploffset:0 in response.
+remote: [tester::#XC1] Test passed.
+remote:
+remote: [tester::#HC6] Running tests for Stage #HC6 (Replication - The INFO command on a replica)
+remote: [tester::#HC6] Master is running on port 6379
+remote: [tester::#HC6] $ ./your_program.sh --port 6380 --replicaof "localhost 6379"
+remote: [your_program] 2026/05/23 13:22:35 Redis server listening on :6380 (role := slave)
+remote: [tester::#HC6] [client] $ redis-cli -p 6380 INFO replication
+remote: [tester::#HC6] [client] ✔︎ Received "# Replication\r\nrole:slave\r\nmaster_replid:8371b4fb1155b71f4a04d3e1bc3e18c4a990aeeb\r\nmaster_repl_offset:0\r\n"
+remote: [tester::#HC6] Found role:slave in response.
+remote: [tester::#HC6] Test passed.
+remote:
+remote: [tester::#YE5] Running tests for Stage #YE5 (Replication - The INFO command)
+remote: [tester::#YE5] $ ./your_program.sh
+remote: [your_program] 2026/05/23 13:22:35 Redis server listening on :6379 (role := master)
+remote: [tester::#YE5] [client] $ redis-cli INFO replication
+remote: [tester::#YE5] [client] ✔︎ Received "# Replication\r\nrole:master\r\nmaster_replid:8371b4fb1155b71f4a04d3e1bc3e18c4a990aeeb\r\nmaster_repl_offset:0\r\n"
+remote: [tester::#YE5] Found role:master in response.
+remote: [tester::#YE5] Test passed.
+remote:
+remote: [tester::#BW1] Running tests for Stage #BW1 (Replication - Configure listening port)
+remote: [tester::#BW1] $ ./your_program.sh --port 6387
+remote: [tester::#BW1] Connecting to port 6387...
+remote: [your_program] 2026/05/23 13:22:35 Redis server listening on :6387 (role := master)
+remote: [tester::#BW1] Test passed.
+remote:
+remote: [tester::#HQ1] Running tests for Stage #HQ1 (Optimistic Locking - Unwatch on DISCARD)
+remote: [tester::#HQ1] $ ./your_program.sh
+remote: [your_program] 2026/05/23 13:22:36 Redis server listening on :6379 (role := master)
+remote: [tester::#HQ1] [client-1] $ redis-cli SET mango 17
+remote: [tester::#HQ1] [client-1] ✔︎ Received "OK"
+remote: [tester::#HQ1] [client-1] > SET banana 43
+remote: [tester::#HQ1] [client-1] ✔︎ Received "OK"
+remote: [tester::#HQ1] [client-1] > WATCH mango banana
+remote: [tester::#HQ1] [client-1] ✔︎ Received "OK"
+remote: [tester::#HQ1] [client-1] > MULTI
+remote: [tester::#HQ1] [client-1] ✔︎ Received "OK"
+remote: [tester::#HQ1] [client-1] > SET banana 76
+remote: [tester::#HQ1] [client-1] ✔︎ Received "QUEUED"
+remote: [tester::#HQ1] Modifying the value of mango (watched key)
+remote: [tester::#HQ1] [client-2] $ redis-cli SET mango 151
+remote: [tester::#HQ1] [client-2] ✔︎ Received "OK"
+remote: [tester::#HQ1] Clearing all watched keys using DISCARD
+remote: [tester::#HQ1] [client-1] > DISCARD
+remote: [tester::#HQ1] [client-1] ✔︎ Received "OK"
+remote: [tester::#HQ1] [client-1] > MULTI
+remote: [tester::#HQ1] [client-1] ✔︎ Received "OK"
+remote: [tester::#HQ1] [client-1] > SET banana 59
+remote: [tester::#HQ1] [client-1] ✔︎ Received "QUEUED"
+remote: [tester::#HQ1] [client-1] > EXEC
+remote: [tester::#HQ1] [client-1] ✔︎ Received ["OK"]
+remote: [tester::#HQ1] Checking if the transaction succeeded
+remote: [tester::#HQ1] [client-1] > GET banana
+remote: [tester::#HQ1] [client-1] ✔︎ Received "59"
+remote: [tester::#HQ1] Test passed.
+remote:
+remote: [tester::#FN4] Running tests for Stage #FN4 (Optimistic Locking - Unwatch on EXEC)
+remote: [tester::#FN4] $ ./your_program.sh
+remote: [your_program] 2026/05/23 13:22:36 Redis server listening on :6379 (role := master)
+remote: [tester::#FN4] [client-1] $ redis-cli SET strawberry 17
+remote: [tester::#FN4] [client-1] ✔︎ Received "OK"
+remote: [tester::#FN4] [client-1] > SET grape 42
+remote: [tester::#FN4] [client-1] ✔︎ Received "OK"
+remote: [tester::#FN4] [client-1] > WATCH strawberry
+remote: [tester::#FN4] [client-1] ✔︎ Received "OK"
+remote: [tester::#FN4] [client-1] > MULTI
+remote: [tester::#FN4] [client-1] ✔︎ Received "OK"
+remote: [tester::#FN4] [client-1] > SET grape 83
+remote: [tester::#FN4] [client-1] ✔︎ Received "QUEUED"
+remote: [tester::#FN4] Modifying the value of strawberry (watched key)
+remote: [tester::#FN4] [client-2] $ redis-cli SET strawberry 147
+remote: [tester::#FN4] [client-2] ✔︎ Received "OK"
+remote: [tester::#FN4] [client-1] > EXEC
+remote: [tester::#FN4] [client-1] ✔︎ Received "*-1\r\n"
+remote: [tester::#FN4] Checking if the transaction failed
+remote: [tester::#FN4] [client-1] > GET grape
+remote: [tester::#FN4] [client-1] ✔︎ Received "42"
+remote: [tester::#FN4] [client-1] > MULTI
+remote: [tester::#FN4] [client-1] ✔︎ Received "OK"
+remote: [tester::#FN4] [client-1] > SET grape 93
+remote: [tester::#FN4] [client-1] ✔︎ Received "QUEUED"
+remote: [tester::#FN4] [client-1] > EXEC
+remote: [tester::#FN4] [client-1] ✔︎ Received ["OK"]
+remote: [tester::#FN4] Checking if the transaction succeeded
+remote: [tester::#FN4] [client-1] > GET grape
+remote: [tester::#FN4] [client-1] ✔︎ Received "93"
+remote: [tester::#FN4] Test passed.
+remote:
+remote: [tester::#BN1] Running tests for Stage #BN1 (Optimistic Locking - The UNWATCH command)
+remote: [tester::#BN1] $ ./your_program.sh
+remote: [your_program] 2026/05/23 13:22:36 Redis server listening on :6379 (role := master)
+remote: [tester::#BN1] [client-1] $ redis-cli SET mango 15
+remote: [tester::#BN1] [client-1] ✔︎ Received "OK"
+remote: [tester::#BN1] [client-1] > SET apple 9
+remote: [tester::#BN1] [client-1] ✔︎ Received "OK"
+remote: [tester::#BN1] [client-1] > WATCH mango apple
+remote: [tester::#BN1] [client-1] ✔︎ Received "OK"
+remote: [tester::#BN1] Modifying the value of mango (watched key)
+remote: [tester::#BN1] [client-2] $ redis-cli SET mango 146
+remote: [tester::#BN1] [client-2] ✔︎ Received "OK"
+remote: [tester::#BN1] Clearing all watched keys using UNWATCH
+remote: [tester::#BN1] [client-1] > UNWATCH
+remote: [tester::#BN1] [client-1] ✔︎ Received "OK"
+remote: [tester::#BN1] [client-1] > MULTI
+remote: [tester::#BN1] [client-1] ✔︎ Received "OK"
+remote: [tester::#BN1] [client-1] > SET mango 89
+remote: [tester::#BN1] [client-1] ✔︎ Received "QUEUED"
+remote: [tester::#BN1] [client-1] > EXEC
+remote: [tester::#BN1] [client-1] ✔︎ Received ["OK"]
+remote: [tester::#BN1] Checking if the transaction succeeded
+remote: [tester::#BN1] [client-1] > GET mango
+remote: [tester::#BN1] [client-1] ✔︎ Received "89"
+remote: [tester::#BN1] Test passed.
+remote:
+remote: [tester::#UO9] Running tests for Stage #UO9 (Optimistic Locking - Watching missing keys)
+remote: [tester::#UO9] $ ./your_program.sh
+remote: [your_program] 2026/05/23 13:22:36 Redis server listening on :6379 (role := master)
+remote: [tester::#UO9] [client-1] $ redis-cli WATCH blueberry
+remote: [tester::#UO9] [client-1] ✔︎ Received "OK"
+remote: [tester::#UO9] [client-1] > MULTI
+remote: [tester::#UO9] [client-1] ✔︎ Received "OK"
+remote: [tester::#UO9] [client-1] > SET blueberry 95
+remote: [tester::#UO9] [client-1] ✔︎ Received "QUEUED"
+remote: [tester::#UO9] Modifying the value of blueberry (watched key)
+remote: [tester::#UO9] [client-2] $ redis-cli SET blueberry 176
+remote: [tester::#UO9] [client-2] ✔︎ Received "OK"
+remote: [tester::#UO9] [client-1] > EXEC
+remote: [tester::#UO9] [client-1] ✔︎ Received "*-1\r\n"
+remote: [tester::#UO9] Checking if the transaction failed
+remote: [tester::#UO9] [client-1] > GET blueberry
+remote: [tester::#UO9] [client-1] ✔︎ Received "176"
+remote: [tester::#UO9] Test passed.
+remote:
+remote: [tester::#FP0] Running tests for Stage #FP0 (Optimistic Locking - Watching multiple keys)
+remote: [tester::#FP0] $ ./your_program.sh
+remote: [your_program] 2026/05/23 13:22:36 Redis server listening on :6379 (role := master)
+remote: [tester::#FP0] [client-1] $ redis-cli SET apple 30
+remote: [tester::#FP0] [client-1] ✔︎ Received "OK"
+remote: [tester::#FP0] [client-1] > SET strawberry 21
+remote: [tester::#FP0] [client-1] ✔︎ Received "OK"
+remote: [tester::#FP0] [client-1] > WATCH apple strawberry
+remote: [tester::#FP0] [client-1] ✔︎ Received "OK"
+remote: [tester::#FP0] [client-1] > MULTI
+remote: [tester::#FP0] [client-1] ✔︎ Received "OK"
+remote: [tester::#FP0] [client-1] > SET strawberry 65
+remote: [tester::#FP0] [client-1] ✔︎ Received "QUEUED"
+remote: [tester::#FP0] Modifying the value of strawberry (watched key)
+remote: [tester::#FP0] [client-2] $ redis-cli SET strawberry 191
+remote: [tester::#FP0] [client-2] ✔︎ Received "OK"
+remote: [tester::#FP0] [client-1] > EXEC
+remote: [tester::#FP0] [client-1] ✔︎ Received "*-1\r\n"
+remote: [tester::#FP0] Checking if the transaction failed
+remote: [tester::#FP0] [client-1] > GET strawberry
+remote: [tester::#FP0] [client-1] ✔︎ Received "191"
+remote: [tester::#FP0] Test passed.
+remote:
+remote: [tester::#MH8] Running tests for Stage #MH8 (Optimistic Locking - Tracking key modifications)
+remote: [tester::#MH8] $ ./your_program.sh
+remote: [your_program] 2026/05/23 13:22:36 Redis server listening on :6379 (role := master)
+remote: [tester::#MH8] Testing optimistic locking when watched key is modified
+remote: [tester::#MH8] [client-1] $ redis-cli SET blueberry 25
+remote: [tester::#MH8] [client-1] ✔︎ Received "OK"
+remote: [tester::#MH8] [client-1] > SET pear 5
+remote: [tester::#MH8] [client-1] ✔︎ Received "OK"
+remote: [tester::#MH8] [client-1] > WATCH blueberry
+remote: [tester::#MH8] [client-1] ✔︎ Received "OK"
+remote: [tester::#MH8] [client-1] > MULTI
+remote: [tester::#MH8] [client-1] ✔︎ Received "OK"
+remote: [tester::#MH8] [client-1] > SET pear 91
+remote: [tester::#MH8] [client-1] ✔︎ Received "QUEUED"
+remote: [tester::#MH8] Modifying the value of blueberry (watched key)
+remote: [tester::#MH8] [client-2] $ redis-cli SET blueberry 154
+remote: [tester::#MH8] [client-2] ✔︎ Received "OK"
+remote: [tester::#MH8] [client-1] > EXEC
+remote: [tester::#MH8] [client-1] ✔︎ Received "*-1\r\n"
+remote: [tester::#MH8] Checking if the transaction failed
+remote: [tester::#MH8] [client-1] > GET pear
+remote: [tester::#MH8] [client-1] ✔︎ Received "5"
+remote: [tester::#MH8] Testing optimistic locking when watched key is not modified
+remote: [tester::#MH8] [client-3] $ redis-cli SET mango 7
+remote: [tester::#MH8] [client-3] ✔︎ Received "OK"
+remote: [tester::#MH8] [client-3] > SET apple 17
+remote: [tester::#MH8] [client-3] ✔︎ Received "OK"
+remote: [tester::#MH8] [client-3] > WATCH mango
+remote: [tester::#MH8] [client-3] ✔︎ Received "OK"
+remote: [tester::#MH8] [client-3] > MULTI
+remote: [tester::#MH8] [client-3] ✔︎ Received "OK"
+remote: [tester::#MH8] [client-3] > SET apple 97
+remote: [tester::#MH8] [client-3] ✔︎ Received "QUEUED"
+remote: [tester::#MH8] Modifying the value of apple (unwatched key)
+remote: [tester::#MH8] [client-4] $ redis-cli SET apple 120
+remote: [tester::#MH8] [client-4] ✔︎ Received "OK"
+remote: [tester::#MH8] [client-3] > EXEC
+remote: [tester::#MH8] [client-3] ✔︎ Received ["OK"]
+remote: [tester::#MH8] Checking if the transaction succeeded
+remote: [tester::#MH8] [client-3] > GET apple
+remote: [tester::#MH8] [client-3] ✔︎ Received "97"
+remote: [tester::#MH8] Test passed.
+remote:
+remote: [tester::#JQ9] Running tests for Stage #JQ9 (Optimistic Locking - WATCH inside transaction)
+remote: [tester::#JQ9] $ ./your_program.sh
+remote: [your_program] 2026/05/23 13:22:36 Redis server listening on :6379 (role := master)
+remote: [tester::#JQ9] [client] $ redis-cli MULTI
+remote: [tester::#JQ9] [client] ✔︎ Received "OK"
+remote: [tester::#JQ9] [client] > WATCH apple
+remote: [tester::#JQ9] [client] ✔︎ Received "ERR WATCH inside MULTI is not allowed"
+remote: [tester::#JQ9] Test passed.
+remote:
+remote: [tester::#JB7] Running tests for Stage #JB7 (Optimistic Locking - The WATCH command)
+remote: [tester::#JB7] $ ./your_program.sh
+remote: [your_program] 2026/05/23 13:22:37 Redis server listening on :6379 (role := master)
+remote: [tester::#JB7] [client] $ redis-cli WATCH strawberry
+remote: [tester::#JB7] [client] ✔︎ Received "OK"
+remote: [tester::#JB7] Test passed.
+remote:
+remote: [tester::#JF8] Running tests for Stage #JF8 (Transactions - Multiple transactions)
+remote: [tester::#JF8] $ ./your_program.sh
+remote: [your_program] 2026/05/23 13:22:37 Redis server listening on :6379 (role := master)
+remote: [tester::#JF8] [client-1] $ redis-cli SET mango 21
+remote: [tester::#JF8] [client-1] ✔︎ Received "OK"
+remote: [tester::#JF8] [client-1] > INCR banana
+remote: [tester::#JF8] [client-1] ✔︎ Received 1
+remote: [tester::#JF8] [client-2] $ redis-cli SET mango 21
+remote: [tester::#JF8] [client-2] ✔︎ Received "OK"
+remote: [tester::#JF8] [client-2] > INCR banana
+remote: [tester::#JF8] [client-2] ✔︎ Received 2
+remote: [tester::#JF8] [client-3] $ redis-cli SET mango 21
+remote: [tester::#JF8] [client-3] ✔︎ Received "OK"
+remote: [tester::#JF8] [client-3] > INCR banana
+remote: [tester::#JF8] [client-3] ✔︎ Received 3
+remote: [tester::#JF8] [client-1] > MULTI
+remote: [tester::#JF8] [client-1] ✔︎ Received "OK"
+remote: [tester::#JF8] [client-1] > INCR banana
+remote: [tester::#JF8] [client-1] ✔︎ Received "QUEUED"
+remote: [tester::#JF8] [client-1] > INCR mango
+remote: [tester::#JF8] [client-1] ✔︎ Received "QUEUED"
+remote: [tester::#JF8] [client-2] > MULTI
+remote: [tester::#JF8] [client-2] ✔︎ Received "OK"
+remote: [tester::#JF8] [client-2] > INCR banana
+remote: [tester::#JF8] [client-2] ✔︎ Received "QUEUED"
+remote: [tester::#JF8] [client-2] > INCR mango
+remote: [tester::#JF8] [client-2] ✔︎ Received "QUEUED"
+remote: [tester::#JF8] [client-3] > MULTI
+remote: [tester::#JF8] [client-3] ✔︎ Received "OK"
+remote: [tester::#JF8] [client-3] > INCR banana
+remote: [tester::#JF8] [client-3] ✔︎ Received "QUEUED"
+remote: [tester::#JF8] [client-3] > INCR mango
+remote: [tester::#JF8] [client-3] ✔︎ Received "QUEUED"
+remote: [tester::#JF8] [client-1] > EXEC
+remote: [tester::#JF8] [client-1] ✔︎ Received [4, 22]
+remote: [tester::#JF8] [client-2] > EXEC
+remote: [tester::#JF8] [client-2] ✔︎ Received [5, 23]
+remote: [tester::#JF8] [client-3] > EXEC
+remote: [tester::#JF8] [client-3] ✔︎ Received [6, 24]
+remote: [tester::#JF8] Test passed.
+remote:
+remote: [tester::#SG9] Running tests for Stage #SG9 (Transactions - Failures within transactions)
+remote: [tester::#SG9] $ ./your_program.sh
+remote: [your_program] 2026/05/23 13:22:37 Redis server listening on :6379 (role := master)
+remote: [tester::#SG9] [client-1] $ redis-cli SET apple mango
+remote: [tester::#SG9] [client-1] ✔︎ Received "OK"
+remote: [tester::#SG9] [client-1] > SET raspberry 52
+remote: [tester::#SG9] [client-1] ✔︎ Received "OK"
+remote: [tester::#SG9] [client-1] > MULTI
+remote: [tester::#SG9] [client-1] ✔︎ Received "OK"
+remote: [tester::#SG9] [client-1] > INCR apple
+remote: [tester::#SG9] [client-1] ✔︎ Received "QUEUED"
+remote: [tester::#SG9] [client-1] > INCR raspberry
+remote: [tester::#SG9] [client-1] ✔︎ Received "QUEUED"
+remote: [tester::#SG9] [client-1] > EXEC
+remote: [tester::#SG9] [client-1] ✔︎ Received [
+remote: [tester::#SG9] [client-1]   "ERR value is not an integer or out of range",
+remote: [tester::#SG9] [client-1]   53
+remote: [tester::#SG9] [client-1] ]
+remote: [tester::#SG9] [client-2] $ redis-cli GET raspberry
+remote: [tester::#SG9] [client-2] ✔︎ Received "53"
+remote: [tester::#SG9] [client-2] > GET apple
+remote: [tester::#SG9] [client-2] ✔︎ Received "mango"
+remote: [tester::#SG9] Test passed.
+remote:
+remote: [tester::#RL9] Running tests for Stage #RL9 (Transactions - The DISCARD command)
+remote: [tester::#RL9] $ ./your_program.sh
+remote: [your_program] 2026/05/23 13:22:37 Redis server listening on :6379 (role := master)
+remote: [tester::#RL9] [client] $ redis-cli SET pear 46
+remote: [tester::#RL9] [client] ✔︎ Received "OK"
+remote: [tester::#RL9] [client] > MULTI
+remote: [tester::#RL9] [client] ✔︎ Received "OK"
+remote: [tester::#RL9] [client] > SET blueberry 95
+remote: [tester::#RL9] [client] ✔︎ Received "QUEUED"
+remote: [tester::#RL9] [client] > INCR blueberry
+remote: [tester::#RL9] [client] ✔︎ Received "QUEUED"
+remote: [tester::#RL9] [client] > DISCARD
+remote: [tester::#RL9] [client] ✔︎ Received "OK"
+remote: [tester::#RL9] [client] > GET blueberry
+remote: [tester::#RL9] [client] ✔︎ Received "$-1\r\n"
+remote: [tester::#RL9] [client] > GET pear
+remote: [tester::#RL9] [client] ✔︎ Received "46"
+remote: [tester::#RL9] [client] > DISCARD
+remote: [tester::#RL9] [client] ✔︎ Received "ERR DISCARD without MULTI"
+remote: [tester::#RL9] Test passed.
+remote:
+remote: [tester::#FY6] Running tests for Stage #FY6 (Transactions - Executing a transaction)
+remote: [tester::#FY6] $ ./your_program.sh
+remote: [your_program] 2026/05/23 13:22:37 Redis server listening on :6379 (role := master)
+remote: [tester::#FY6] [client-1] $ redis-cli MULTI
+remote: [tester::#FY6] [client-1] ✔︎ Received "OK"
+remote: [tester::#FY6] [client-1] > SET blueberry 13
+remote: [tester::#FY6] [client-1] ✔︎ Received "QUEUED"
+remote: [tester::#FY6] [client-1] > INCR blueberry
+remote: [tester::#FY6] [client-1] ✔︎ Received "QUEUED"
+remote: [tester::#FY6] [client-1] > INCR pear
+remote: [tester::#FY6] [client-1] ✔︎ Received "QUEUED"
+remote: [tester::#FY6] [client-1] > GET pear
+remote: [tester::#FY6] [client-1] ✔︎ Received "QUEUED"
+remote: [tester::#FY6] [client-1] > EXEC
+remote: [tester::#FY6] [client-1] ✔︎ Received ["OK", 14, 1, "1"]
+remote: [tester::#FY6] [client-2] $ redis-cli GET blueberry
+remote: [tester::#FY6] [client-2] ✔︎ Received "14"
+remote: [tester::#FY6] Test passed.
+remote:
+remote: [tester::#RS9] Running tests for Stage #RS9 (Transactions - Queueing commands)
+remote: [tester::#RS9] $ ./your_program.sh
+remote: [your_program] 2026/05/23 13:22:37 Redis server listening on :6379 (role := master)
+remote: [tester::#RS9] [client-1] $ redis-cli MULTI
+remote: [tester::#RS9] [client-1] ✔︎ Received "OK"
+remote: [tester::#RS9] [client-1] > SET grape 24
+remote: [tester::#RS9] [client-1] ✔︎ Received "QUEUED"
+remote: [tester::#RS9] [client-1] > INCR grape
+remote: [tester::#RS9] [client-1] ✔︎ Received "QUEUED"
+remote: [tester::#RS9] [client-2] $ redis-cli GET grape
+remote: [tester::#RS9] [client-2] ✔︎ Received "$-1\r\n"
+remote: [tester::#RS9] Test passed.
+remote:
+remote: [tester::#WE1] Running tests for Stage #WE1 (Transactions - Empty transaction)
+remote: [tester::#WE1] $ ./your_program.sh
+remote: [your_program] 2026/05/23 13:22:37 Redis server listening on :6379 (role := master)
+remote: [tester::#WE1] [client] $ redis-cli MULTI
+remote: [tester::#WE1] [client] ✔︎ Received "OK"
+remote: [tester::#WE1] [client] > EXEC
+remote: [tester::#WE1] [client] ✔︎ Received []
+remote: [tester::#WE1] [client] > EXEC
+remote: [tester::#WE1] [client] ✔︎ Received "ERR EXEC without MULTI"
+remote: [tester::#WE1] Test passed.
+remote:
+remote: [tester::#LO4] Running tests for Stage #LO4 (Transactions - The EXEC command)
+remote: [tester::#LO4] $ ./your_program.sh
+remote: [your_program] 2026/05/23 13:22:37 Redis server listening on :6379 (role := master)
+remote: [tester::#LO4] [client] $ redis-cli EXEC
+remote: [tester::#LO4] [client] ✔︎ Received "ERR EXEC without MULTI"
+remote: [tester::#LO4] Test passed.
+remote:
+remote: [tester::#PN0] Running tests for Stage #PN0 (Transactions - The MULTI command)
+remote: [tester::#PN0] $ ./your_program.sh
+remote: [your_program] 2026/05/23 13:22:37 Redis server listening on :6379 (role := master)
+remote: [tester::#PN0] [client] $ redis-cli MULTI
+remote: [tester::#PN0] [client] ✔︎ Received "OK"
+remote: [tester::#PN0] Test passed.
+remote:
+remote: [tester::#MK1] Running tests for Stage #MK1 (Transactions - The INCR command (3/3))
+remote: [tester::#MK1] $ ./your_program.sh
+remote: [your_program] 2026/05/23 13:22:38 Redis server listening on :6379 (role := master)
+remote: [tester::#MK1] [client] $ redis-cli SET pineapple grape
+remote: [tester::#MK1] [client] ✔︎ Received "OK"
+remote: [tester::#MK1] [client] > INCR pineapple
+remote: [tester::#MK1] [client] ✔︎ Received "ERR value is not an integer or out of range"
+remote: [tester::#MK1] Test passed.
+remote:
+remote: [tester::#LZ8] Running tests for Stage #LZ8 (Transactions - The INCR command (2/3))
+remote: [tester::#LZ8] $ ./your_program.sh
+remote: [your_program] 2026/05/23 13:22:38 Redis server listening on :6379 (role := master)
+remote: [tester::#LZ8] [client] $ redis-cli INCR orange
+remote: [tester::#LZ8] [client] ✔︎ Received 1
+remote: [tester::#LZ8] [client] > INCR orange
+remote: [tester::#LZ8] [client] ✔︎ Received 2
+remote: [tester::#LZ8] [client] > GET orange
+remote: [tester::#LZ8] [client] ✔︎ Received "2"
+remote: [tester::#LZ8] Test passed.
+remote:
+remote: [tester::#SI4] Running tests for Stage #SI4 (Transactions - The INCR command (1/3))
+remote: [tester::#SI4] $ ./your_program.sh
+remote: [your_program] 2026/05/23 13:22:38 Redis server listening on :6379 (role := master)
+remote: [tester::#SI4] [client] $ redis-cli SET apple 41
+remote: [tester::#SI4] [client] ✔︎ Received "OK"
+remote: [tester::#SI4] [client] > INCR apple
+remote: [tester::#SI4] [client] ✔︎ Received 42
+remote: [tester::#SI4] Test passed.
+remote:
+remote: [tester::#XU1] Running tests for Stage #XU1 (Streams - Blocking reads using $)
+remote: [tester::#XU1] $ ./your_program.sh
+remote: [your_program] 2026/05/23 13:22:38 Redis server listening on :6379 (role := master)
+remote: [tester::#XU1] [client-1] $ redis-cli XADD apple 0-1 temperature 66
+remote: [tester::#XU1] [client-1] ✔︎ Received "0-1"
+remote: [tester::#XU1] [client-1] > XREAD block 0 streams apple $
+remote: [tester::#XU1] [client-1] Sleeping for 1000 ms
+remote: [tester::#XU1] [client-2] $ redis-cli XADD apple 0-2 temperature 40
+remote: [tester::#XU1] [client-2] ✔︎ Received "0-2"
+remote: [tester::#XU1] Expecting 1 client to receive response of XREAD command
+remote: [tester::#XU1] [client-1] ✔︎ Received [
+remote: [tester::#XU1] [client-1]   [
+remote: [tester::#XU1] [client-1]     "apple",
+remote: [tester::#XU1] [client-1]     [
+remote: [tester::#XU1] [client-1]       [
+remote: [tester::#XU1] [client-1]         "0-2",
+remote: [tester::#XU1] [client-1]         ["temperature", "40"]
+remote: [tester::#XU1] [client-1]       ]
+remote: [tester::#XU1] [client-1]     ]
+remote: [tester::#XU1] [client-1]   ]
+remote: [tester::#XU1] [client-1] ]
+remote: [tester::#XU1] [client-1] > XREAD block 1000 streams apple $
+remote: [tester::#XU1] [client-1] ✔︎ Received "*-1\r\n"
+remote: [tester::#XU1] Test passed.
+remote:
+remote: [tester::#HW1] Running tests for Stage #HW1 (Streams - Blocking reads without timeout)
+remote: [tester::#HW1] $ ./your_program.sh
+remote: [your_program] 2026/05/23 13:22:40 Redis server listening on :6379 (role := master)
+remote: [tester::#HW1] [client-1] $ redis-cli XADD raspberry 0-1 temperature 35
+remote: [tester::#HW1] [client-1] ✔︎ Received "0-1"
+remote: [tester::#HW1] [client-1] > XREAD block 0 streams raspberry 0-1
+remote: [tester::#HW1] [client-2] $ redis-cli XADD raspberry 0-2 temperature 42
+remote: [tester::#HW1] [client-2] ✔︎ Received "0-2"
+remote: [tester::#HW1] Expecting 1 client to receive response of XREAD command
+remote: [tester::#HW1] [client-1] ✔︎ Received [
+remote: [tester::#HW1] [client-1]   [
+remote: [tester::#HW1] [client-1]     "raspberry",
+remote: [tester::#HW1] [client-1]     [
+remote: [tester::#HW1] [client-1]       [
+remote: [tester::#HW1] [client-1]         "0-2",
+remote: [tester::#HW1] [client-1]         ["temperature", "42"]
+remote: [tester::#HW1] [client-1]       ]
+remote: [tester::#HW1] [client-1]     ]
+remote: [tester::#HW1] [client-1]   ]
+remote: [tester::#HW1] [client-1] ]
+remote: [tester::#HW1] Test passed.
+remote:
+remote: [tester::#BS1] Running tests for Stage #BS1 (Streams - Blocking reads)
+remote: [tester::#BS1] $ ./your_program.sh
+remote: [your_program] 2026/05/23 13:22:40 Redis server listening on :6379 (role := master)
+remote: [tester::#BS1] [client-1] $ redis-cli XADD pineapple 0-1 temperature 12
+remote: [tester::#BS1] [client-1] ✔︎ Received "0-1"
+remote: [tester::#BS1] [client-1] > XREAD block 1000 streams pineapple 0-1
+remote: [tester::#BS1] [client-1] Waiting for 500 ms
+remote: [tester::#BS1] [client-2] $ redis-cli XADD pineapple 0-2 temperature 62
+remote: [tester::#BS1] [client-2] ✔︎ Received "0-2"
+remote: [tester::#BS1] Expecting 1 client to receive response of XREAD command
+remote: [tester::#BS1] [client-1] ✔︎ Received [
+remote: [tester::#BS1] [client-1]   [
+remote: [tester::#BS1] [client-1]     "pineapple",
+remote: [tester::#BS1] [client-1]     [
+remote: [tester::#BS1] [client-1]       [
+remote: [tester::#BS1] [client-1]         "0-2",
+remote: [tester::#BS1] [client-1]         ["temperature", "62"]
+remote: [tester::#BS1] [client-1]       ]
+remote: [tester::#BS1] [client-1]     ]
+remote: [tester::#BS1] [client-1]   ]
+remote: [tester::#BS1] [client-1] ]
+remote: [tester::#BS1] [client-1] > XREAD block 1000 streams pineapple 0-2
+remote: [tester::#BS1] [client-1] ✔︎ Received "*-1\r\n"
+remote: [tester::#BS1] Test passed.
+remote:
+remote: [tester::#RU9] Running tests for Stage #RU9 (Streams - Query multiple streams using XREAD)
+remote: [tester::#RU9] $ ./your_program.sh
+remote: [your_program] 2026/05/23 13:22:42 Redis server listening on :6379 (role := master)
+remote: [tester::#RU9] [client] $ redis-cli XADD mango 0-1 temperature 0
+remote: [tester::#RU9] [client] ✔︎ Received "0-1"
+remote: [tester::#RU9] [client] > XADD pear 0-2 humidity 1
+remote: [tester::#RU9] [client] ✔︎ Received "0-2"
+remote: [tester::#RU9] [client] > XREAD streams mango pear 0-0 0-1
+remote: [tester::#RU9] [client] ✔︎ Received [
+remote: [tester::#RU9] [client]   [
+remote: [tester::#RU9] [client]     "mango",
+remote: [tester::#RU9] [client]     [
+remote: [tester::#RU9] [client]       [
+remote: [tester::#RU9] [client]         "0-1",
+remote: [tester::#RU9] [client]         ["temperature", "0"]
+remote: [tester::#RU9] [client]       ]
+remote: [tester::#RU9] [client]     ]
+remote: [tester::#RU9] [client]   ],
+remote: [tester::#RU9] [client]   [
+remote: [tester::#RU9] [client]     "pear",
+remote: [tester::#RU9] [client]     [["0-2", ["humidity", "1"]]]
+remote: [tester::#RU9] [client]   ]
+remote: [tester::#RU9] [client] ]
+remote: [tester::#RU9] Test passed.
+remote:
+remote: [tester::#UM0] Running tests for Stage #UM0 (Streams - Query single stream using XREAD)
+remote: [tester::#UM0] $ ./your_program.sh
+remote: [your_program] 2026/05/23 13:22:42 Redis server listening on :6379 (role := master)
+remote: [tester::#UM0] [client] $ redis-cli XADD mango 0-1 temperature 92
+remote: [tester::#UM0] [client] ✔︎ Received "0-1"
+remote: [tester::#UM0] [client] > XREAD streams mango 0-0
+remote: [tester::#UM0] [client] ✔︎ Received [
+remote: [tester::#UM0] [client]   [
+remote: [tester::#UM0] [client]     "mango",
+remote: [tester::#UM0] [client]     [
+remote: [tester::#UM0] [client]       [
+remote: [tester::#UM0] [client]         "0-1",
+remote: [tester::#UM0] [client]         ["temperature", "92"]
+remote: [tester::#UM0] [client]       ]
+remote: [tester::#UM0] [client]     ]
+remote: [tester::#UM0] [client]   ]
+remote: [tester::#UM0] [client] ]
+remote: [tester::#UM0] Test passed.
+remote:
+remote: [tester::#FS1] Running tests for Stage #FS1 (Streams - Query with +)
+remote: [tester::#FS1] $ ./your_program.sh
+remote: [your_program] 2026/05/23 13:22:42 Redis server listening on :6379 (role := master)
+remote: [tester::#FS1] [client] $ redis-cli XADD blueberry 0-1 strawberry banana
+remote: [tester::#FS1] [client] ✔︎ Received "0-1"
+remote: [tester::#FS1] [client] > XADD blueberry 0-2 strawberry blueberry
+remote: [tester::#FS1] [client] ✔︎ Received "0-2"
+remote: [tester::#FS1] [client] > XADD blueberry 0-3 blueberry orange
+remote: [tester::#FS1] [client] ✔︎ Received "0-3"
+remote: [tester::#FS1] [client] > XRANGE blueberry 0-1 +
+remote: [tester::#FS1] [client] ✔︎ Received [
+remote: [tester::#FS1] [client]   [
+remote: [tester::#FS1] [client]     "0-1",
+remote: [tester::#FS1] [client]     ["strawberry", "banana"]
+remote: [tester::#FS1] [client]   ],
+remote: [tester::#FS1] [client]   [
+remote: [tester::#FS1] [client]     "0-2",
+remote: [tester::#FS1] [client]     ["strawberry", "blueberry"]
+remote: [tester::#FS1] [client]   ],
+remote: [tester::#FS1] [client]   [
+remote: [tester::#FS1] [client]     "0-3",
+remote: [tester::#FS1] [client]     ["blueberry", "orange"]
+remote: [tester::#FS1] [client]   ]
+remote: [tester::#FS1] [client] ]
+remote: [tester::#FS1] Test passed.
+remote:
+remote: [tester::#YP1] Running tests for Stage #YP1 (Streams - Query with -)
+remote: [tester::#YP1] $ ./your_program.sh
+remote: [your_program] 2026/05/23 13:22:42 Redis server listening on :6379 (role := master)
+remote: [tester::#YP1] [client] $ redis-cli XADD blueberry 0-1 grape pear
+remote: [tester::#YP1] [client] ✔︎ Received "0-1"
+remote: [tester::#YP1] [client] > XADD blueberry 0-2 banana mango
+remote: [tester::#YP1] [client] ✔︎ Received "0-2"
+remote: [tester::#YP1] [client] > XADD blueberry 0-3 orange pear
+remote: [tester::#YP1] [client] ✔︎ Received "0-3"
+remote: [tester::#YP1] [client] > XRANGE blueberry - 0-2
+remote: [tester::#YP1] [client] ✔︎ Received [
+remote: [tester::#YP1] [client]   ["0-1", ["grape", "pear"]],
+remote: [tester::#YP1] [client]   ["0-2", ["banana", "mango"]]
+remote: [tester::#YP1] [client] ]
+remote: [tester::#YP1] Test passed.
+remote:
+remote: [tester::#ZX1] Running tests for Stage #ZX1 (Streams - Query entries from stream)
+remote: [tester::#ZX1] $ ./your_program.sh
+remote: [your_program] 2026/05/23 13:22:42 Redis server listening on :6379 (role := master)
+remote: [tester::#ZX1] [client] $ redis-cli XADD blueberry 0-1 strawberry blueberry
+remote: [tester::#ZX1] [client] ✔︎ Received "0-1"
+remote: [tester::#ZX1] [client] > XADD blueberry 0-2 strawberry apple
+remote: [tester::#ZX1] [client] ✔︎ Received "0-2"
+remote: [tester::#ZX1] [client] > XADD blueberry 0-3 blueberry raspberry
+remote: [tester::#ZX1] [client] ✔︎ Received "0-3"
+remote: [tester::#ZX1] [client] > XRANGE blueberry 0-2 0-3
+remote: [tester::#ZX1] [client] ✔︎ Received [
+remote: [tester::#ZX1] [client]   [
+remote: [tester::#ZX1] [client]     "0-2",
+remote: [tester::#ZX1] [client]     ["strawberry", "apple"]
+remote: [tester::#ZX1] [client]   ],
+remote: [tester::#ZX1] [client]   [
+remote: [tester::#ZX1] [client]     "0-3",
+remote: [tester::#ZX1] [client]     ["blueberry", "raspberry"]
+remote: [tester::#ZX1] [client]   ]
+remote: [tester::#ZX1] [client] ]
+remote: [tester::#ZX1] Test passed.
+remote:
+remote: [tester::#XU6] Running tests for Stage #XU6 (Streams - Fully auto-generated IDs)
+remote: [tester::#XU6] $ ./your_program.sh
+remote: [your_program] 2026/05/23 13:22:42 Redis server listening on :6379 (role := master)
+remote: [tester::#XU6] [client] $ redis-cli XADD pear * foo bar
+remote: [tester::#XU6] [client] ✔︎ Received "1779542562854-0"
+remote: [tester::#XU6] The first part of the ID is a valid unix milliseconds timestamp
+remote: [tester::#XU6] The second part of the ID is a valid sequence number
+remote: [tester::#XU6] Test passed.
+remote:
+remote: [tester::#YH3] Running tests for Stage #YH3 (Streams - Partially auto-generated IDs)
+remote: [tester::#YH3] $ ./your_program.sh
+remote: [your_program] 2026/05/23 13:22:42 Redis server listening on :6379 (role := master)
+remote: [tester::#YH3] [client] $ redis-cli XADD apple 0-* banana blueberry
+remote: [tester::#YH3] [client] ✔︎ Received "0-1"
+remote: [tester::#YH3] [client] > XADD apple 1-* banana blueberry
+remote: [tester::#YH3] [client] ✔︎ Received "1-0"
+remote: [tester::#YH3] [client] > XADD apple 1-* blueberry raspberry
+remote: [tester::#YH3] [client] ✔︎ Received "1-1"
+remote: [tester::#YH3] Test passed.
+remote:
+remote: [tester::#HQ8] Running tests for Stage #HQ8 (Streams - Validating entry IDs)
+remote: [tester::#HQ8] $ ./your_program.sh
+remote: [your_program] 2026/05/23 13:22:42 Redis server listening on :6379 (role := master)
+remote: [tester::#HQ8] [client] $ redis-cli XADD grape 1-1 strawberry raspberry
+remote: [tester::#HQ8] [client] ✔︎ Received "1-1"
+remote: [tester::#HQ8] [client] > XADD grape 1-2 mango orange
+remote: [tester::#HQ8] [client] ✔︎ Received "1-2"
+remote: [tester::#HQ8] [client] > XADD grape 1-2 banana blueberry
+remote: [tester::#HQ8] [client] ✔︎ Received "ERR The ID specified in XADD is equal or smaller than the target stream top item"
+remote: [tester::#HQ8] [client] > XADD grape 0-3 pear apple
+remote: [tester::#HQ8] [client] ✔︎ Received "ERR The ID specified in XADD is equal or smaller than the target stream top item"
+remote: [tester::#HQ8] [client] > XADD grape 0-0 grape pineapple
+remote: [tester::#HQ8] [client] ✔︎ Received "ERR The ID specified in XADD must be greater than 0-0"
+remote: [tester::#HQ8] Test passed.
+remote:
+remote: [tester::#CF6] Running tests for Stage #CF6 (Streams - Create a stream)
+remote: [tester::#CF6] $ ./your_program.sh
+remote: [your_program] 2026/05/23 13:22:43 Redis server listening on :6379 (role := master)
+remote: [tester::#CF6] [client] $ redis-cli XADD banana 0-1 foo bar
+remote: [tester::#CF6] [client] ✔︎ Received "0-1"
+remote: [tester::#CF6] [client] > TYPE banana
+remote: [tester::#CF6] [client] ✔︎ Received "stream"
+remote: [tester::#CF6] Test passed.
+remote:
+remote: [tester::#CC3] Running tests for Stage #CC3 (Streams - The TYPE command)
+remote: [tester::#CC3] $ ./your_program.sh
+remote: [your_program] 2026/05/23 13:22:43 Redis server listening on :6379 (role := master)
+remote: [tester::#CC3] [client] $ redis-cli SET mango apple
+remote: [tester::#CC3] [client] ✔︎ Received "OK"
+remote: [tester::#CC3] [client] > TYPE mango
+remote: [tester::#CC3] [client] ✔︎ Received "string"
+remote: [tester::#CC3] [client] > TYPE missing_key_apple
+remote: [tester::#CC3] [client] ✔︎ Received "none"
+remote: [tester::#CC3] Test passed.
+remote:
+remote: [tester::#XJ7] Running tests for Stage #XJ7 (Lists - Blocking retrieval with timeout)
+remote: [tester::#XJ7] $ ./your_program.sh
+remote: [your_program] 2026/05/23 13:22:43 Redis server listening on :6379 (role := master)
+remote: [tester::#XJ7] [client] $ redis-cli BLPOP banana 0.2
+remote: [tester::#XJ7] [client] ✔︎ Received "*-1\r\n"
+remote: [tester::#XJ7] [client-1] $ redis-cli BLPOP raspberry 0.1
+remote: [tester::#XJ7] [client-2] $ redis-cli RPUSH raspberry blueberry
+remote: [tester::#XJ7] [client-2] ✔︎ Received 1
+remote: [tester::#XJ7] Expecting 1 client to receive response of BLPOP command
+remote: [tester::#XJ7] [client-1] ✔︎ Received ["raspberry", "blueberry"]
+remote: [tester::#XJ7] Test passed.
+remote:
+remote: [tester::#EC3] Running tests for Stage #EC3 (Lists - Blocking retrieval)
+remote: [tester::#EC3] $ ./your_program.sh
+remote: [your_program] 2026/05/23 13:22:43 Redis server listening on :6379 (role := master)
+remote: [tester::#EC3] [client-1] $ redis-cli BLPOP banana 0
+remote: [tester::#EC3] [client-2] $ redis-cli BLPOP banana 0
+remote: [tester::#EC3] [client-3] $ redis-cli RPUSH banana strawberry
+remote: [tester::#EC3] [client-3] ✔︎ Received 1
+remote: [tester::#EC3] Expecting 1 client to receive response of BLPOP command
+remote: [tester::#EC3] [client-1] ✔︎ Received ["banana", "strawberry"]
+remote: [tester::#EC3] [client-2] Expecting no response
+remote: [tester::#EC3] [client-2] ✔︎ No response received yet
+remote: [tester::#EC3] Test passed.
+remote:
+remote: [tester::#JP1] Running tests for Stage #JP1 (Lists - Remove multiple elements)
+remote: [tester::#JP1] $ ./your_program.sh
+remote: [your_program] 2026/05/23 13:22:43 Redis server listening on :6379 (role := master)
+remote: [tester::#JP1] [client] $ redis-cli RPUSH grape mango banana blueberry strawberry raspberry
+remote: [tester::#JP1] [client] ✔︎ Received 5
+remote: [tester::#JP1] [client] > LPOP grape 2
+remote: [tester::#JP1] [client] ✔︎ Received ["mango", "banana"]
+remote: [tester::#JP1] [client] > LRANGE grape 0 -1
+remote: [tester::#JP1] [client] ✔︎ Received [
+remote: [tester::#JP1] [client]   "blueberry",
+remote: [tester::#JP1] [client]   "strawberry",
+remote: [tester::#JP1] [client]   "raspberry"
+remote: [tester::#JP1] [client] ]
+remote: [tester::#JP1] Test passed.
+remote:
+remote: [tester::#EF1] Running tests for Stage #EF1 (Lists - Remove an element)
+remote: [tester::#EF1] $ ./your_program.sh
+remote: [your_program] 2026/05/23 13:22:43 Redis server listening on :6379 (role := master)
+remote: [tester::#EF1] [client] $ redis-cli RPUSH orange grape strawberry mango pineapple raspberry
+remote: [tester::#EF1] [client] ✔︎ Received 5
+remote: [tester::#EF1] [client] > LPOP orange
+remote: [tester::#EF1] [client] ✔︎ Received "grape"
+remote: [tester::#EF1] [client] > LRANGE orange 0 -1
+remote: [tester::#EF1] [client] ✔︎ Received [
+remote: [tester::#EF1] [client]   "strawberry",
+remote: [tester::#EF1] [client]   "mango",
+remote: [tester::#EF1] [client]   "pineapple",
+remote: [tester::#EF1] [client]   "raspberry"
+remote: [tester::#EF1] [client] ]
+remote: [tester::#EF1] Test passed.
+remote:
+remote: [tester::#FV6] Running tests for Stage #FV6 (Lists - Query list length)
+remote: [tester::#FV6] $ ./your_program.sh
+remote: [your_program] 2026/05/23 13:22:43 Redis server listening on :6379 (role := master)
+remote: [tester::#FV6] [client] $ redis-cli RPUSH banana raspberry grape pear pineapple
+remote: [tester::#FV6] [client] ✔︎ Received 4
+remote: [tester::#FV6] [client] > LLEN banana
+remote: [tester::#FV6] [client] ✔︎ Received 4
+remote: [tester::#FV6] [client] > LLEN missing_key_18
+remote: [tester::#FV6] [client] ✔︎ Received 0
+remote: [tester::#FV6] Test passed.
+remote:
+remote: [tester::#GU5] Running tests for Stage #GU5 (Lists - Prepend elements)
+remote: [tester::#GU5] $ ./your_program.sh
+remote: [your_program] 2026/05/23 13:22:44 Redis server listening on :6379 (role := master)
+remote: [tester::#GU5] [client] $ redis-cli LPUSH pineapple raspberry
+remote: [tester::#GU5] [client] ✔︎ Received 1
+remote: [tester::#GU5] [client] > LPUSH pineapple mango orange
+remote: [tester::#GU5] [client] ✔︎ Received 3
+remote: [tester::#GU5] [client] > LRANGE pineapple 0 -1
+remote: [tester::#GU5] [client] ✔︎ Received ["orange", "mango", "raspberry"]
+remote: [tester::#GU5] Test passed.
+remote:
+remote: [tester::#RI1] Running tests for Stage #RI1 (Lists - List elements (negative indexes))
+remote: [tester::#RI1] $ ./your_program.sh
+remote: [your_program] 2026/05/23 13:22:44 Redis server listening on :6379 (role := master)
+remote: [tester::#RI1] [client] $ redis-cli RPUSH pear orange grape mango blueberry banana pineapple apple
+remote: [tester::#RI1] [client] ✔︎ Received 7
+remote: [tester::#RI1] [client] > LRANGE pear 0 -5
+remote: [tester::#RI1] [client] ✔︎ Received ["orange", "grape", "mango"]
+remote: [tester::#RI1] [client] > LRANGE pear -5 -1
+remote: [tester::#RI1] [client] ✔︎ Received [
+remote: [tester::#RI1] [client]   "mango",
+remote: [tester::#RI1] [client]   "blueberry",
+remote: [tester::#RI1] [client]   "banana",
+remote: [tester::#RI1] [client]   "pineapple",
+remote: [tester::#RI1] [client]   "apple"
+remote: [tester::#RI1] [client] ]
+remote: [tester::#RI1] [client] > LRANGE pear 0 -1
+remote: [tester::#RI1] [client] ✔︎ Received [
+remote: [tester::#RI1] [client]   "orange",
+remote: [tester::#RI1] [client]   "grape",
+remote: [tester::#RI1] [client]   "mango",
+remote: [tester::#RI1] [client]   "blueberry",
+remote: [tester::#RI1] [client]   "banana",
+remote: [tester::#RI1] [client]   "pineapple",
+remote: [tester::#RI1] [client]   "apple"
+remote: [tester::#RI1] [client] ]
+remote: [tester::#RI1] [client] > LRANGE pear -1 -2
+remote: [tester::#RI1] [client] ✔︎ Received []
+remote: [tester::#RI1] [client] > LRANGE pear -8 -1
+remote: [tester::#RI1] [client] ✔︎ Received [
+remote: [tester::#RI1] [client]   "orange",
+remote: [tester::#RI1] [client]   "grape",
+remote: [tester::#RI1] [client]   "mango",
+remote: [tester::#RI1] [client]   "blueberry",
+remote: [tester::#RI1] [client]   "banana",
+remote: [tester::#RI1] [client]   "pineapple",
+remote: [tester::#RI1] [client]   "apple"
+remote: [tester::#RI1] [client] ]
+remote: [tester::#RI1] Test passed.
+remote:
+remote: [tester::#SF6] Running tests for Stage #SF6 (Lists - List elements (positive indexes))
+remote: [tester::#SF6] $ ./your_program.sh
+remote: [your_program] 2026/05/23 13:22:44 Redis server listening on :6379 (role := master)
+remote: [tester::#SF6] [client] $ redis-cli RPUSH apple orange grape blueberry raspberry
+remote: [tester::#SF6] [client] ✔︎ Received 4
+remote: [tester::#SF6] [client] > LRANGE apple 0 2
+remote: [tester::#SF6] [client] ✔︎ Received ["orange", "grape", "blueberry"]
+remote: [tester::#SF6] [client] > LRANGE apple 2 3
+remote: [tester::#SF6] [client] ✔︎ Received ["blueberry", "raspberry"]
+remote: [tester::#SF6] [client] > LRANGE apple 0 3
+remote: [tester::#SF6] [client] ✔︎ Received [
+remote: [tester::#SF6] [client]   "orange",
+remote: [tester::#SF6] [client]   "grape",
+remote: [tester::#SF6] [client]   "blueberry",
+remote: [tester::#SF6] [client]   "raspberry"
+remote: [tester::#SF6] [client] ]
+remote: [tester::#SF6] [client] > LRANGE apple 1 0
+remote: [tester::#SF6] [client] ✔︎ Received []
+remote: [tester::#SF6] [client] > LRANGE apple 0 8
+remote: [tester::#SF6] [client] ✔︎ Received [
+remote: [tester::#SF6] [client]   "orange",
+remote: [tester::#SF6] [client]   "grape",
+remote: [tester::#SF6] [client]   "blueberry",
+remote: [tester::#SF6] [client]   "raspberry"
+remote: [tester::#SF6] [client] ]
+remote: [tester::#SF6] [client] > LRANGE missing_key_59 0 1
+remote: [tester::#SF6] [client] ✔︎ Received []
+remote: [tester::#SF6] Test passed.
+remote:
+remote: [tester::#LX4] Running tests for Stage #LX4 (Lists - Append multiple elements)
+remote: [tester::#LX4] $ ./your_program.sh
+remote: [your_program] 2026/05/23 13:22:44 Redis server listening on :6379 (role := master)
+remote: [tester::#LX4] [client] $ redis-cli RPUSH orange raspberry orange
+remote: [tester::#LX4] [client] ✔︎ Received 2
+remote: [tester::#LX4] [client] > RPUSH orange raspberry blueberry apple
+remote: [tester::#LX4] [client] ✔︎ Received 5
+remote: [tester::#LX4] Test passed.
+remote:
+remote: [tester::#TN7] Running tests for Stage #TN7 (Lists - Append an element)
+remote: [tester::#TN7] $ ./your_program.sh
+remote: [your_program] 2026/05/23 13:22:44 Redis server listening on :6379 (role := master)
+remote: [tester::#TN7] [client] $ redis-cli RPUSH banana raspberry
+remote: [tester::#TN7] [client] ✔︎ Received 1
+remote: [tester::#TN7] [client] > RPUSH banana orange
+remote: [tester::#TN7] [client] ✔︎ Received 2
+remote: [tester::#TN7] [client] > RPUSH banana blueberry
+remote: [tester::#TN7] [client] ✔︎ Received 3
+remote: [tester::#TN7] Test passed.
+remote:
+remote: [tester::#MH6] Running tests for Stage #MH6 (Lists - Create a list)
+remote: [tester::#MH6] $ ./your_program.sh
+remote: [your_program] 2026/05/23 13:22:44 Redis server listening on :6379 (role := master)
+remote: [tester::#MH6] [client] $ redis-cli RPUSH apple orange
+remote: [tester::#MH6] [client] ✔︎ Received 1
+remote: [tester::#MH6] Test passed.
+remote:
+remote: [tester::#YZ1] Running tests for Stage #YZ1 (Expiry)
+remote: [tester::#YZ1] $ ./your_program.sh
+remote: [your_program] 2026/05/23 13:22:44 Redis server listening on :6379 (role := master)
+remote: [tester::#YZ1] [client] $ redis-cli SET grape mango PX 100
+remote: [tester::#YZ1] [client] ✔︎ Received "OK"
+remote: [tester::#YZ1] Received OK at 13:22:44.761
+remote: [tester::#YZ1] Fetching key "grape" at 13:22:44.762 (should not be expired)
+remote: [tester::#YZ1] [client] > GET grape
+remote: [tester::#YZ1] [client] ✔︎ Received "mango"
+remote: [tester::#YZ1] Fetching key "grape" at 13:22:44.864 (should be expired)
+remote: [tester::#YZ1] [client] > GET grape
+remote: [tester::#YZ1] [client] ✔︎ Received "$-1\r\n"
+remote: [tester::#YZ1] Test passed.
+remote:
+remote: [tester::#LA7] Running tests for Stage #LA7 (Implement the SET & GET commands)
+remote: [tester::#LA7] $ ./your_program.sh
+remote: [your_program] 2026/05/23 13:22:44 Redis server listening on :6379 (role := master)
+remote: [tester::#LA7] [client] $ redis-cli SET blueberry apple
+remote: [tester::#LA7] [client] ✔︎ Received "OK"
+remote: [tester::#LA7] [client] > GET blueberry
+remote: [tester::#LA7] [client] ✔︎ Received "apple"
+remote: [tester::#LA7] Test passed.
+remote:
+remote: [tester::#QQ0] Running tests for Stage #QQ0 (Implement the ECHO command)
+remote: [tester::#QQ0] $ ./your_program.sh
+remote: [your_program] 2026/05/23 13:22:44 Redis server listening on :6379 (role := master)
+remote: [tester::#QQ0] [client] $ redis-cli ECHO pineapple
+remote: [tester::#QQ0] [client] ✔︎ Received "pineapple"
+remote: [tester::#QQ0] Test passed.
+remote:
+remote: [tester::#ZU2] Running tests for Stage #ZU2 (Handle concurrent clients)
+remote: [tester::#ZU2] $ ./your_program.sh
+remote: [your_program] 2026/05/23 13:22:45 Redis server listening on :6379 (role := master)
+remote: [tester::#ZU2] [client-1] $ redis-cli PING
+remote: [tester::#ZU2] [client-1] ✔︎ Received "PONG"
+remote: [tester::#ZU2] [client-2] $ redis-cli PING
+remote: [tester::#ZU2] [client-2] ✔︎ Received "PONG"
+remote: [tester::#ZU2] [client-1] > PING
+remote: [tester::#ZU2] [client-1] ✔︎ Received "PONG"
+remote: [tester::#ZU2] [client-1] > PING
+remote: [tester::#ZU2] [client-1] ✔︎ Received "PONG"
+remote: [tester::#ZU2] [client-2] > PING
+remote: [tester::#ZU2] [client-2] ✔︎ Received "PONG"
+remote: [tester::#ZU2] [client-3] $ redis-cli PING
+remote: [tester::#ZU2] [client-3] ✔︎ Received "PONG"
+remote: [tester::#ZU2] Test passed.
+remote:
+remote: [tester::#WY1] Running tests for Stage #WY1 (Respond to multiple PINGs)
+remote: [tester::#WY1] $ ./your_program.sh
+remote: [your_program] 2026/05/23 13:22:45 Redis server listening on :6379 (role := master)
+remote: [tester::#WY1] [client-1] $ redis-cli PING
+remote: [tester::#WY1] [client-1] ✔︎ Received "PONG"
+remote: [tester::#WY1] [client-1] > PING
+remote: [tester::#WY1] [client-1] ✔︎ Received "PONG"
+remote: [tester::#WY1] [client-1] > PING
+remote: [tester::#WY1] [client-1] ✔︎ Received "PONG"
+remote: [tester::#WY1] Test passed.
+remote:
+remote: [tester::#RG2] Running tests for Stage #RG2 (Respond to PING)
+remote: [tester::#RG2] $ ./your_program.sh
+remote: [your_program] 2026/05/23 13:22:45 Redis server listening on :6379 (role := master)
+remote: [tester::#RG2] [client] $ redis-cli PING
+remote: [tester::#RG2] [client] ✔︎ Received "PONG"
+remote: [tester::#RG2] Test passed.
+remote:
+remote: [tester::#JM1] Running tests for Stage #JM1 (Bind to a port)
+remote: [tester::#JM1] $ ./your_program.sh
+remote: [tester::#JM1] Connecting to port 6379...
+remote: [your_program] 2026/05/23 13:22:45 Redis server listening on :6379 (role := master)
+remote: [tester::#JM1] Test passed.
+remote:
+remote: Test passed. Congrats!
