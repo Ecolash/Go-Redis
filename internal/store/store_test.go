@@ -392,6 +392,82 @@ func TestZScore(t *testing.T) {
 	}
 }
 
+func TestGeoAdd(t *testing.T) {
+	tests := []struct {
+		name    string
+		members []store.GeoMember
+		want    int
+	}{
+		{
+			name:    "adds new member returns 1",
+			members: []store.GeoMember{{Lon: -0.0884948, Lat: 51.506479, Member: "London"}},
+			want:    1,
+		},
+		{
+			name: "adds two new members returns 2",
+			members: []store.GeoMember{
+				{Lon: -0.0884948, Lat: 51.506479, Member: "London"},
+				{Lon: 2.3514992, Lat: 48.8566101, Member: "Paris"},
+			},
+			want: 2,
+		},
+		{
+			name: "updating existing member does not count as new",
+			members: []store.GeoMember{
+				{Lon: -0.0884948, Lat: 51.506479, Member: "London"},
+				{Lon: 0.1, Lat: 51.0, Member: "London"},
+			},
+			want: 1,
+		},
+		{
+			name:    "boundary longitude -180 is valid",
+			members: []store.GeoMember{{Lon: -180, Lat: 0, Member: "a"}},
+			want:    1,
+		},
+		{
+			name:    "boundary longitude +180 is valid",
+			members: []store.GeoMember{{Lon: 180, Lat: 0, Member: "a"}},
+			want:    1,
+		},
+		{
+			name:    "boundary latitude -85.05112878 is valid",
+			members: []store.GeoMember{{Lon: 0, Lat: -85.05112878, Member: "a"}},
+			want:    1,
+		},
+		{
+			name:    "boundary latitude +85.05112878 is valid",
+			members: []store.GeoMember{{Lon: 0, Lat: 85.05112878, Member: "a"}},
+			want:    1,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			s := store.New()
+			got := s.GeoAdd("places", tt.members)
+			if got != tt.want {
+				t.Errorf("GeoAdd returned %d, want %d", got, tt.want)
+			}
+		})
+	}
+}
+
+func TestGeoAddCreatesZSetType(t *testing.T) {
+	s := store.New()
+	s.GeoAdd("places", []store.GeoMember{{Lon: -0.0884948, Lat: 51.506479, Member: "London"}})
+	if got := s.Type("places"); got != "zset" {
+		t.Errorf("Type = %q, want \"zset\"", got)
+	}
+}
+
+func TestGeoAddMemberIsQueryableViaZScore(t *testing.T) {
+	s := store.New()
+	s.GeoAdd("places", []store.GeoMember{{Lon: -0.0884948, Lat: 51.506479, Member: "London"}})
+	_, ok := s.ZScore("places", "London")
+	if !ok {
+		t.Error("expected London to exist in the sorted set after GeoAdd")
+	}
+}
+
 func TestZRem(t *testing.T) {
 	tests := []struct {
 		name    string

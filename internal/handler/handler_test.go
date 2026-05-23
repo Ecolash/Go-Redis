@@ -2048,6 +2048,66 @@ func TestHandleZScore(t *testing.T) {
 	}
 }
 
+func TestHandleGeoAdd(t *testing.T) {
+	tests := []struct {
+		name  string
+		setup []string
+		input string
+		want  string
+	}{
+		{
+			name:  "adds single location returns 1",
+			input: "*5\r\n$6\r\nGEOADD\r\n$6\r\nplaces\r\n$9\r\n-0.0884948\r\n$9\r\n51.506479\r\n$6\r\nLondon\r\n",
+			want:  ":1\r\n",
+		},
+		{
+			name:  "adds two locations returns 2",
+			input: "*8\r\n$6\r\nGEOADD\r\n$6\r\nplaces\r\n$9\r\n-0.0884948\r\n$9\r\n51.506479\r\n$6\r\nLondon\r\n$9\r\n2.3514992\r\n$9\r\n48.8566101\r\n$5\r\nParis\r\n",
+			want:  ":2\r\n",
+		},
+		{
+			name:  "updating existing member does not count as new",
+			setup: []string{"*5\r\n$6\r\nGEOADD\r\n$6\r\nplaces\r\n$9\r\n-0.0884948\r\n$9\r\n51.506479\r\n$6\r\nLondon\r\n"},
+			input: "*5\r\n$6\r\nGEOADD\r\n$6\r\nplaces\r\n$3\r\n0.1\r\n$4\r\n51.0\r\n$6\r\nLondon\r\n",
+			want:  ":0\r\n",
+		},
+		{
+			name:  "longitude out of range returns error",
+			input: "*5\r\n$6\r\nGEOADD\r\n$6\r\nplaces\r\n$4\r\n-181\r\n$1\r\n0\r\n$1\r\na\r\n",
+			want:  resp.Error("ERR invalid longitude,latitude pair -181,0"),
+		},
+		{
+			name:  "latitude out of range returns error",
+			input: "*5\r\n$6\r\nGEOADD\r\n$6\r\nplaces\r\n$1\r\n0\r\n$2\r\n86\r\n$1\r\na\r\n",
+			want:  resp.Error("ERR invalid longitude,latitude pair 0,86"),
+		},
+		{
+			name:  "non-numeric longitude returns error",
+			input: "*5\r\n$6\r\nGEOADD\r\n$6\r\nplaces\r\n$3\r\nfoo\r\n$1\r\n0\r\n$1\r\na\r\n",
+			want:  resp.Error("ERR value is not a valid float"),
+		},
+		{
+			name:  "wrong number of arguments",
+			input: "*4\r\n$6\r\nGEOADD\r\n$6\r\nplaces\r\n$1\r\n0\r\n$1\r\n0\r\n",
+			want:  errs.WrongArgs,
+		},
+		{
+			name:  "incomplete triple returns wrong args",
+			input: "*6\r\n$6\r\nGEOADD\r\n$6\r\nplaces\r\n$1\r\n0\r\n$1\r\n0\r\n$1\r\na\r\n$1\r\n1\r\n",
+			want:  errs.WrongArgs,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			h := newHandler()
+			runCommands(h, tt.setup)
+			if got := h.Handle([]byte(tt.input)); got != tt.want {
+				t.Errorf("got %q, want %q", got, tt.want)
+			}
+		})
+	}
+}
+
 func TestHandleZRem(t *testing.T) {
 	zadd2 := []string{"*8\r\n$4\r\nZADD\r\n$2\r\nzk\r\n$1\r\n1\r\n$1\r\na\r\n$1\r\n2\r\n$1\r\nb\r\n$1\r\n3\r\n$1\r\nc\r\n"}
 	tests := []struct {

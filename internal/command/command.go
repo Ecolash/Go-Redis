@@ -57,4 +57,7 @@ const (
 	ZSCORE Command = "ZSCORE"
 	ZCARD  Command = "ZCARD"
 	ZREM   Command = "ZREM"
+
+	// Geo Commands
+	GEOADD Command = "GEOADD"
 )
