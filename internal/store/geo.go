@@ -53,8 +53,10 @@ func geoPos(score uint64) (lon, lat float64) {
 	}
 	latNorm := compact(score)
 	lonNorm := compact(score >> 1)
-	lat = minLat + float64(latNorm)/scale*(maxLat-minLat)
-	lon = minLon + float64(lonNorm)/scale*(maxLon-minLon)
+	latStep := (maxLat - minLat) / scale
+	lonStep := (maxLon - minLon) / scale
+	lat = minLat + (float64(latNorm) + 0.5) * latStep
+	lon = minLon + (float64(lonNorm) + 0.5) * lonStep
 	return
 }
 
