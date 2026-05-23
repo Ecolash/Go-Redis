@@ -4,6 +4,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/codecrafters-io/redis-starter-go/internal/acl"
 	"github.com/codecrafters-io/redis-starter-go/internal/command"
 	"github.com/codecrafters-io/redis-starter-go/internal/errs"
 	"github.com/codecrafters-io/redis-starter-go/internal/pubsub"
@@ -44,22 +45,11 @@ It can be configured with a callback to propagate write commands to connected re
 - BecameReplica() : checks if the connection has become a replica (after PSYNC) and resets the replica flag.
 */
 
-type aclUser struct {
-	nopass    bool
-	passwords []string
-}
-
-func (u *aclUser) flags() []string {
-	if u.nopass {
-		return []string{"nopass"}
-	}
-	return nil
-}
-
 type Handler struct {
 	store       *store.Store
 	role        string
-	defaultUser aclUser
+	defaultUser *acl.DefaultUser
+	authenticated bool
 	inMulti bool
 	queue   [][]string
 	watching map[string]uint64
@@ -130,11 +120,19 @@ func WithConfig(key, value string) Option {
 	}
 }
 
+func WithDefaultUser(u *acl.DefaultUser) Option {
+	return func(h *Handler) { h.defaultUser = u }
+}
+
 func New(s *store.Store, role string, opts ...Option) *Handler {
-	h := &Handler{store: s, role: role, defaultUser: aclUser{nopass: true}}
+	h := &Handler{store: s, role: role}
 	for _, opt := range opts {
 		opt(h)
 	}
+	if h.defaultUser == nil {
+		h.defaultUser = acl.NewDefaultUser()
+	}
+	h.authenticated = h.defaultUser.NoPass()
 	h.commands = map[command.Command]commandFunc{
 		command.PING:   h.handlePing,
 		command.ECHO:   h.handleEcho,
@@ -173,6 +171,7 @@ func New(s *store.Store, role string, opts ...Option) *Handler {
 		command.GEODIST:   h.handleGeoDist,
 		command.GEOSEARCH: h.handleGeoSearch,
 		command.ACL:       h.handleACL,
+		command.AUTH:      h.handleAuth,
 	}
 	h.txCommands = map[command.Command]commandFunc{
 		command.MULTI:   h.handleMulti,
@@ -224,6 +223,9 @@ func (h *Handler) dispatch(parts []string) string {
 	fn, ok := h.commands[cmd]
 	if !ok {
 		return errs.UnknownCommand
+	}
+	if !h.authenticated && cmd != command.AUTH {
+		return resp.Error("NOAUTH Authentication required.")
 	}
 	result := fn(parts)
 	if writeCommands[cmd] && !strings.HasPrefix(result, "-") {

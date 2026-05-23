@@ -65,5 +65,6 @@ const (
 	GEOSEARCH Command = "GEOSEARCH"
 
 	// ACL Commands
-	ACL Command = "ACL"
+	ACL  Command = "ACL"
+	AUTH Command = "AUTH"
 )

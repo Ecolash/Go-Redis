@@ -8,6 +8,7 @@ import (
 	"path/filepath"
 	"time"
 
+	"github.com/codecrafters-io/redis-starter-go/internal/acl"
 	"github.com/codecrafters-io/redis-starter-go/internal/aof"
 	"github.com/codecrafters-io/redis-starter-go/internal/handler"
 	"github.com/codecrafters-io/redis-starter-go/internal/pubsub"
@@ -28,6 +29,7 @@ type Server struct {
 	configOverrides map[string]string
 	config          map[string]string
 	aofWriter       *aof.Writer
+	defaultUser     *acl.DefaultUser
 }
 
 type ServerOption func(*Server)
@@ -52,12 +54,13 @@ func New(addr, role, masterAddr string, opts ...ServerOption) (*Server, error) {
 		return nil, err
 	}
 	s := &Server{
-		listener:   l,
-		store:      store.New(),
-		role:       role,
-		masterAddr: masterAddr,
-		replicas:   newReplicas(),
-		pubsub:     pubsub.New(),
+		listener:    l,
+		store:       store.New(),
+		role:        role,
+		masterAddr:  masterAddr,
+		replicas:    newReplicas(),
+		pubsub:      pubsub.New(),
+		defaultUser: acl.NewDefaultUser(),
 	}
 	for _, opt := range opts {
 		opt(s)
@@ -160,6 +163,7 @@ func (s *Server) handleConn(conn net.Conn) {
 		handler.WithReplicaWaiter(s.replicas.Wait),
 		handler.WithPubSub(s.pubsub),
 		handler.WithSubscriberID(conn.RemoteAddr().String()),
+		handler.WithDefaultUser(s.defaultUser),
 	}
 	for k, v := range s.config {
 		opts = append(opts, handler.WithConfig(k, v))

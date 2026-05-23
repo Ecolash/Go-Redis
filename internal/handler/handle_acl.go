@@ -1,8 +1,6 @@
 package handler
 
 import (
-	"crypto/sha256"
-	"fmt"
 	"strings"
 
 	"github.com/codecrafters-io/redis-starter-go/internal/errs"
@@ -24,18 +22,19 @@ func (h *Handler) handleACL(parts []string) string {
 		if strings.ToLower(parts[2]) != "default" {
 			return nullBulk
 		}
-		flags := h.defaultUser.flags()
+		flags := h.defaultUser.Flags()
 		var flagsEncoded string
 		if len(flags) == 0 {
 			flagsEncoded = "*0\r\n"
 		} else {
 			flagsEncoded = resp.Array(flags)
 		}
+		pws := h.defaultUser.Passwords()
 		var pwEncoded string
-		if len(h.defaultUser.passwords) == 0 {
+		if len(pws) == 0 {
 			pwEncoded = "*0\r\n"
 		} else {
-			pwEncoded = resp.Array(h.defaultUser.passwords)
+			pwEncoded = resp.Array(pws)
 		}
 		return resp.RawArray([]string{
 			resp.BulkString("flags"),
@@ -52,14 +51,27 @@ func (h *Handler) handleACL(parts []string) string {
 		}
 		for _, rule := range parts[3:] {
 			if strings.HasPrefix(rule, ">") {
-				password := rule[1:]
-				hash := fmt.Sprintf("%x", sha256.Sum256([]byte(password)))
-				h.defaultUser.nopass = false
-				h.defaultUser.passwords = append(h.defaultUser.passwords, hash)
+				h.defaultUser.AddPassword(rule[1:])
 			}
 		}
 		return okResponse
 	default:
 		return resp.Error("ERR unknown subcommand '" + parts[1] + "' for 'acl' command")
 	}
+}
+
+func (h *Handler) handleAuth(parts []string) string {
+	if len(parts) < 3 {
+		return errs.WrongArgs
+	}
+	username := strings.ToLower(parts[1])
+	password := parts[2]
+	if username != "default" {
+		return resp.Error("WRONGPASS invalid username-password pair or user is disabled.")
+	}
+	if !h.defaultUser.Authenticate(password) {
+		return resp.Error("WRONGPASS invalid username-password pair or user is disabled.")
+	}
+	h.authenticated = true
+	return okResponse
 }
