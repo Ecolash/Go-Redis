@@ -41,6 +41,51 @@ func (h *Handler) handleGeoPos(parts []string) string {
 	return sb.String()
 }
 
+func (h *Handler) handleGeoSearch(parts []string) string {
+	// GEOSEARCH key FROMLONLAT lon lat BYRADIUS radius unit
+	if len(parts) < 8 {
+		return errs.WrongArgs
+	}
+	if !strings.EqualFold(parts[2], "FROMLONLAT") {
+		return resp.Error("ERR unsupported search mode")
+	}
+	lon, err := strconv.ParseFloat(parts[3], 64)
+	if err != nil {
+		return resp.Error("ERR value is not a valid float")
+	}
+	lat, err := strconv.ParseFloat(parts[4], 64)
+	if err != nil {
+		return resp.Error("ERR value is not a valid float")
+	}
+	if !strings.EqualFold(parts[5], "BYRADIUS") {
+		return resp.Error("ERR unsupported search shape")
+	}
+	radius, err := strconv.ParseFloat(parts[6], 64)
+	if err != nil {
+		return resp.Error("ERR value is not a valid float")
+	}
+	var radiusMeters float64
+	switch strings.ToLower(parts[7]) {
+	case "m":
+		radiusMeters = radius
+	case "km":
+		radiusMeters = radius * 1000
+	case "mi":
+		radiusMeters = radius * 1609.344
+	case "ft":
+		radiusMeters = radius * 0.3048
+	default:
+		return resp.Error("ERR unsupported unit")
+	}
+	members := h.store.GeoSearch(parts[1], lon, lat, radiusMeters)
+	var sb strings.Builder
+	fmt.Fprintf(&sb, "*%d\r\n", len(members))
+	for _, m := range members {
+		sb.WriteString(resp.BulkString(m))
+	}
+	return sb.String()
+}
+
 func (h *Handler) handleGeoDist(parts []string) string {
 	// GEODIST key member1 member2
 	if len(parts) < 4 {

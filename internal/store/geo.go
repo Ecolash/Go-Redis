@@ -118,6 +118,24 @@ func (s *Store) GeoDist(key, member1, member2 string) (float64, bool) {
 	return haversine(lat1, lon1, lat2, lon2), true
 }
 
+// GeoSearch returns members within radiusMeters of (lon, lat).
+func (s *Store) GeoSearch(key string, lon, lat, radiusMeters float64) []string {
+	s.mu.RLock()
+	defer s.mu.RUnlock()
+	e, ok := s.data[key]
+	if !ok || e.kind != kindZSet {
+		return nil
+	}
+	var results []string
+	for member, score := range e.zsetVal.scores {
+		mLon, mLat := geoPos(uint64(score))
+		if haversine(lat, lon, mLat, mLon) <= radiusMeters {
+			results = append(results, member)
+		}
+	}
+	return results
+}
+
 func (s *Store) GeoAdd(key string, members []GeoMember) int {
 	zms := make([]ZSetMember, len(members))
 	for i, m := range members {
