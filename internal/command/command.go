@@ -55,4 +55,5 @@ const (
 	ZRANGE Command = "ZRANGE"
 	ZRANK  Command = "ZRANK"
 	ZSCORE Command = "ZSCORE"
+	ZCARD  Command = "ZCARD"
 )

@@ -68,3 +68,12 @@ func (h *Handler) handleZScore(parts []string) string {
 	}
 	return resp.BulkString(strconv.FormatFloat(score, 'f', -1, 64))
 }
+
+func (h *Handler) handleZCard(parts []string) string {
+	// ZCARD key
+	if len(parts) != 2 {
+		return errs.WrongArgs
+	}
+	card := h.store.ZCard(parts[1])
+	return resp.Integer(card)
+}

@@ -78,3 +78,13 @@ func (s *Store) ZScore(key string, member string) (float64, bool) {
 	}
 	return e.zsetVal.score(member)
 }
+
+func (s *Store) ZCard(key string) int {
+	s.mu.RLock()
+	defer s.mu.RUnlock()
+	e, ok := s.data[key]
+	if !ok || e.kind != kindZSet {
+		return 0
+	}
+	return e.zsetVal.length
+}
