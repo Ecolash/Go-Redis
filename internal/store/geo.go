@@ -90,7 +90,7 @@ func (s *Store) GeoPos(key string, members []string) []*GeoPosResult {
 }
 
 func haversine(lat1, lon1, lat2, lon2 float64) float64 {
-	const r = 6372.8
+	const r = 6372.797560856
 	dLat := (lat2 - lat1) * math.Pi / 180
 	dLon := (lon2 - lon1) * math.Pi / 180
 	lat1 = lat1 * math.Pi / 180
