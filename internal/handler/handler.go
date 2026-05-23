@@ -44,9 +44,22 @@ It can be configured with a callback to propagate write commands to connected re
 - BecameReplica() : checks if the connection has become a replica (after PSYNC) and resets the replica flag.
 */
 
+type aclUser struct {
+	nopass    bool
+	passwords []string
+}
+
+func (u *aclUser) flags() []string {
+	if u.nopass {
+		return []string{"nopass"}
+	}
+	return nil
+}
+
 type Handler struct {
-	store *store.Store
-	role  string
+	store       *store.Store
+	role        string
+	defaultUser aclUser
 	inMulti bool
 	queue   [][]string
 	watching map[string]uint64
@@ -118,7 +131,7 @@ func WithConfig(key, value string) Option {
 }
 
 func New(s *store.Store, role string, opts ...Option) *Handler {
-	h := &Handler{store: s, role: role}
+	h := &Handler{store: s, role: role, defaultUser: aclUser{nopass: true}}
 	for _, opt := range opts {
 		opt(h)
 	}

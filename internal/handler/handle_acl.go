@@ -1,6 +1,8 @@
 package handler
 
 import (
+	"crypto/sha256"
+	"fmt"
 	"strings"
 
 	"github.com/codecrafters-io/redis-starter-go/internal/errs"
@@ -22,12 +24,41 @@ func (h *Handler) handleACL(parts []string) string {
 		if strings.ToLower(parts[2]) != "default" {
 			return nullBulk
 		}
+		flags := h.defaultUser.flags()
+		var flagsEncoded string
+		if len(flags) == 0 {
+			flagsEncoded = "*0\r\n"
+		} else {
+			flagsEncoded = resp.Array(flags)
+		}
+		var pwEncoded string
+		if len(h.defaultUser.passwords) == 0 {
+			pwEncoded = "*0\r\n"
+		} else {
+			pwEncoded = resp.Array(h.defaultUser.passwords)
+		}
 		return resp.RawArray([]string{
 			resp.BulkString("flags"),
-			resp.Array([]string{"nopass"}),
+			flagsEncoded,
 			resp.BulkString("passwords"),
-			"*0\r\n",
+			pwEncoded,
 		})
+	case "SETUSER":
+		if len(parts) < 4 {
+			return errs.WrongArgs
+		}
+		if strings.ToLower(parts[2]) != "default" {
+			return resp.Error("ERR unknown user")
+		}
+		for _, rule := range parts[3:] {
+			if strings.HasPrefix(rule, ">") {
+				password := rule[1:]
+				hash := fmt.Sprintf("%x", sha256.Sum256([]byte(password)))
+				h.defaultUser.nopass = false
+				h.defaultUser.passwords = append(h.defaultUser.passwords, hash)
+			}
+		}
+		return okResponse
 	default:
 		return resp.Error("ERR unknown subcommand '" + parts[1] + "' for 'acl' command")
 	}
