@@ -1,5 +1,7 @@
 package store
 
+import "math"
+
 type GeoMember struct {
 	Lon    float64
 	Lat    float64
@@ -85,6 +87,35 @@ func (s *Store) GeoPos(key string, members []string) []*GeoPosResult {
 		results[i] = &GeoPosResult{Lon: lon, Lat: lat}
 	}
 	return results
+}
+
+func haversine(lat1, lon1, lat2, lon2 float64) float64 {
+	const r = 6372.8
+	dLat := (lat2 - lat1) * math.Pi / 180
+	dLon := (lon2 - lon1) * math.Pi / 180
+	lat1 = lat1 * math.Pi / 180
+	lat2 = lat2 * math.Pi / 180
+	a := math.Sin(dLat/2)*math.Sin(dLat/2) + math.Cos(lat1)*math.Cos(lat2)*math.Sin(dLon/2)*math.Sin(dLon/2)
+	c := 2 * math.Asin(math.Sqrt(a))
+	return r * c * 1000
+}
+
+// GeoDist returns the distance in meters between two members, or -1 if either is missing.
+func (s *Store) GeoDist(key, member1, member2 string) (float64, bool) {
+	s.mu.RLock()
+	defer s.mu.RUnlock()
+	e, ok := s.data[key]
+	if !ok || e.kind != kindZSet {
+		return 0, false
+	}
+	score1, ok1 := e.zsetVal.scores[member1]
+	score2, ok2 := e.zsetVal.scores[member2]
+	if !ok1 || !ok2 {
+		return 0, false
+	}
+	lon1, lat1 := geoPos(uint64(score1))
+	lon2, lat2 := geoPos(uint64(score2))
+	return haversine(lat1, lon1, lat2, lon2), true
 }
 
 func (s *Store) GeoAdd(key string, members []GeoMember) int {

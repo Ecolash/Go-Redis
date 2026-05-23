@@ -155,8 +155,9 @@ func New(s *store.Store, role string, opts ...Option) *Handler {
 		command.ZSCORE: h.handleZScore,
 		command.ZCARD:  h.handleZCard,
 		command.ZREM:   h.handleZRem,
-		command.GEOADD: h.handleGeoAdd,
-		command.GEOPOS: h.handleGeoPos,
+		command.GEOADD:  h.handleGeoAdd,
+		command.GEOPOS:  h.handleGeoPos,
+		command.GEODIST: h.handleGeoDist,
 	}
 	h.txCommands = map[command.Command]commandFunc{
 		command.MULTI:   h.handleMulti,

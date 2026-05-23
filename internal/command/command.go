@@ -59,6 +59,7 @@ const (
 	ZREM   Command = "ZREM"
 
 	// Geo Commands
-	GEOADD Command = "GEOADD"
-	GEOPOS Command = "GEOPOS"
+	GEOADD   Command = "GEOADD"
+	GEOPOS   Command = "GEOPOS"
+	GEODIST  Command = "GEODIST"
 )

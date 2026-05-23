@@ -41,6 +41,18 @@ func (h *Handler) handleGeoPos(parts []string) string {
 	return sb.String()
 }
 
+func (h *Handler) handleGeoDist(parts []string) string {
+	// GEODIST key member1 member2
+	if len(parts) < 4 {
+		return errs.WrongArgs
+	}
+	dist, ok := h.store.GeoDist(parts[1], parts[2], parts[3])
+	if !ok {
+		return nullBulk
+	}
+	return resp.BulkString(strconv.FormatFloat(dist, 'f', 4, 64))
+}
+
 func (h *Handler) handleGeoAdd(parts []string) string {
 	// GEOADD key longitude latitude member [longitude latitude member ...]
 	if len(parts) < 5 || (len(parts)-2)%3 != 0 {
