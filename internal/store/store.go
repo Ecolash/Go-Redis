@@ -70,6 +70,7 @@ func (s *Store) Type(key string) string {
 		kindString: "string",
 		kindList:   "list",
 		kindStream: "stream",
+		kindZSet:   "zset",
 	}
 	if typeStr, ok := kindToString[e.kind]; ok {
 		return typeStr

@@ -177,6 +177,221 @@ func TestLPush(t *testing.T) {
 	}
 }
 
+func TestZAdd(t *testing.T) {
+	tests := []struct {
+		name    string
+		members []store.ZSetMember
+		want    int
+	}{
+		{
+			name:    "creates zset and returns 1 for new member",
+			members: []store.ZSetMember{{Score: 1, Member: "a"}},
+			want:    1,
+		},
+		{
+			name: "adds two new members returns 2",
+			members: []store.ZSetMember{
+				{Score: 1, Member: "a"},
+				{Score: 2, Member: "b"},
+			},
+			want: 2,
+		},
+		{
+			name: "updating existing member score does not count as new",
+			members: []store.ZSetMember{
+				{Score: 1, Member: "a"},
+				{Score: 5, Member: "a"},
+			},
+			want: 1,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			s := store.New()
+			got := s.ZAdd("zk", tt.members)
+			if got != tt.want {
+				t.Errorf("ZAdd returned %d, want %d", got, tt.want)
+			}
+		})
+	}
+}
+
+func TestZAddCreatesZSetType(t *testing.T) {
+	s := store.New()
+	s.ZAdd("zk", []store.ZSetMember{{Score: 1, Member: "a"}})
+	if got := s.Type("zk"); got != "zset" {
+		t.Errorf("Type = %q, want \"zset\"", got)
+	}
+}
+
+func TestZRange(t *testing.T) {
+	tests := []struct {
+		name    string
+		members []store.ZSetMember
+		start   int
+		stop    int
+		want    []string
+	}{
+		{
+			name:  "missing key returns empty slice",
+			start: 0,
+			stop:  -1,
+			want:  []string{},
+		},
+		{
+			name:    "full range returns all members ordered by score",
+			members: []store.ZSetMember{{Score: 3, Member: "c"}, {Score: 1, Member: "a"}, {Score: 2, Member: "b"}},
+			start:   0,
+			stop:    -1,
+			want:    []string{"a", "b", "c"},
+		},
+		{
+			name:    "partial range",
+			members: []store.ZSetMember{{Score: 1, Member: "a"}, {Score: 2, Member: "b"}, {Score: 3, Member: "c"}},
+			start:   1,
+			stop:    2,
+			want:    []string{"b", "c"},
+		},
+		{
+			name:    "negative stop -1 means last element",
+			members: []store.ZSetMember{{Score: 1, Member: "a"}, {Score: 2, Member: "b"}, {Score: 3, Member: "c"}},
+			start:   0,
+			stop:    -1,
+			want:    []string{"a", "b", "c"},
+		},
+		{
+			name:    "score ties broken by member lexicographic order",
+			members: []store.ZSetMember{{Score: 1, Member: "b"}, {Score: 1, Member: "a"}},
+			start:   0,
+			stop:    -1,
+			want:    []string{"a", "b"},
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			s := store.New()
+			if tt.members != nil {
+				s.ZAdd("zk", tt.members)
+			}
+			got := s.ZRange("zk", tt.start, tt.stop)
+			members := make([]string, len(got))
+			for i, m := range got {
+				members[i] = m.Member
+			}
+			if len(members) != len(tt.want) {
+				t.Fatalf("len = %d, want %d; got %v", len(members), len(tt.want), members)
+			}
+			for i, w := range tt.want {
+				if members[i] != w {
+					t.Errorf("index %d: got %q, want %q", i, members[i], w)
+				}
+			}
+		})
+	}
+}
+
+func TestZRank(t *testing.T) {
+	tests := []struct {
+		name    string
+		members []store.ZSetMember
+		member  string
+		want    int
+		wantOK  bool
+	}{
+		{
+			name:   "missing key returns not ok",
+			member: "a",
+			wantOK: false,
+		},
+		{
+			name:    "existing member returns 0-based rank",
+			members: []store.ZSetMember{{Score: 1, Member: "a"}, {Score: 2, Member: "b"}, {Score: 3, Member: "c"}},
+			member:  "b",
+			want:    1,
+			wantOK:  true,
+		},
+		{
+			name:    "lowest score member has rank 0",
+			members: []store.ZSetMember{{Score: 1, Member: "a"}, {Score: 2, Member: "b"}},
+			member:  "a",
+			want:    0,
+			wantOK:  true,
+		},
+		{
+			name:    "non-existent member returns not ok",
+			members: []store.ZSetMember{{Score: 1, Member: "a"}},
+			member:  "z",
+			wantOK:  false,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			s := store.New()
+			if tt.members != nil {
+				s.ZAdd("zk", tt.members)
+			}
+			got, ok := s.ZRank("zk", tt.member)
+			if ok != tt.wantOK {
+				t.Fatalf("ok = %v, want %v", ok, tt.wantOK)
+			}
+			if ok && got != tt.want {
+				t.Errorf("rank = %d, want %d", got, tt.want)
+			}
+		})
+	}
+}
+
+func TestZScore(t *testing.T) {
+	tests := []struct {
+		name    string
+		members []store.ZSetMember
+		member  string
+		want    float64
+		wantOK  bool
+	}{
+		{
+			name:   "missing key returns not ok",
+			member: "a",
+			wantOK: false,
+		},
+		{
+			name:    "existing member returns its score",
+			members: []store.ZSetMember{{Score: 3.14, Member: "pi"}},
+			member:  "pi",
+			want:    3.14,
+			wantOK:  true,
+		},
+		{
+			name:    "non-existent member returns not ok",
+			members: []store.ZSetMember{{Score: 1, Member: "a"}},
+			member:  "z",
+			wantOK:  false,
+		},
+		{
+			name:    "updated score returns new score",
+			members: []store.ZSetMember{{Score: 1, Member: "a"}, {Score: 9, Member: "a"}},
+			member:  "a",
+			want:    9,
+			wantOK:  true,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			s := store.New()
+			if tt.members != nil {
+				s.ZAdd("zk", tt.members)
+			}
+			got, ok := s.ZScore("zk", tt.member)
+			if ok != tt.wantOK {
+				t.Fatalf("ok = %v, want %v", ok, tt.wantOK)
+			}
+			if ok && got != tt.want {
+				t.Errorf("score = %v, want %v", got, tt.want)
+			}
+		})
+	}
+}
+
 func TestIncr(t *testing.T) {
 	tests := []struct {
 		name    string

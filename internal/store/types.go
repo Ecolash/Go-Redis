@@ -10,6 +10,7 @@ const (
 	kindString valueKind = iota
 	kindList
 	kindStream
+	kindZSet
 )
 
 // StreamEntry is a single entry in a Redis stream.
@@ -24,6 +25,7 @@ type entry struct {
 	strVal    string
 	listVal   []string
 	streamVal []StreamEntry
+	zsetVal   *skipList
 	expiresAt time.Time // zero means no expiry
 }
 
