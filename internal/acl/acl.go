@@ -6,7 +6,6 @@ import (
 	"sync"
 )
 
-// DefaultUser holds the ACL state for the default user, shared across all connections.
 type DefaultUser struct {
 	mu        sync.RWMutex
 	nopass    bool
@@ -40,7 +39,6 @@ func (u *DefaultUser) Passwords() []string {
 	return out
 }
 
-// AddPassword hashes the plaintext password with SHA-256, clears nopass, and appends the hash.
 func (u *DefaultUser) AddPassword(plaintext string) {
 	hash := fmt.Sprintf("%x", sha256.Sum256([]byte(plaintext)))
 	u.mu.Lock()
@@ -49,8 +47,6 @@ func (u *DefaultUser) AddPassword(plaintext string) {
 	u.passwords = append(u.passwords, hash)
 }
 
-// Authenticate returns true if the given plaintext password matches any stored hash,
-// or if nopass is set (any password accepted).
 func (u *DefaultUser) Authenticate(plaintext string) bool {
 	hash := fmt.Sprintf("%x", sha256.Sum256([]byte(plaintext)))
 	u.mu.RLock()

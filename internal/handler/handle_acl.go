@@ -15,6 +15,7 @@ func (h *Handler) handleACL(parts []string) string {
 	switch sub {
 	case "WHOAMI":
 		return resp.BulkString("default")
+
 	case "GETUSER":
 		if len(parts) < 3 {
 			return errs.WrongArgs
@@ -42,6 +43,7 @@ func (h *Handler) handleACL(parts []string) string {
 			resp.BulkString("passwords"),
 			pwEncoded,
 		})
+
 	case "SETUSER":
 		if len(parts) < 4 {
 			return errs.WrongArgs

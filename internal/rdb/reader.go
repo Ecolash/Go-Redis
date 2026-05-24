@@ -9,8 +9,6 @@ import (
 	"time"
 )
 
-// emptyHex is a hex-encoded snapshot of an empty Redis RDB file. Used to
-// satisfy a replica's FULLRESYNC handshake before any data exists.
 const emptyHex = "524544495330303131fa0972656469732d76657205372e322e30fa0a72656469732d62697473c040fa056374696d65c26d08bc65fa08757365642d6d656dc2b0c41000fa08616f662d62617365c000fff06e3bfec0ff5aa2"
 
 var empty []byte
@@ -23,7 +21,6 @@ func init() {
 	empty = b
 }
 
-// Empty returns the bytes of an empty RDB file snapshot.
 func Empty() []byte {
 	return empty
 }
@@ -146,9 +143,6 @@ func (r *rdbReader) readKeyValue() (Entry, error) {
 	return Entry{Key: key, Value: val}, nil
 }
 
-// readSize decodes a length-encoded integer.
-// Returns a negative value if the first two bits are 0b11 (special encoding);
-// callers that need a raw length should not call this for the 0b11 case.
 func (r *rdbReader) readSize() (int, error) {
 	if r.pos >= len(r.data) {
 		return 0, io.ErrUnexpectedEOF

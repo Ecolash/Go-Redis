@@ -10,7 +10,6 @@ import (
 )
 
 func (h *Handler) handleZAdd(parts []string) string {
-	// ZADD key score member [score member ...]
 	if len(parts) < 4 || (len(parts)-2)%2 != 0 {
 		return errs.WrongArgs
 	}
@@ -28,7 +27,6 @@ func (h *Handler) handleZAdd(parts []string) string {
 }
 
 func (h *Handler) handleZRange(parts []string) string {
-	// ZRANGE key start stop
 	if len(parts) != 4 {
 		return errs.WrongArgs
 	}
@@ -46,7 +44,6 @@ func (h *Handler) handleZRange(parts []string) string {
 }
 
 func (h *Handler) handleZRank(parts []string) string {
-	// ZRANK key member
 	if len(parts) != 3 {
 		return errs.WrongArgs
 	}
@@ -58,7 +55,6 @@ func (h *Handler) handleZRank(parts []string) string {
 }
 
 func (h *Handler) handleZScore(parts []string) string {
-	// ZSCORE key member
 	if len(parts) != 3 {
 		return errs.WrongArgs
 	}
@@ -70,7 +66,6 @@ func (h *Handler) handleZScore(parts []string) string {
 }
 
 func (h *Handler) handleZCard(parts []string) string {
-	// ZCARD key
 	if len(parts) != 2 {
 		return errs.WrongArgs
 	}
@@ -79,7 +74,6 @@ func (h *Handler) handleZCard(parts []string) string {
 }
 
 func (h *Handler) handleZRem(parts []string) string {
-	// ZREM key member [member ...]
 	if len(parts) < 3 {
 		return errs.WrongArgs
 	}

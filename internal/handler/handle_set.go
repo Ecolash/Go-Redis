@@ -16,8 +16,6 @@ func (h *Handler) handleSet(parts []string) string {
 	return okResponse
 }
 
-// parseTTL extracts the TTL duration from optional SET arguments (PX <ms> or EX <s>).
-// Returns 0 if no TTL option is present or the value is invalid.
 func parseTTL(opts []string) time.Duration {
 	if len(opts) < 2 {
 		return 0

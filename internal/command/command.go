@@ -3,15 +3,17 @@ package command
 type Command string
 
 const (
-	PING  Command = "PING"
-	ECHO  Command = "ECHO"
-	SET   Command = "SET"
-	GET   Command = "GET"
-	INCR  Command = "INCR"
-	DECR  Command = "DECR"
-
+	// Basic commands
+	PING Command = "PING"
+	ECHO Command = "ECHO"
 	TYPE Command = "TYPE"
 	INFO Command = "INFO"
+
+	// String and Integer commands
+	SET  Command = "SET"
+	GET  Command = "GET"
+	INCR Command = "INCR"
+	DECR Command = "DECR"
 
 	// Transaction commands
 	MULTI   Command = "MULTI"

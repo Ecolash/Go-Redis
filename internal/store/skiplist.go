@@ -36,8 +36,6 @@ func (sl *skipList) randomLevel() int {
 	return level
 }
 
-// less reports whether (aScore, aMember) sorts before (bScore, bMember).
-// Ties in score are broken lexicographically by member.
 func (sl *skipList) less(aScore float64, aMember string, bScore float64, bMember string) bool {
 	if aScore != bScore {
 		return aScore < bScore
@@ -45,7 +43,6 @@ func (sl *skipList) less(aScore float64, aMember string, bScore float64, bMember
 	return aMember < bMember
 }
 
-// insert adds or updates a member. Returns true if the member is new.
 func (sl *skipList) insert(score float64, member string) bool {
 	isNew := true
 	if oldScore, exists := sl.scores[member]; exists {
@@ -85,7 +82,6 @@ func (sl *skipList) insert(score float64, member string) bool {
 	return isNew
 }
 
-// remove deletes a member by score+member.
 func (sl *skipList) remove(score float64, member string) bool {
 	update := make([]*skipListNode, maxLevel)
 	cur := sl.head
@@ -114,13 +110,11 @@ func (sl *skipList) remove(score float64, member string) bool {
 	return true
 }
 
-// score returns the score for a member. ok is false if the member does not exist.
 func (sl *skipList) score(member string) (float64, bool) {
 	s, ok := sl.scores[member]
 	return s, ok
 }
 
-// rank returns the 0-based rank of a member by ascending score. Returns -1 if not found.
 func (sl *skipList) rank(member string) int {
 	r := 0
 	cur := sl.head.next[0]
@@ -134,8 +128,6 @@ func (sl *skipList) rank(member string) int {
 	return -1
 }
 
-// rangeByRank returns members in [start, stop] (0-based, inclusive).
-// Negative indices must be resolved by the caller before this call.
 func (sl *skipList) rangeByRank(start, stop int) []ZSetMember {
 	if start > stop || start >= sl.length {
 		return []ZSetMember{}

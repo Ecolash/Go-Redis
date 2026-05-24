@@ -174,11 +174,10 @@ func (s *Store) XReadWait(key, afterID string) (<-chan []StreamEntry, func()) {
 	var afterMs, afterSeq int64
 	s.mu.Lock()
 	if afterID == "$" {
-		// Resolve $ to the current last entry so only future entries are delivered.
 		if e, ok := s.data[key]; ok && e.kind == kindStream && len(e.streamVal) > 0 {
 			afterMs, afterSeq, _ = parseStreamID(e.streamVal[len(e.streamVal)-1].ID)
 		}
-		// else Empty/missing stream: afterMs = 0, afterSeq = 0 
+		// else Empty/missing stream: afterMs = 0, afterSeq = 0
 		// any valid XADD will be > 0-0.
 	} else {
 		afterMs, afterSeq, _ = parseStreamID(afterID)
@@ -225,5 +224,3 @@ func (s *Store) notifyXReadWaiters(key string, newEntry StreamEntry) {
 	}
 	s.xreadWaiters[key] = remaining
 }
-
-

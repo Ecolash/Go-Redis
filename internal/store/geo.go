@@ -2,22 +2,11 @@ package store
 
 import "math"
 
-type GeoMember struct {
-	Lon    float64
-	Lat    float64
-	Member string
-}
-
-type GeoPosResult struct {
-	Lon float64
-	Lat float64
-}
-
 const (
 	minLat      = -85.05112878
-	maxLat      = 85.05112878
+	maxLat      = +85.05112878
 	minLon      = -180.0
-	maxLon      = 180.0
+	maxLon      = +180.0
 	scale       = float64(uint64(1) << 26)
 	earthRadius = 6372797.560856
 )

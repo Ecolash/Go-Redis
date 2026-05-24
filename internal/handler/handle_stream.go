@@ -11,7 +11,6 @@ import (
 )
 
 func (h *Handler) handleXAdd(parts []string) string {
-	// XADD key id field value [field value ...]
 	if len(parts) < 5 || (len(parts)-3)%2 != 0 {
 		return errs.WrongArgs
 	}
@@ -38,7 +37,6 @@ func (h *Handler) handleXRange(parts []string) string {
 }
 
 func (h *Handler) handleXRead(parts []string) string {
-	// XREAD [BLOCK <ms>] STREAMS <key1>...<keyN> <id1>...<idN>
 	if len(parts) < 4 {
 		return errs.WrongArgs
 	}
@@ -55,7 +53,6 @@ func (h *Handler) handleXRead(parts []string) string {
 }
 
 func (h *Handler) handleXReadBlocking(parts []string) string {
-	// parts: [XREAD, BLOCK, <ms>, STREAMS, <key>, <id>]
 	if len(parts) < 6 || !strings.EqualFold(parts[3], "STREAMS") {
 		return errs.WrongArgs
 	}

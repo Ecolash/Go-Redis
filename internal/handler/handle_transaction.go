@@ -31,7 +31,6 @@ func (h *Handler) handleExec(_ []string) string {
 	h.queue = nil
 	h.watching = nil
 
-	// If any watched key's version changed since WATCH, abort the transaction.
 	for key, snapshot := range watching {
 		if h.store.Version(key) != snapshot {
 			return nullArray
@@ -50,10 +49,6 @@ func (h *Handler) handleUnwatch(_ []string) string {
 	return okResponse
 }
 
-// handleWatch snapshots current versions of the given keys. Subsequent EXEC
-// aborts if any of those versions change. WATCH inside MULTI is rejected.
-// Calling WATCH again accumulates keys; later WATCH on the same key
-// re-snapshots it (matching Redis semantics).
 func (h *Handler) handleWatch(parts []string) string {
 	if len(parts) < 2 {
 		return errs.WrongArgs

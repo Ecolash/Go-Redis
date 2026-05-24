@@ -1,13 +1,5 @@
 package store
 
-// ZSetMember is a single member of a sorted set.
-type ZSetMember struct {
-	Score  float64
-	Member string
-}
-
-// ZAdd adds or updates members in the sorted set at key.
-// Returns the count of newly added members (updates are not counted).
 func (s *Store) ZAdd(key string, members []ZSetMember) int {
 	s.mu.Lock()
 	defer s.mu.Unlock()
@@ -28,9 +20,6 @@ func (s *Store) ZAdd(key string, members []ZSetMember) int {
 	return added
 }
 
-// ZRange returns members in rank [start, stop] (0-based, inclusive).
-// Negative indices are resolved Redis-style: -1 is the last element.
-// Returns an empty slice if the key does not exist.
 func (s *Store) ZRange(key string, start, stop int) []ZSetMember {
 	s.mu.RLock()
 	defer s.mu.RUnlock()
@@ -51,8 +40,6 @@ func (s *Store) ZRange(key string, start, stop int) []ZSetMember {
 	return e.zsetVal.rangeByRank(start, stop)
 }
 
-// ZRank returns the 0-based rank of member in the sorted set at key.
-// ok is false if the key or member does not exist.
 func (s *Store) ZRank(key string, member string) (int, bool) {
 	s.mu.RLock()
 	defer s.mu.RUnlock()
@@ -67,8 +54,6 @@ func (s *Store) ZRank(key string, member string) (int, bool) {
 	return r, true
 }
 
-// ZScore returns the score of member in the sorted set at key.
-// ok is false if the key or member does not exist.
 func (s *Store) ZScore(key string, member string) (float64, bool) {
 	s.mu.RLock()
 	defer s.mu.RUnlock()
@@ -79,8 +64,6 @@ func (s *Store) ZScore(key string, member string) (float64, bool) {
 	return e.zsetVal.score(member)
 }
 
-// ZRem removes members from the sorted set at key.
-// Returns the number of members actually removed.
 func (s *Store) ZRem(key string, members []string) int {
 	s.mu.Lock()
 	defer s.mu.Unlock()

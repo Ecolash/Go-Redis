@@ -13,11 +13,9 @@ const (
 	kindZSet
 )
 
-// StreamEntry is a single entry in a Redis stream.
-// Fields is a flat alternating list of keys and values, e.g. ["k1","v1","k2","v2"].
 type StreamEntry struct {
 	ID     string
-	Fields []string 
+	Fields []string
 }
 
 type entry struct {
@@ -26,25 +24,38 @@ type entry struct {
 	listVal   []string
 	streamVal []StreamEntry
 	zsetVal   *skipList
-	expiresAt time.Time // zero means no expiry
+	expiresAt time.Time
 }
 
-// BLPOPResult is the key+value returned by a blocking pop.
 type BLPOPResult struct {
 	Key string
 	Val string
 }
 
-// blpopWaiter tracks a single pending BLPOP across one or more keys.
 type blpopWaiter struct {
 	keys []string
-	ch   chan BLPOPResult // buffered size 1
+	ch   chan BLPOPResult
 }
 
-// xreadWaiter tracks a single pending XREAD across one or more streams.
 type xreadWaiter struct {
-    key     string
-    afterMs  int64
-    afterSeq int64
-    ch      chan []StreamEntry // buffered 1
+	key      string
+	afterMs  int64
+	afterSeq int64
+	ch       chan []StreamEntry
+}
+
+type ZSetMember struct {
+	Score  float64
+	Member string
+}
+
+type GeoMember struct {
+	Lon    float64
+	Lat    float64
+	Member string
+}
+
+type GeoPosResult struct {
+	Lon float64
+	Lat float64
 }

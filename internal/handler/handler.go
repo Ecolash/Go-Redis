@@ -23,7 +23,7 @@ type commandFunc func(parts []string) string
 
 /*
 
-Handler is responsible for parsing incoming RESP commands, executing them against the store, and returning RESP responses. 
+Handler is responsible for parsing incoming RESP commands, executing them against the store, and returning RESP responses.
 It also tracks transaction state for MULTI/EXEC and watches for WATCHed keys to implement optimistic locking.
 It can be configured with a callback to propagate write commands to connected replicas.
 
@@ -46,27 +46,27 @@ It can be configured with a callback to propagate write commands to connected re
 */
 
 type Handler struct {
-	store       *store.Store
-	role        string
-	defaultUser *acl.DefaultUser
+	store         *store.Store
+	role          string
+	defaultUser   *acl.DefaultUser
 	authenticated bool
-	inMulti bool
-	queue   [][]string
-	watching map[string]uint64
-	onPropagate func(parts []string)
-	onAOFAppend func(parts []string)
-	replicaCount func() int
+	inMulti       bool
+	queue         [][]string
+	watching      map[string]uint64
+	onPropagate   func(parts []string)
+	onAOFAppend   func(parts []string)
+	replicaCount  func() int
 	replicaWaiter func(numReplicas int, timeout time.Duration) int
-	replica bool
+	replica       bool
 	replyToMaster bool
-	trackOffset bool
-	offset int
-	config map[string]string
-	pubsub *pubsub.PubSub
-	subscriberID string
-	inSubscribe bool
+	trackOffset   bool
+	offset        int
+	config        map[string]string
+	pubsub        *pubsub.PubSub
+	subscriberID  string
+	inSubscribe   bool
 
-	commands map[command.Command]commandFunc
+	commands   map[command.Command]commandFunc
 	txCommands map[command.Command]commandFunc
 }
 
@@ -76,29 +76,18 @@ func WithPropagate(fn func(parts []string)) Option {
 	return func(h *Handler) { h.onPropagate = fn }
 }
 
-// WithAOFAppend wires a callback invoked with each successful write command's
-// parts so it can be appended to the append-only file.
 func WithAOFAppend(fn func(parts []string)) Option {
 	return func(h *Handler) { h.onAOFAppend = fn }
 }
 
-// WithReplicaCount lets the handler report the number of currently-connected
-// replicas (used by WAIT). The callback is consulted at request time so the
-// count is always live.
 func WithReplicaCount(fn func() int) Option {
 	return func(h *Handler) { h.replicaCount = fn }
 }
 
-// WithReplicaWaiter wires the master's WAIT implementation: a blocking call
-// that returns the number of replicas which have acknowledged all previously
-// propagated writes within the given timeout.
 func WithReplicaWaiter(fn func(numReplicas int, timeout time.Duration) int) Option {
 	return func(h *Handler) { h.replicaWaiter = fn }
 }
 
-// WithOffsetTracking makes the handler accumulate the byte length of every
-// command passed to Handle. Used by replicas so REPLCONF GETACK can report the
-// number of bytes processed before the current request.
 func WithOffsetTracking() Option {
 	return func(h *Handler) { h.trackOffset = true }
 }
@@ -134,44 +123,44 @@ func New(s *store.Store, role string, opts ...Option) *Handler {
 	}
 	h.authenticated = h.defaultUser.NoPass()
 	h.commands = map[command.Command]commandFunc{
-		command.PING:   h.handlePing,
-		command.ECHO:   h.handleEcho,
-		command.INFO:   h.handleInfo,
-		command.SET:    h.handleSet,
-		command.GET:    h.handleGet,
-		command.TYPE:   h.handleType,
-		command.INCR:   h.handleIncr,
-		command.DECR:   h.handleDecr,
-		command.XADD:   h.handleXAdd,
-		command.XRANGE: h.handleXRange,
-		command.XREAD:  h.handleXRead,
-		command.LPOP:   h.handleLPop,
-		command.RPOP:   h.handleRPop,
-		command.BLPOP:  h.handleBLPop,
-		command.LLEN:   h.handleLLen,
-		command.LPUSH:  h.handleLPush,
-		command.RPUSH:  h.handleRPush,
-		command.LRANGE: h.handleLRange,
-		command.REPLCONF: h.handleReplConf,
-		command.PSYNC:    h.handlePsync,
-		command.WAIT:     h.handleWait,
-		command.CONFIG:     h.handleConfig,
-		command.KEYS:       h.handleKeys,
-		command.SUBSCRIBE:  h.handleSubscribe,
+		command.PING:        h.handlePing,
+		command.ECHO:        h.handleEcho,
+		command.INFO:        h.handleInfo,
+		command.SET:         h.handleSet,
+		command.GET:         h.handleGet,
+		command.TYPE:        h.handleType,
+		command.INCR:        h.handleIncr,
+		command.DECR:        h.handleDecr,
+		command.XADD:        h.handleXAdd,
+		command.XRANGE:      h.handleXRange,
+		command.XREAD:       h.handleXRead,
+		command.LPOP:        h.handleLPop,
+		command.RPOP:        h.handleRPop,
+		command.BLPOP:       h.handleBLPop,
+		command.LLEN:        h.handleLLen,
+		command.LPUSH:       h.handleLPush,
+		command.RPUSH:       h.handleRPush,
+		command.LRANGE:      h.handleLRange,
+		command.REPLCONF:    h.handleReplConf,
+		command.PSYNC:       h.handlePsync,
+		command.WAIT:        h.handleWait,
+		command.CONFIG:      h.handleConfig,
+		command.KEYS:        h.handleKeys,
+		command.SUBSCRIBE:   h.handleSubscribe,
 		command.UNSUBSCRIBE: h.handleUnsubscribe,
-		command.PUBLISH:    h.handlePublish,
-		command.ZADD:   h.handleZAdd,
-		command.ZRANGE: h.handleZRange,
-		command.ZRANK:  h.handleZRank,
-		command.ZSCORE: h.handleZScore,
-		command.ZCARD:  h.handleZCard,
-		command.ZREM:   h.handleZRem,
-		command.GEOADD:    h.handleGeoAdd,
-		command.GEOPOS:    h.handleGeoPos,
-		command.GEODIST:   h.handleGeoDist,
-		command.GEOSEARCH: h.handleGeoSearch,
-		command.ACL:       h.handleACL,
-		command.AUTH:      h.handleAuth,
+		command.PUBLISH:     h.handlePublish,
+		command.ZADD:        h.handleZAdd,
+		command.ZRANGE:      h.handleZRange,
+		command.ZRANK:       h.handleZRank,
+		command.ZSCORE:      h.handleZScore,
+		command.ZCARD:       h.handleZCard,
+		command.ZREM:        h.handleZRem,
+		command.GEOADD:      h.handleGeoAdd,
+		command.GEOPOS:      h.handleGeoPos,
+		command.GEODIST:     h.handleGeoDist,
+		command.GEOSEARCH:   h.handleGeoSearch,
+		command.ACL:         h.handleACL,
+		command.AUTH:        h.handleAuth,
 	}
 	h.txCommands = map[command.Command]commandFunc{
 		command.MULTI:   h.handleMulti,
@@ -193,8 +182,6 @@ var subscribedModeAllowed = map[command.Command]bool{
 
 func (h *Handler) Handle(data []byte) string {
 	if h.trackOffset {
-		// Increment AFTER dispatch so the current command's bytes aren't
-		// reflected in its own reply (matters for REPLCONF GETACK).
 		defer func() { h.offset += len(data) }()
 	}
 	parts, err := resp.ParseArray(data)
@@ -243,8 +230,6 @@ func (h *Handler) InSubscribeMode() bool {
 	return h.inSubscribe
 }
 
-// MessageChan returns the channel on which published messages are delivered
-// to this client. Returns nil if the client has not yet subscribed.
 func (h *Handler) MessageChan() <-chan string {
 	if h.pubsub == nil {
 		return nil
@@ -258,16 +243,12 @@ func (h *Handler) BecameReplica() bool {
 	return b
 }
 
-// ShouldReplyToMaster reports whether the previous Handle call produced a reply
-// that the replica must forward back over its master connection (e.g. the ACK
-// for REPLCONF GETACK). The flag is consumed on read.
 func (h *Handler) ShouldReplyToMaster() bool {
 	b := h.replyToMaster
 	h.replyToMaster = false
 	return b
 }
 
-// writeCommands are the commands that mutate the dataset & must be forwarded to connected replicas.
 var writeCommands = map[command.Command]bool{
 	command.SET:   true,
 	command.INCR:  true,
