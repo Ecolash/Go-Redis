@@ -1,6 +1,10 @@
 # Redis — Go Implementation
 
-A from-scratch Redis server and interactive client CLI written in Go.
+
+
+A from-scratch Redis server and interactive client CLI written in Go. ["Build Your Own Redis" Challenge](https://codecrafters.io/challenges/redis).
+
+![Demo](demo.gif)
 
 ---
 
@@ -8,8 +12,8 @@ A from-scratch Redis server and interactive client CLI written in Go.
 
 | Binary | Path | Description |
 |---|---|---|
-| `redis-server` | `app/` | Full Redis server — RESP protocol, persistence, replication, pub/sub |
-| `redis-cli` | `cmd/redis-cli/` | Rich interactive client — TUI REPL, autocomplete, live pub/sub feed |
+| `redis-server` | `app/` | Full Redis server : RESP protocol, persistence, replication, pub/sub |
+| `redis-cli` | `cmd/redis-cli/` | Rich interactive client : TUI REPL, autocomplete, live pub/sub feed |
 
 ---
 
@@ -50,32 +54,6 @@ go run ./app/ --port 6380 --replicaof "127.0.0.1 6379"
 | ACL / Auth | `AUTH` `ACL` |
 | Config / Keys | `CONFIG` `KEYS` |
 
-### Architecture
-
-```
-app/
-└── main.go                   Entry point, flag parsing
-
-internal/
-├── server/
-│   ├── server.go             TCP listener, one goroutine per connection
-│   ├── replication.go        Master/replica handshake and propagation
-│   └── replicas.go           Replica tracking and WAIT logic
-├── handler/                  One file per command group
-├── store/                    In-memory data store (RWMutex protected)
-│   ├── store.go              String and expiry management
-│   ├── list.go               List operations
-│   ├── zset.go               Sorted set (skip list backed)
-│   ├── stream.go             Stream entries
-│   └── geo.go                Geo indexing (Haversine distance)
-├── resp/                     RESP encoder / decoder
-├── rdb/                      RDB file reader for persistence
-├── aof/                      Append-only file writer
-├── pubsub/                   Pub/Sub broker (channel fan-out)
-├── acl/                      User management and AUTH
-└── command/                  Command name constants
-```
-
 **Concurrency model:** each client connection runs in its own goroutine; the store is protected by `sync.RWMutex` so reads run concurrently and writes are serialised — similar to Redis but via OS threads instead of an event loop.
 
 ---
@@ -107,31 +85,7 @@ go run ./cmd/redis-cli/ --demo
 - **Transaction mode** — prompt changes to `TX›` (yellow), queued commands show `⬡ QUEUED`
 - **Pub/Sub live feed** — Bubble Tea view with timestamped `🔔` messages, `Ctrl+C` to exit and unsubscribe
 - **Built-in help** — `HELP` lists all commands by category; `HELP <cmd>` shows synopsis and example
-
-### Architecture
-
-```
-cmd/redis-cli/
-└── main.go               Cobra entry point (--host, --port, --password, --demo)
-
-internal/cli/
-├── client/               TCP connection, RESP parser, latency tracking
-├── state/                Shared session state (TX queue, subscriptions, latency)
-├── registry/             Metadata for all 45+ commands (synopsis, args, examples)
-├── completer/            go-prompt autocomplete + Levenshtein typo correction
-├── renderer/
-│   ├── renderer.go       RESP dispatcher
-│   ├── string.go         Simple strings, errors, integers, bulk strings, null
-│   ├── array.go          Generic arrays and EXEC indexed results
-│   ├── table.go          Sorted set and GEO tables
-│   ├── stream.go         XRANGE / XREAD stream entry cards
-│   └── pubsub.go         Bubble Tea live-feed model
-├── repl/                 go-prompt REPL loop and state machine
-├── banner/               Startup banner printer
-└── demo/                 Scripted demo runner (--demo flag)
-```
-
----
+--- 
 
 ## Build
 
@@ -143,7 +97,7 @@ go build -o redis-cli    ./cmd/redis-cli/
 # Run all tests
 go test ./...
 ```
+---
 
-## Requirements
+[![progress-banner](https://backend.codecrafters.io/progress/redis/5a841655-12e1-4cc2-9fc2-c52a3123f245)](https://app.codecrafters.io/users/codecrafters-bot?r=2qF)
 
-- Go 1.22+
