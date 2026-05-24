@@ -2,6 +2,7 @@ package repl
 
 import (
 	"fmt"
+	"os"
 	"strings"
 
 	goprompt "github.com/c-bata/go-prompt"
@@ -79,7 +80,7 @@ func handleInput(input string, c *client.Client, sess *state.Session, comp *comp
 	case "QUIT", "EXIT", "BYE":
 		fmt.Println(styleTip.Render("Goodbye! 👋"))
 		c.Close()
-		return
+		os.Exit(0)
 	}
 
 	// Pub/Sub entry — hands off to Bubble Tea feed
