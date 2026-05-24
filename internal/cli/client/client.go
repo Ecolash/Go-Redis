@@ -103,16 +103,21 @@ func (c *Client) Subscribe(channels []string) (<-chan Message, func(), error) {
 	done := make(chan struct{})
 
 	go func() {
-		defer close(ch)
+		defer func() {
+			close(ch)
+			// Reset deadline so the connection is usable again after PubSub exits.
+			c.conn.SetReadDeadline(time.Time{})
+		}()
 		for {
 			select {
 			case <-done:
 				return
 			default:
 			}
-			c.mu.Lock()
+			// No mutex held here: REPL sends nothing while in PubSub mode,
+			// so we are the exclusive reader and holding the lock would
+			// prevent cancel() from unblocking us via SetReadDeadline.
 			val, err := c.readValue()
-			c.mu.Unlock()
 			if err != nil {
 				return
 			}
@@ -130,7 +135,9 @@ func (c *Client) Subscribe(channels []string) (<-chan Message, func(), error) {
 
 	cancel := func() {
 		close(done)
-		c.Do("UNSUBSCRIBE") //nolint:errcheck
+		// Unblock the goroutine's pending readValue() by expiring the deadline.
+		// The goroutine resets it to zero on exit so future Do() calls are unaffected.
+		c.conn.SetReadDeadline(time.Now())
 	}
 	return ch, cancel, nil
 }

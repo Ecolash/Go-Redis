@@ -65,7 +65,7 @@ func (m feedModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	case tea.KeyMsg:
 		if msg.Type == tea.KeyCtrlC {
 			m.cancel()
-			return m, func() tea.Msg { return feedDone{} }
+			return m, tea.Quit
 		}
 	}
 	return m, nil
