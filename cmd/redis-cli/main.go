@@ -7,6 +7,7 @@ import (
 
 	"github.com/codecrafters-io/redis-starter-go/internal/cli/banner"
 	"github.com/codecrafters-io/redis-starter-go/internal/cli/client"
+	"github.com/codecrafters-io/redis-starter-go/internal/cli/demo"
 	"github.com/codecrafters-io/redis-starter-go/internal/cli/repl"
 	"github.com/codecrafters-io/redis-starter-go/internal/cli/state"
 	"github.com/spf13/cobra"
@@ -17,6 +18,7 @@ func main() {
 		host     string
 		port     int
 		password string
+		demoMode bool
 	)
 
 	root := &cobra.Command{
@@ -38,6 +40,10 @@ func main() {
 			sess := state.New(host, port)
 			sess.UpdateLatency(c.Latency())
 
+			if demoMode {
+				demo.Run(c, sess)
+				return nil
+			}
 			repl.Run(c, sess)
 			return nil
 		},
@@ -46,6 +52,7 @@ func main() {
 	root.Flags().StringVarP(&host, "host", "H", "127.0.0.1", "Redis server host")
 	root.Flags().IntVarP(&port, "port", "p", 6379, "Redis server port")
 	root.Flags().StringVarP(&password, "password", "a", "", "Redis password (AUTH)")
+	root.Flags().BoolVar(&demoMode, "demo", false, "Run scripted demo and exit")
 
 	if err := root.Execute(); err != nil {
 		fmt.Fprintln(os.Stderr, err)
