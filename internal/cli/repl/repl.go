@@ -101,6 +101,11 @@ func handleInput(input string, c *client.Client, sess *state.Session, comp *comp
 		if err := renderer.RunPubSubFeed(ch, cancel); err != nil {
 			fmt.Println(styleWarn.Render("✗ PubSub feed error: " + err.Error()))
 		}
+		// Drain ch until the goroutine exits and closes it.
+		// This guarantees the read deadline has been reset before we send UNSUBSCRIBE.
+		for range ch {}
+		unsubArgs := append([]string{"UNSUBSCRIBE"}, channels...)
+		c.Do(unsubArgs...) //nolint:errcheck
 		for _, channel := range channels {
 			sess.Unsubscribe(channel)
 		}
