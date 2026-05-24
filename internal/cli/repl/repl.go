@@ -14,14 +14,11 @@ import (
 )
 
 var (
-	stylePromptNormal = lipgloss.NewStyle().Foreground(lipgloss.Color("1")).Bold(true)
-	stylePromptTX     = lipgloss.NewStyle().Foreground(lipgloss.Color("3")).Bold(true)
-	styleQueued       = lipgloss.NewStyle().Foreground(lipgloss.Color("8")).Italic(true)
-	styleLatency      = lipgloss.NewStyle().Foreground(lipgloss.Color("8"))
-	styleTip          = lipgloss.NewStyle().Foreground(lipgloss.Color("2"))
-	styleWarn         = lipgloss.NewStyle().Foreground(lipgloss.Color("3"))
-	styleCmdName      = lipgloss.NewStyle().Foreground(lipgloss.Color("6")).Bold(true)
-	styleCat          = lipgloss.NewStyle().Foreground(lipgloss.Color("4")).Bold(true)
+	styleQueued  = lipgloss.NewStyle().Foreground(lipgloss.Color("8")).Italic(true)
+	styleTip     = lipgloss.NewStyle().Foreground(lipgloss.Color("2"))
+	styleWarn    = lipgloss.NewStyle().Foreground(lipgloss.Color("3"))
+	styleCmdName = lipgloss.NewStyle().Foreground(lipgloss.Color("6")).Bold(true)
+	styleCat     = lipgloss.NewStyle().Foreground(lipgloss.Color("4")).Bold(true)
 )
 
 // Run starts the interactive REPL. Blocks until the user quits.
@@ -36,13 +33,21 @@ func Run(c *client.Client, sess *state.Session) {
 		handleInput(input, c, sess, comp)
 	}
 
+	// prefixColor switches to Yellow in TX mode so the user can see state change.
+	prefixColor := func() goprompt.Color {
+		if sess.InTx {
+			return goprompt.Yellow
+		}
+		return goprompt.Red
+	}
+
 	p := goprompt.New(
 		executor,
 		comp.Complete,
 		goprompt.OptionPrefix("redis> "),
 		goprompt.OptionLivePrefix(func() (string, bool) { return buildPrompt(sess) }),
 		goprompt.OptionTitle("redis-cli"),
-		goprompt.OptionPrefixTextColor(goprompt.Red),
+		goprompt.OptionPrefixTextColor(prefixColor()),
 		goprompt.OptionPreviewSuggestionTextColor(goprompt.Blue),
 		goprompt.OptionSelectedSuggestionBGColor(goprompt.LightGray),
 		goprompt.OptionSuggestionBGColor(goprompt.DarkGray),
@@ -51,12 +56,12 @@ func Run(c *client.Client, sess *state.Session) {
 }
 
 func buildPrompt(sess *state.Session) (string, bool) {
-	lat := styleLatency.Render(fmt.Sprintf("[%dms]", sess.Latency.Milliseconds()))
 	addr := fmt.Sprintf("%s:%d", sess.Host, sess.Port)
+	lat := fmt.Sprintf("[%dms]", sess.Latency.Milliseconds())
 	if sess.InTx {
-		return stylePromptTX.Render(fmt.Sprintf("TX› %s %s ", addr, lat)), true
+		return fmt.Sprintf("TX› %s %s ", addr, lat), true
 	}
-	return stylePromptNormal.Render(fmt.Sprintf("redis %s %s › ", addr, lat)), true
+	return fmt.Sprintf("redis %s %s › ", addr, lat), true
 }
 
 func handleInput(input string, c *client.Client, sess *state.Session, comp *completer.Completer) {
