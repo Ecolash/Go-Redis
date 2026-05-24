@@ -2,7 +2,7 @@
 
 
 
-A from-scratch Redis server and interactive client CLI written in Go. ["Build Your Own Redis" Challenge](https://codecrafters.io/challenges/redis).
+A from-scratch Redis server and interactive client CLI written in Go. **Credits:** [Build Your Own Redis Challenge : CodeCrafters](https://codecrafters.io/challenges/redis)
 
 ![Demo](demo.gif)
 
