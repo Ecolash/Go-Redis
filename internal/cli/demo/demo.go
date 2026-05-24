@@ -26,7 +26,7 @@ type step struct {
 var script = []step{
 	{section: "── Basics ──────────────────────────────────"},
 	{cmd: "PING"},
-	{cmd: "ECHO hello world"},
+	{cmd: "ECHO hello"},
 	{cmd: "SET user:1 alice EX 3600"},
 	{cmd: "GET user:1"},
 	{cmd: "SET counter 10"},
@@ -45,7 +45,7 @@ var script = []step{
 
 	{section: "── Sorted Sets ─────────────────────────────"},
 	{cmd: "ZADD leaderboard 100 alice 200 bob 150 carol"},
-	{cmd: "ZRANGE leaderboard 0 -1 WITHSCORES"},
+	{cmd: "ZRANGE leaderboard 0 -1"},
 	{cmd: "ZRANK leaderboard alice"},
 	{cmd: "ZSCORE leaderboard bob"},
 
